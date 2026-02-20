@@ -12,25 +12,33 @@ interface Props {
 
 export const MiniSysChart: React.FC<Props> = ({ data, dataKey, colorHex, colorId }) => {
   const secondColor = (hex: string) => (hex && hex.length === 7 ? `${hex}66` : hex);
-
   const isNetwork = dataKey === 'network';
+
+  // Transform network data: Download (Rx) is negative, Upload (Tx) is positive
+  const transformedData = isNetwork
+    ? data.map(point => ({
+        ...point,
+        networkRx: point.networkRx ? -Math.abs(point.networkRx) : 0,
+        networkTx: point.networkTx ? Math.abs(point.networkTx) : 0,
+      }))
+    : data;
 
   return (
     <div className="h-24 w-full mt-auto relative">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data}>
+        <AreaChart data={transformedData}>
           <defs>
             <linearGradient id={`grad-${colorId}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={colorHex} stopOpacity={0.4}/>
-              <stop offset="95%" stopColor={colorHex} stopOpacity={0}/>
+              <stop offset="5%" stopColor={colorHex} stopOpacity={0.2}/>
+              <stop offset="95%" stopColor={colorHex} stopOpacity={0.8}/>
             </linearGradient>
             <linearGradient id={`grad-${colorId}-tx`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={secondColor(colorHex)} stopOpacity={0.35}/>
-              <stop offset="95%" stopColor={secondColor(colorHex)} stopOpacity={0}/>
+              <stop offset="5%" stopColor={secondColor(colorHex)} stopOpacity={0.15}/>
+              <stop offset="95%" stopColor={secondColor(colorHex)} stopOpacity={0.7}/>
             </linearGradient>
           </defs>
           <XAxis dataKey="time" domain={["dataMin", "dataMax"]} type="number" hide />
-          <YAxis domain={[0, 'auto']} hide />
+          <YAxis domain={isNetwork ? [null, null] : [0, 'auto']} hide />
           <Tooltip 
               contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#f8fafc', fontSize: '12px', borderRadius: '6px' }}
               itemStyle={(value) => ({ color: Array.isArray(value) ? colorHex : colorHex }) as any}
@@ -38,7 +46,7 @@ export const MiniSysChart: React.FC<Props> = ({ data, dataKey, colorHex, colorId
               labelFormatter={(value) => formatTooltipTime(value)}
               formatter={(value?: number, name?: string) => {
                 if (value == null) return [''];
-                if (isNetwork) return [formatBytes(value)];
+                if (isNetwork) return [formatBytes(Math.abs(value))];
                 return [`${value.toFixed(1)}%`];
               }}
           />
@@ -49,23 +57,23 @@ export const MiniSysChart: React.FC<Props> = ({ data, dataKey, colorHex, colorId
                 type="monotone"
                 dataKey="networkRx"
                 name="Download"
-                stroke={colorHex}
+                stroke={secondColor(colorHex)}
                 strokeWidth={2}
                 fill={`url(#grad-${colorId})`}
                 isAnimationActive={false}
-                dot={{ r: 2.5, fill: '#1e293b', stroke: colorHex, strokeWidth: 2, fillOpacity: 1 }}
-                activeDot={{ r: 6, fill: colorHex, stroke: '#fff', strokeWidth: 2 }}
+                dot={{ r: 2.5, fill: '#1e293b', stroke: secondColor(colorHex), strokeWidth: 2, fillOpacity: 1 }}
+                activeDot={{ r: 6, fill: secondColor(colorHex), stroke: '#fff', strokeWidth: 2 }}
               />
               <Area
                 type="monotone"
                 dataKey="networkTx"
                 name="Upload"
-                stroke={secondColor(colorHex)}
+                stroke={colorHex}
                 strokeWidth={2}
                 fill={`url(#grad-${colorId}-tx)`}
                 isAnimationActive={false}
-                dot={{ r: 2.5, fill: '#1e293b', stroke: secondColor(colorHex), strokeWidth: 2, fillOpacity: 1 }}
-                activeDot={{ r: 6, fill: secondColor(colorHex), stroke: '#fff', strokeWidth: 2 }}
+                dot={{ r: 2.5, fill: '#1e293b', stroke: colorHex, strokeWidth: 2, fillOpacity: 1 }}
+                activeDot={{ r: 6, fill: colorHex, stroke: '#fff', strokeWidth: 2 }}
               />
             </>
           ) : (
