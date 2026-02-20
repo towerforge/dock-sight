@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Clock, ChevronDown } from 'lucide-react';
 
 interface Props {
   value: number;
@@ -50,7 +50,7 @@ export const TimeSelector: React.FC<Props> = ({ value, onChange }) => {
               }`}
             >
               {opt.label}
-              {value === opt.value && <CheckCircle2 size={12} />}
+              {value === opt.value && <Clock size={12} />}
             </button>
           ))}
         </div>

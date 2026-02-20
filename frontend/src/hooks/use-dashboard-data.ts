@@ -7,6 +7,8 @@ export function useDashboardData(refreshInterval: number) {
   const [dock, setDock] = useState<DockerService[]>([]);
   const [sysHistory, setSysHistory] = useState<SysHistoryPoint[]>([]);
   const [serviceHistory, setServiceHistory] = useState<Record<string, ServiceHistoryPoint[]>>({});
+
+  const maxSysHistory = 200;
   
   // Internal trigger to force a re-render on each interval
   const [tick, setTick] = useState(0);
@@ -34,8 +36,8 @@ export function useDashboardData(refreshInterval: number) {
                 networkRx: sysData.network?.total_rx ?? 0,
                 networkTx: sysData.network?.total_tx ?? 0
               };
-              const newArr = [...prev, newPoint];
-              if (newArr.length > 60) newArr.shift();
+              let newArr = [newPoint, ...prev];
+              if (newArr.length > maxSysHistory) newArr.pop();
               return newArr;
             });
           }
@@ -56,7 +58,7 @@ export function useDashboardData(refreshInterval: number) {
                   cpu: svc.info.cpu.percent,
                   ramPercent: svc.info.ram.percent
                 }];
-                if (svcHistory.length > 50) svcHistory.shift();
+                if (svcHistory.length > maxSysHistory) svcHistory.shift();
                 next[svc.name] = svcHistory;
               });
               return next;

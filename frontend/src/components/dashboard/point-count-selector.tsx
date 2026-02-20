@@ -43,7 +43,7 @@ export const PointCountSelector: React.FC<Props> = ({ value, onChange, options =
               }`}
             >
               {opt}
-              {value === opt && <ChevronDown size={12} />}
+              {value === opt && <List size={12} />}
             </button>
           ))}
         </div>
