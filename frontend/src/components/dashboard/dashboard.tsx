@@ -63,7 +63,7 @@ export default function Dashboard() {
           progressBgClass="text-blue-500"
           percent={sys?.cpu.percent ?? 0}
           mainValue={`${sys?.cpu.percent.toFixed(0) ?? 0}%`}
-          subtitle={`${sys?.cpu.total ?? 0} Cores Active`}
+          subtitle={`${sys?.cpu.active ?? 0} / ${sys?.cpu.total ?? 0} Cores`}
           dataKey="cpu"
           colorHex="#3b82f6"
           colorId="blue"
@@ -77,7 +77,7 @@ export default function Dashboard() {
           progressBgClass="text-emerald-500"
           percent={sys?.ram.percent ?? 0}
           mainValue={`${sys?.ram.percent.toFixed(0) ?? 0}%`}
-          subtitle={`${formatBytes(sys?.ram.used ?? 0)} Used`}
+          subtitle={`${formatBytes(sys?.ram.used ?? 0)} / ${formatBytes(sys?.ram.total ?? 0)}`}
           dataKey="ram"
           colorHex="#10b981"
           colorId="emerald"
@@ -91,7 +91,7 @@ export default function Dashboard() {
           progressBgClass="text-amber-500"
           percent={sys?.disk.percent ?? 0}
           mainValue={`${sys?.disk.percent.toFixed(0) ?? 0}%`}
-          subtitle={`${formatBytes(sys?.disk.used ?? 0)} Used`}
+          subtitle={`${formatBytes(sys?.disk.used ?? 0)} / ${formatBytes(sys?.disk.total ?? 0)}`}
           dataKey="disk"
           colorHex="#f59e0b"
           colorId="amber"

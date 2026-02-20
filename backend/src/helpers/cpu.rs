@@ -11,8 +11,11 @@ pub(crate) fn cpu_info(sys: &mut System) -> serde_json::Value {
 		0.0
 	};
 
+	let active_cores = ((cpu_usage_percent / 100.0) * cpu_count as f64).round();
+
 	json!({
 		"total": cpu_count,
 		"percent": (cpu_usage_percent * 10.0).round() / 10.0
+		,"active": active_cores as u32
 	})
 }
