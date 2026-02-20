@@ -15,6 +15,7 @@ export default function MetricCard({
   colorId,
   viewMode,
   sysHistory,
+  pointCount,
 }: {
   title: string;
   Icon: React.ComponentType<any>;
@@ -50,7 +51,7 @@ export default function MetricCard({
           </div>
         </div>
       ) : (
-        <MiniSysChart data={sysHistory} dataKey={dataKey} colorHex={colorHex} colorId={colorId} />
+        <MiniSysChart data={sysHistory} dataKey={dataKey} colorHex={colorHex} colorId={colorId} pointCount={pointCount} />
       )}
     </div>
   );

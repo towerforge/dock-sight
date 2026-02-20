@@ -7,10 +7,15 @@ import type { DockerService, ServiceHistoryPoint } from '@/types/dashboard';
 interface Props {
   service: DockerService;
   historyData: ServiceHistoryPoint[];
+  pointCount?: number;
 }
 
-export const ServiceCard: React.FC<Props> = ({ service, historyData }) => {
+export const ServiceCard: React.FC<Props> = ({ service, historyData, pointCount }) => {
   const isHighLoad = service.info.cpu.percent > 70;
+
+  // Limitar a los últimos pointCount puntos
+  const count = typeof pointCount === 'number' ? pointCount : 10;
+  const limitedHistory = historyData.slice(-count);
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col h-64 relative overflow-hidden group hover:border-slate-700 transition-colors">
@@ -37,7 +42,7 @@ export const ServiceCard: React.FC<Props> = ({ service, historyData }) => {
       </div>
       <div className="flex-1 w-full min-h-0 relative">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={historyData}>
+          <AreaChart data={limitedHistory}>
             <defs>
               <linearGradient id="splitColorCpu" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>

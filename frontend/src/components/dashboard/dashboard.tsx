@@ -6,11 +6,13 @@ import { ServiceCard } from '@/components/dashboard/service-card';
 import { ServiceBar } from '@/components/dashboard/service-bar';
 import { TimeSelector } from '@/components/dashboard/time-selector';
 import MetricCard from '@/components/dashboard/metric-card';
+import { PointCountSelector } from '@/components/dashboard/point-count-selector';
 
 export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'bars' | 'chart'>('bars');
   const [refreshInterval, setRefreshInterval] = useState(5000);
+  const [pointCount, setPointCount] = useState(10);
 
   // Hook managing real-time system and docker data
   const { sys, dock, sysHistory, serviceHistory } = useDashboardData(refreshInterval);
@@ -43,6 +45,7 @@ export default function Dashboard() {
         
         <div className="flex items-center gap-3">
           <TimeSelector value={refreshInterval} onChange={setRefreshInterval} />
+          <PointCountSelector value={pointCount} onChange={setPointCount} />
 
           <div className="bg-slate-900 p-1 rounded-lg border border-slate-800 flex shadow-sm h-[38px]">
             <button onClick={() => setViewMode('bars')} className={`flex items-center gap-2 px-4 rounded-md text-sm font-medium transition-all ${viewMode === 'bars' ? 'bg-slate-800 text-white shadow-sm ring-1 ring-white/10' : 'text-slate-500 hover:text-slate-300'}`}>
@@ -69,6 +72,7 @@ export default function Dashboard() {
           colorId="blue"
           viewMode={viewMode}
           sysHistory={sysHistory}
+          pointCount={pointCount}
         />
 
         <MetricCard
@@ -83,6 +87,7 @@ export default function Dashboard() {
           colorId="emerald"
           viewMode={viewMode}
           sysHistory={sysHistory}
+          pointCount={pointCount}
         />
 
         <MetricCard
@@ -97,6 +102,7 @@ export default function Dashboard() {
           colorId="amber"
           viewMode={viewMode}
           sysHistory={sysHistory}
+          pointCount={pointCount}
         />
 
         <MetricCard
@@ -111,6 +117,7 @@ export default function Dashboard() {
           colorId="violet"
           viewMode={viewMode}
           sysHistory={sysHistory}
+          pointCount={pointCount}
         />
       </div>
 
@@ -140,6 +147,7 @@ export default function Dashboard() {
                 key={s.name} 
                 service={s} 
                 historyData={serviceHistory[s.name] || []} 
+                pointCount={pointCount}
               />
             ))}
           </div>
