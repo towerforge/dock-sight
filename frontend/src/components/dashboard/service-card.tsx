@@ -13,7 +13,6 @@ interface Props {
 export const ServiceCard: React.FC<Props> = ({ service, historyData, pointCount }) => {
   const isHighLoad = service.info.cpu.percent > 70;
 
-  // Limitar a los últimos pointCount puntos
   const count = typeof pointCount === 'number' ? pointCount : 10;
   const limitedHistory = historyData.slice(-count);
 

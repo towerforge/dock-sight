@@ -15,9 +15,8 @@ export const MiniSysChart: React.FC<Props> = ({ data, dataKey, colorHex, colorId
   const secondColor = (hex: string) => (hex && hex.length === 7 ? `${hex}66` : hex);
   const isNetwork = dataKey === 'network';
 
-  // Limitar a los últimos pointCount puntos
   const count = typeof pointCount === 'number' ? pointCount : 10;
-  const limitedData = data.slice(-count);
+  const limitedData = data.slice(0, count);
 
   // Transform network data: Download (Rx) is negative, Upload (Tx) is positive
   const transformedData = isNetwork
