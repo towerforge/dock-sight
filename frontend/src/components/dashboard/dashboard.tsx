@@ -2,25 +2,34 @@ import React, { useState, useMemo } from 'react';
 import { Search, Server, Cpu, CircuitBoard, HardDrive, BarChart2, Activity } from 'lucide-react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { formatBytes } from '@/lib/formatters';
-import { MiniSysChart } from '@/components/dashboard/mini-sys-chart';
 import { ServiceCard } from '@/components/dashboard/service-card';
 import { ServiceBar } from '@/components/dashboard/service-bar';
 import { TimeSelector } from '@/components/dashboard/time-selector';
+import MetricCard from '@/components/dashboard/metric-card';
 
 export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'bars' | 'chart'>('bars');
   const [refreshInterval, setRefreshInterval] = useState(5000);
 
-  // Hook call that manages all data and the refresh interval
+  // Hook managing real-time system and docker data
   const { sys, dock, sysHistory, serviceHistory } = useDashboardData(refreshInterval);
 
-  // Optimized filtering
+  // Optimized filtering for Docker services
   const filteredDocs = useMemo(() => {
     return dock
       .filter((s) => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [dock, searchTerm]);
+
+  // Network Logic: Calculate throughput and percentage relative to hardware capacity
+  const totalNetworkTraffic = (sys?.network?.total_rx ?? 0) + (sys?.network?.total_tx ?? 0);
+  
+  // Use max_limit from Rust (or fallback to 1Gbps / 125MB/s)
+  const networkHardwareLimit = sys?.network?.max_limit ?? 125000000; 
+  
+  // Relative percentage for the progress bar
+  const networkUsagePercent = Math.min((totalNetworkTraffic / networkHardwareLimit) * 100, 100);
 
   return (
     <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-0">
@@ -46,64 +55,63 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* GLOBAL METRICS (CPU / RAM / DISK) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* CPU */}
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm flex flex-col justify-between h-56 relative overflow-hidden">
-          <div>
-            <h3 className="text-slate-400 font-medium text-sm flex items-center gap-2"><Cpu size={18} className="text-blue-500"/> CPU</h3>
-            <div className="text-3xl font-bold text-white mt-1">{sys?.cpu.percent.toFixed(0) ?? 0}%</div>
-            <div className="text-xs text-slate-500 mt-1">{sys?.cpu.total ?? 0} Cores Active</div>
-          </div>
-          {viewMode === 'bars' ? (
-            <div className="mt-auto">
-               <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2">
-                 <div className="bg-blue-500 h-full rounded-full transition-all duration-500" style={{ width: `${sys?.cpu.percent ?? 0}%` }}></div>
-               </div>
-               <div className="flex justify-between text-[10px] text-slate-500 font-medium uppercase tracking-wider"><span>0%</span><span>Load</span><span>100%</span></div>
-            </div>
-          ) : (
-            <MiniSysChart data={sysHistory} dataKey="cpu" colorHex="#3b82f6" colorId="blue" />
-          )}
-        </div>
+      {/* GLOBAL METRICS */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <MetricCard
+          title="CPU"
+          Icon={Cpu}
+          progressBgClass="text-blue-500"
+          percent={sys?.cpu.percent ?? 0}
+          mainValue={`${sys?.cpu.percent.toFixed(0) ?? 0}%`}
+          subtitle={`${sys?.cpu.total ?? 0} Cores Active`}
+          dataKey="cpu"
+          colorHex="#3b82f6"
+          colorId="blue"
+          viewMode={viewMode}
+          sysHistory={sysHistory}
+        />
 
-        {/* RAM */}
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm flex flex-col justify-between h-56 relative overflow-hidden">
-          <div>
-            <h3 className="text-slate-400 font-medium text-sm flex items-center gap-2"><CircuitBoard size={18} className="text-emerald-500"/> RAM</h3>
-            <div className="text-3xl font-bold text-white mt-1">{sys?.ram.percent.toFixed(0) ?? 0}%</div>
-            <div className="text-xs text-slate-500 mt-1">{formatBytes(sys?.ram.used ?? 0)} Used</div>
-          </div>
-          {viewMode === 'bars' ? (
-            <div className="mt-auto">
-               <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2">
-                 <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${sys?.ram.percent ?? 0}%` }}></div>
-               </div>
-               <div className="flex justify-between text-[10px] text-slate-500 font-medium uppercase tracking-wider"><span>Used</span><span>Free</span></div>
-            </div>
-          ) : (
-            <MiniSysChart data={sysHistory} dataKey="ram" colorHex="#10b981" colorId="emerald" />
-          )}
-        </div>
+        <MetricCard
+          title="RAM"
+          Icon={CircuitBoard}
+          progressBgClass="text-emerald-500"
+          percent={sys?.ram.percent ?? 0}
+          mainValue={`${sys?.ram.percent.toFixed(0) ?? 0}%`}
+          subtitle={`${formatBytes(sys?.ram.used ?? 0)} Used`}
+          dataKey="ram"
+          colorHex="#10b981"
+          colorId="emerald"
+          viewMode={viewMode}
+          sysHistory={sysHistory}
+        />
 
-        {/* DISK */}
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm flex flex-col justify-between h-56 relative overflow-hidden">
-           <div>
-            <h3 className="text-slate-400 font-medium text-sm flex items-center gap-2"><HardDrive size={18} className="text-amber-500"/> DISK</h3>
-            <div className="text-3xl font-bold text-white mt-1">{sys?.disk.percent.toFixed(0) ?? 0}%</div>
-            <div className="text-xs text-slate-500 mt-1">{formatBytes(sys?.disk.used ?? 0)} Used</div>
-          </div>
-          {viewMode === 'bars' ? (
-            <div className="mt-auto">
-               <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2">
-                 <div className="bg-amber-500 h-full rounded-full transition-all duration-500" style={{ width: `${sys?.disk.percent ?? 0}%` }}></div>
-               </div>
-               <div className="flex justify-between text-[10px] text-slate-500 font-medium uppercase tracking-wider"><span>Used</span><span>Free</span></div>
-            </div>
-          ) : (
-            <MiniSysChart data={sysHistory} dataKey="disk" colorHex="#f59e0b" colorId="amber" />
-          )}
-        </div>
+        <MetricCard
+          title="DISK"
+          Icon={HardDrive}
+          progressBgClass="text-amber-500"
+          percent={sys?.disk.percent ?? 0}
+          mainValue={`${sys?.disk.percent.toFixed(0) ?? 0}%`}
+          subtitle={`${formatBytes(sys?.disk.used ?? 0)} Used`}
+          dataKey="disk"
+          colorHex="#f59e0b"
+          colorId="amber"
+          viewMode={viewMode}
+          sysHistory={sysHistory}
+        />
+
+        <MetricCard
+          title="NETWORK"
+          Icon={Activity}
+          progressBgClass="text-violet-500"
+          percent={networkUsagePercent} 
+          mainValue={`${networkUsagePercent > 0 ? networkUsagePercent.toFixed(0) : 0}%`}
+          subtitle={`↓ ${formatBytes(sys?.network?.total_rx ?? 0)}/s • ↑ ${formatBytes(sys?.network?.total_tx ?? 0)}/s`}
+          dataKey="network"
+          colorHex="#8b5cf6"
+          colorId="violet"
+          viewMode={viewMode}
+          sysHistory={sysHistory}
+        />
       </div>
 
       {/* SERVICES SECTION */}

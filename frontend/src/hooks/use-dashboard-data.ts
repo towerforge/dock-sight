@@ -12,42 +12,64 @@ export function useDashboardData(refreshInterval: number) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    Promise.all([apiSysInfo(), apiDockerService()])
-      .then(([sysData, dockData]) => {
-        setSys(sysData);
-        setDock(dockData);
+    let mounted = true;
+    (async () => {
+      try {
+        const results = await Promise.allSettled([apiSysInfo(), apiDockerService()]);
         const now = Date.now();
 
-        // 1. Update global history
-        setSysHistory(prev => {
-          const newPoint: SysHistoryPoint = {
-            time: now,
-            cpu: sysData.cpu.percent,
-            ram: sysData.ram.percent,
-            disk: sysData.disk.percent
-          };
-          const newArr = [...prev, newPoint];
-          if (newArr.length > 60) newArr.shift();
-          return newArr;
-        });
+        const sysResult = results[0];
+        const dockResult = results[1];
 
-        // 2. Update services history
-        setServiceHistory(prev => {
-          const next = { ...prev };
-          dockData.forEach((svc: DockerService) => {
-            if (!next[svc.name]) next[svc.name] = [];
-            const svcHistory = [...next[svc.name], { 
-              time: now, 
-              cpu: svc.info.cpu.percent, 
-              ramPercent: svc.info.ram.percent 
-            }];
-            if (svcHistory.length > 50) svcHistory.shift();
-            next[svc.name] = svcHistory;
-          });
-          return next;
-        });
-      })
-      .catch((err) => console.error("Error metrics:", err));
+        if (sysResult.status === 'fulfilled') {
+          const sysData = sysResult.value;
+          if (mounted) {
+            setSys(sysData);
+            setSysHistory(prev => {
+              const newPoint: SysHistoryPoint = {
+                time: now,
+                cpu: sysData.cpu.percent,
+                ram: sysData.ram.percent,
+                disk: sysData.disk.percent,
+                networkRx: sysData.network?.total_rx ?? 0,
+                networkTx: sysData.network?.total_tx ?? 0
+              };
+              const newArr = [...prev, newPoint];
+              if (newArr.length > 60) newArr.shift();
+              return newArr;
+            });
+          }
+        } else {
+          console.error('Error fetching sys info:', sysResult.reason);
+        }
+
+        if (dockResult.status === 'fulfilled') {
+          const dockData = dockResult.value;
+          if (mounted) {
+            setDock(dockData);
+            setServiceHistory(prev => {
+              const next = { ...prev };
+              dockData.forEach((svc: DockerService) => {
+                if (!next[svc.name]) next[svc.name] = [];
+                const svcHistory = [...next[svc.name], {
+                  time: now,
+                  cpu: svc.info.cpu.percent,
+                  ramPercent: svc.info.ram.percent
+                }];
+                if (svcHistory.length > 50) svcHistory.shift();
+                next[svc.name] = svcHistory;
+              });
+              return next;
+            });
+          }
+        } else {
+          console.error('Error fetching docker services:', dockResult.reason);
+        }
+      } catch (err) {
+        console.error('Unexpected error metrics:', err);
+      }
+    })();
+    return () => { mounted = false; };
   }, [tick]);
 
   // Interval management

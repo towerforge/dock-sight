@@ -4,15 +4,16 @@ import defaultTheme from "tailwindcss/defaultTheme";
 export default {
   content: [
     './src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}',
-    // ⚠️ ESTA LÍNEA ES OBLIGATORIA PARA TREMOR:
     './node_modules/@tremor/**/*.{js,ts,jsx,tsx}',
   ],
+  safelist: [
+    {
+      pattern: /^(bg|text|border|ring)-(violet|purple|blue|emerald|amber)-500$/,
+    },
+  ],
   theme: {
-    transparent: "transparent",
-    current: "currentColor",
     extend: {
       colors: {
-        // Colores obligatorios para Tremor
         tremor: {
           brand: {
             faint: "#eff6ff",
@@ -38,7 +39,6 @@ export default {
             inverted: "#ffffff",
           },
         },
-        // Modo oscuro (Dark mode)
         "dark-tremor": {
           brand: {
             faint: "#0B1229",
@@ -67,6 +67,6 @@ export default {
       },
     },
   },
-  plugins: [require('@tailwindcss/forms')], // Plugin necesario
-  darkMode: "class", // O 'media' si prefieres que siga al sistema
+  plugins: [require('@tailwindcss/forms')],
+  darkMode: "class",
 }

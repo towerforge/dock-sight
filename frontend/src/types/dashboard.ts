@@ -2,6 +2,7 @@ export interface SystemStats {
   cpu: { percent: number; total: number };
   ram: { percent: number; total: number; used: number; free: number };
   disk: { percent: number; total: number; used: number; free: number };
+  network: { total_rx: number; total_tx: number; max_limit: number };
 }
 
 export interface DockerService {
@@ -19,6 +20,8 @@ export interface SysHistoryPoint {
   cpu: number;
   ram: number;
   disk: number;
+  networkRx?: number;
+  networkTx?: number;
 }
 
 // For the services chart (Docker)
