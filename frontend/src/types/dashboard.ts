@@ -1,5 +1,5 @@
 export interface SystemStats {
-  cpu: { percent: number; total: number };
+  cpu: { percent: number; total: number, active: number };
   ram: { percent: number; total: number; used: number; free: number };
   disk: { percent: number; total: number; used: number; free: number };
   network: { total_rx: number; total_tx: number; max_limit: number };

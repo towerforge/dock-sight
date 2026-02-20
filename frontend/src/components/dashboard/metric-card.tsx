@@ -28,6 +28,7 @@ export default function MetricCard({
   colorId: string;
   viewMode: 'bars' | 'chart';
   sysHistory: any;
+  pointCount?: number;
 }) {
   const fill = progressBgClass.replace('text-', 'bg-');
   const labels = ['0%', '50%', '100%'];
