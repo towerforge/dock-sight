@@ -1,0 +1,10 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Dashboard from '@/components/dashboard/dashboard';
+---
+
+<Layout title="Dock Sight">
+  <main class="bg-slate-950 min-h-screen p-8 text-slate-200 font-sans">
+    <Dashboard client:only="react" />
+  </main>
+</Layout>
