@@ -7,6 +7,7 @@ import { ServiceBar } from '@/components/dashboard/service-bar';
 import { TimeSelector } from '@/components/dashboard/time-selector';
 import MetricCard from '@/components/dashboard/metric-card';
 import { PointCountSelector } from '@/components/dashboard/point-count-selector';
+import { APP_VERSION } from '@/generated/version';
 
 export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,7 +40,9 @@ export default function Dashboard() {
       {/* HEADER */}
       <div className="mb-8 flex flex-col sm:flex-row justify-between items-end gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Dock Sight</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            Dock Sight <span className="text-sm text-slate-400 align-middle">v{APP_VERSION}</span>
+          </h1>
           <p className="text-slate-400">Real-time control panel</p>
         </div>
         
