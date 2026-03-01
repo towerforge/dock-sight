@@ -1,51 +1,67 @@
 SHELL := /bin/bash
 
 PORT ?= 8080
+
+APP_NAME ?= dock-sight
+
+BACKEND_DIR := backend
+FRONTEND_DIR := frontend
+
+BACKEND_BIN := $(BACKEND_DIR)/target/release/backend
+
+DIST_DIR ?= dist
+
 ARTIFACT ?= dock-sight-linux-x86_64.tar.gz
-BACKEND_BIN := backend/target/release/backend
-VERSION ?= $(shell sed -n 's/^version = "\(.*\)"/\1/p' backend/Cargo.toml | head -n1)
+
+VERSION ?= $(shell sed -n 's/^version = "\(.*\)"/\1/p' $(BACKEND_DIR)/Cargo.toml | head -n1)
 VERSION_TAG ?= v$(VERSION)
+
 ARTIFACT_VERSIONED := dock-sight-linux-x86_64-$(VERSION_TAG).tar.gz
 
-.PHONY: help version dev-backend watch-backend dev-frontend build-frontend build-backend build run release package clean
+ENABLE_LATEST_ASSET ?= 0
+
+.PHONY: help version dev-backend watch-backend dev-frontend build-frontend build-backend build run release package clean dist-clean
 
 help:
-	@echo "Dock Sight Make targets"
+	@echo "Dock Sight available targets"
 	@echo ""
-	@echo "  make version          Print detected app version from backend/Cargo.toml"
-	@echo "  make dev-backend      Run backend in dev mode (--dev)"
-	@echo "  make watch-backend    Run backend with cargo-watch in dev mode"
-	@echo "  make dev-frontend     Run Astro frontend dev server"
-	@echo "  make build-frontend   Build frontend (frontend/dist)"
-	@echo "  make build-backend    Build backend release binary"
-	@echo "  make build            Build frontend + backend release binary"
-	@echo "  make run              Run release binary on PORT (default 8080)"
-	@echo "  make release          Alias of 'make build'"
-	@echo "  make package          Build + create release artifact tar.gz"
-	@echo "  make clean            Remove backend build artifacts"
+	@echo "  make version              Print detected version"
+	@echo "  make dev-backend          Run backend in development mode"
+	@echo "  make watch-backend        Run backend with cargo-watch"
+	@echo "  make dev-frontend         Run frontend development server"
+	@echo "  make build-frontend       Build frontend for production"
+	@echo "  make build-backend        Build backend release binary"
+	@echo "  make build                Build frontend and backend"
+	@echo "  make run                  Run backend release binary"
+	@echo "  make release              Alias for 'make build'"
+	@echo "  make package              Build and create release artifact"
+	@echo "  make clean                Clean backend build artifacts"
+	@echo "  make dist-clean           Remove packaged artifacts"
 	@echo ""
 	@echo "Variables:"
-	@echo "  PORT=<port>           Runtime port for 'make run' (default: 8080)"
-	@echo "  VERSION=<x.y.z>       Override version (default: read from backend/Cargo.toml)"
-	@echo "  ARTIFACT=<name>       Stable artifact filename for latest download"
+	@echo "  PORT=<port>               Runtime port (default: 8080)"
+	@echo "  VERSION=<x.y.z>           Override detected version"
+	@echo "  DIST_DIR=<dir>            Output directory (default: dist)"
+	@echo "  ENABLE_LATEST_ASSET=1     Also create unversioned artifact"
+	@echo "  ARTIFACT=<name>           Unversioned artifact filename"
 
 version:
 	@echo $(VERSION)
 
 dev-backend:
-	cargo run --manifest-path backend/Cargo.toml -- --dev --port $(PORT)
+	cargo run --manifest-path $(BACKEND_DIR)/Cargo.toml -- --dev --port $(PORT)
 
 watch-backend:
-	cargo watch --manifest-path backend/Cargo.toml -x "run -- --dev --port $(PORT)"
+	cargo watch --manifest-path $(BACKEND_DIR)/Cargo.toml -x "run -- --dev --port $(PORT)"
 
 dev-frontend:
-	cd frontend && pnpm dev
+	cd $(FRONTEND_DIR) && pnpm dev
 
 build-frontend:
-	cd frontend && pnpm install && pnpm build
+	cd $(FRONTEND_DIR) && pnpm install && pnpm build
 
 build-backend:
-	cargo build --manifest-path backend/Cargo.toml --release
+	cargo build --manifest-path $(BACKEND_DIR)/Cargo.toml --release
 
 build: build-frontend build-backend
 
@@ -55,15 +71,22 @@ run:
 	./$(BACKEND_BIN) --port $(PORT)
 
 package: build
-	mkdir -p releases/latest/download
-	cp backend/target/release/backend releases/latest/download/dock-sight
-	chmod +x releases/latest/download/dock-sight
-	tar -czf releases/latest/download/$(ARTIFACT_VERSIONED) -C releases/latest/download dock-sight
-	tar -czf releases/latest/download/$(ARTIFACT) -C releases/latest/download dock-sight
-	rm -f releases/latest/download/dock-sight
-	@echo "Detected version: $(VERSION_TAG)"
-	@echo "Created artifact: releases/latest/download/$(ARTIFACT_VERSIONED)"
-	@echo "Created artifact: releases/latest/download/$(ARTIFACT)"
+	@if [ ! -f "$(BACKEND_BIN)" ]; then \
+		echo "ERROR: backend binary not found"; \
+		exit 1; \
+	fi
+	@mkdir -p $(DIST_DIR)
+	@cp "$(BACKEND_BIN)" "$(DIST_DIR)/$(APP_NAME)"
+	@chmod +x "$(DIST_DIR)/$(APP_NAME)"
+	@tar -czf "$(DIST_DIR)/$(ARTIFACT_VERSIONED)" -C "$(DIST_DIR)" "$(APP_NAME)"
+	@if [ "$(ENABLE_LATEST_ASSET)" = "1" ]; then \
+		cp "$(DIST_DIR)/$(ARTIFACT_VERSIONED)" "$(DIST_DIR)/$(ARTIFACT)"; \
+	fi
+	@rm -f "$(DIST_DIR)/$(APP_NAME)"
+	@echo "$(DIST_DIR)/$(ARTIFACT_VERSIONED)"
 
 clean:
-	cargo clean --manifest-path backend/Cargo.toml
+	cargo clean --manifest-path $(BACKEND_DIR)/Cargo.toml
+
+dist-clean:
+	rm -rf "$(DIST_DIR)"

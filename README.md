@@ -7,20 +7,20 @@ Lightweight infrastructure dashboard for host metrics and Docker services.
 1) Download the latest release artifact:
 
 ```bash
-curl -L -o dock-sight-linux-x86_64.tar.gz \
-https://github.com/towerforge/dock-sight/releases/latest/download/dock-sight-linux-x86_64.tar.gz
+curl -fL -o dock-sight-linux-x86_64-v0.1.2.tar.gz \
+https://github.com/towerforge/dock-sight/releases/download/v0.1.2/dock-sight-linux-x86_64-v0.1.2.tar.gz
 ```
 
 2) Extract the package:
 
 ```bash
-tar -xzf dock-sight-linux-x86_64.tar.gz
+tar -xzf dock-sight-linux-x86_64-v0.1.2.tar.gz
 ```
 
 3) Ensure the binary is executable:
 
 ```bash
-chmod +x ./dock-sight
+chmod +x dock-sight
 ```
 
 4) Run Dock Sight on port `8080`:
@@ -34,7 +34,7 @@ Open `http://localhost:8080`.
 ## Requirements
 
 - Linux `x86_64` (or matching artifact architecture)
-- Docker Engine running (required for `/docker-service`)
+- Docker Engine running (required for Docker service views)
 
 ## Makefile Workflow
 
@@ -47,8 +47,7 @@ make package
 ```
 
 `make package` now creates:
-- `dock-sight-linux-x86_64.tar.gz` (stable name for `latest` downloads)
-- `dock-sight-linux-x86_64-vX.Y.Z.tar.gz` (versioned, from `backend/Cargo.toml`)
+- `dist/dock-sight-linux-x86_64-vX.Y.Z.tar.gz` (versioned, from `backend/Cargo.toml`)
 
 ## Docker Service Grouping
 
@@ -62,3 +61,4 @@ If missing, they are grouped as `standalone`.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
