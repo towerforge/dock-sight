@@ -1,64 +1,89 @@
 # Dock Sight
 
-Lightweight infrastructure dashboard for host metrics and Docker services.
+Dock Sight is a lightweight infrastructure dashboard for:
 
-## Quick Start (Linux Server)
+- Host metrics (CPU, RAM, disk, network)
+- Docker services and container status
+- Fast local access from your browser
 
-1) Download the latest release artifact:
+## Why Dock Sight
 
-```bash
-curl -fL -o dock-sight-linux-x86_64-v0.1.2.tar.gz \
-https://github.com/towerforge/dock-sight/releases/download/v0.1.2/dock-sight-linux-x86_64-v0.1.2.tar.gz
-```
-
-2) Extract the package:
-
-```bash
-tar -xzf dock-sight-linux-x86_64-v0.1.2.tar.gz
-```
-
-3) Ensure the binary is executable:
-
-```bash
-chmod +x dock-sight
-```
-
-4) Run Dock Sight on port `8080`:
-
-```bash
-./dock-sight --port 8080
-```
-
-Open `http://localhost:8080`.
+- Single binary deployment
+- No complex setup
+- Works well on servers and local machines
 
 ## Requirements
 
-- Linux `x86_64` (or matching artifact architecture)
 - Docker Engine running (required for Docker service views)
+- One of the supported operating systems:
+  - Linux (`x86_64`)
+  - macOS Intel
+  - macOS Apple Silicon (M1/M2/M3/M4)
 
-## Makefile Workflow
+## Installation
 
-```bash
-make help
-make version
-make build
-make run PORT=8080
-make package
+### 1) Choose your package
+
+Use the package that matches your OS and CPU:
+
+| System | Package name |
+|---|---|
+| Linux x86_64 | `dock-sight-linux-x86_64.tar.gz` |
+| Linux ARM64 | `dock-sight-linux-aarch64.tar.gz` |
+| Linux ARMv7 | `dock-sight-linux-armv7.tar.gz` |
+| Linux x86 (32-bit) | `dock-sight-linux-i686.tar.gz` |
+| macOS Intel | `dock-sight-macos-x86_64.tar.gz` |
+| macOS Apple Silicon | `dock-sight-macos-aarch64.tar.gz` |
+
+Release URL pattern:
+
+```text
+https://github.com/towerforge/dock-sight/releases/download/v0.1.3/<package-name>
 ```
 
-`make package` now creates:
-- `dist/dock-sight-linux-x86_64-vX.Y.Z.tar.gz` (versioned, from `backend/Cargo.toml`)
+### 2) Download
+
+Linux server (x86_64) example:
+
+```bash
+curl -fL -o dock-sight.tar.gz \
+https://github.com/towerforge/dock-sight/releases/download/v0.1.3/dock-sight-linux-x86_64.tar.gz
+```
+
+macOS Apple Silicon example:
+
+```bash
+curl -fL -o dock-sight.tar.gz \
+https://github.com/towerforge/dock-sight/releases/download/v0.1.3/dock-sight-macos-aarch64.tar.gz
+```
+
+### 3) Extract and run
+
+```bash
+tar -xzf dock-sight.tar.gz
+chmod +x dock-sight
+./dock-sight --port 8080
+```
+
+Open:
+
+```text
+http://localhost:8080
+```
+
+## Optional: systemd (Linux)
+
+Use this in your service unit:
+
+```text
+ExecStart=/opt/dock-sight/dock-sight --port 8080
+```
 
 ## Docker Service Grouping
 
 Containers are grouped by label `com.docker.swarm.service.name`.
 If missing, they are grouped as `standalone`.
 
-## systemd (optional)
-
-`ExecStart=/opt/dock-sight/dock-sight --port 8080`
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
