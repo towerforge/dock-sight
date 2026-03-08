@@ -28,17 +28,14 @@ Use the package that matches your OS and CPU:
 
 | System | Package name |
 |---|---|
-| Linux x86_64 | `dock-sight-linux-x86_64.tar.gz` |
 | Linux ARM64 | `dock-sight-linux-aarch64.tar.gz` |
-| Linux ARMv7 | `dock-sight-linux-armv7.tar.gz` |
-| Linux x86 (32-bit) | `dock-sight-linux-i686.tar.gz` |
 | macOS Intel | `dock-sight-macos-x86_64.tar.gz` |
 | macOS Apple Silicon | `dock-sight-macos-aarch64.tar.gz` |
 
 Release URL pattern:
 
 ```text
-https://github.com/towerforge/dock-sight/releases/download/v0.1.3/<package-name>
+https://github.com/towerforge/dock-sight/releases/download/v0.1.4/<package-name>
 ```
 
 ### 2) Download
@@ -47,14 +44,14 @@ Linux server (x86_64) example:
 
 ```bash
 curl -fL -o dock-sight.tar.gz \
-https://github.com/towerforge/dock-sight/releases/download/v0.1.3/dock-sight-linux-x86_64.tar.gz
+https://github.com/towerforge/dock-sight/releases/download/v0.1.4/dock-sight-linux-x86_64.tar.gz
 ```
 
 macOS Apple Silicon example:
 
 ```bash
 curl -fL -o dock-sight.tar.gz \
-https://github.com/towerforge/dock-sight/releases/download/v0.1.3/dock-sight-macos-aarch64.tar.gz
+https://github.com/towerforge/dock-sight/releases/download/v0.1.4/dock-sight-macos-aarch64.tar.gz
 ```
 
 ### 3) Extract and run
