@@ -16,7 +16,7 @@ Dock Sight is a lightweight infrastructure dashboard for:
 
 - Docker Engine running (required for Docker service views)
 - One of the supported operating systems:
-  - Linux (`x86_64`)
+  - Linux (`ARM64`)
   - macOS Intel
   - macOS Apple Silicon (M1/M2/M3/M4)
 
@@ -40,11 +40,11 @@ https://github.com/towerforge/dock-sight/releases/download/v0.1.4/<package-name>
 
 ### 2) Download
 
-Linux server (x86_64) example:
+Linux server (ARM64) example:
 
 ```bash
 curl -fL -o dock-sight.tar.gz \
-https://github.com/towerforge/dock-sight/releases/download/v0.1.4/dock-sight-linux-x86_64.tar.gz
+https://github.com/towerforge/dock-sight/releases/download/v0.1.4/dock-sight-linux-aarch64.tar.gz
 ```
 
 macOS Apple Silicon example:
