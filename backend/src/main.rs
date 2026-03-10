@@ -12,10 +12,8 @@ pub mod openapi;
 #[folder = "../frontend/dist/"]
 struct Assets;
 
-const APP_NAME: &str = "dock-sight";
-
 #[derive(Parser)]
-#[command(name = "dock-sight", about = "dock-sight — Monitor Docker services and system metrics")]
+#[command(name = "Dock Sight", about = "Dock Sight — Monitor Docker services and system metrics")]
 struct Args {
     #[arg(short, long, default_value = "8080")]
     port: u16,
@@ -31,19 +29,32 @@ async fn main() {
     let app = routes::create_router(args.dev);
     let addr = SocketAddr::from_str(&format!("0.0.0.0:{}", args.port)).unwrap();
 
-    let mode_text = if args.dev {
+    let mode_label = if args.dev {
         "\x1b[33mDEV\x1b[0m"
     } else {
         "\x1b[32mPROD\x1b[0m"
     };
 
-    println!(
-        "🚀 {} active at http://{} → mode: {}",
-        APP_NAME,
-        addr,
-        mode_text
-    );
+    println!("");
+    println!("  \x1b[1mDock Sight\x1b[0m — Docker services & system metrics dashboard");
+    println!("");
+    println!("  Monitors your host (CPU, RAM, disk, network) and Docker");
+    println!("  containers in real time, accessible from any browser.");
+    println!("");
+    println!("  \x1b[1mOpen\x1b[0m  →  \x1b[36mhttp://localhost:{}\x1b[0m", args.port);
+    println!("  Mode  →  {}", mode_label);
+    println!("");
 
-    let listener = TcpListener::bind(addr).await.unwrap();
+    let listener = TcpListener::bind(addr).await.unwrap_or_else(|_| {
+        eprintln!("");
+        eprintln!("  \x1b[31m✖ Port {} is already in use.\x1b[0m", args.port);
+        eprintln!("");
+        eprintln!("  Another process is listening on that port.");
+        eprintln!("  Try a different port:");
+        eprintln!("");
+        eprintln!("    dock-sight --port 9090");
+        eprintln!("");
+        std::process::exit(1);
+    });
     axum::serve(listener, app).await.unwrap();
 }

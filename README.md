@@ -16,7 +16,7 @@ Dock Sight is a lightweight infrastructure dashboard for:
 
 - Docker Engine running (required for Docker service views)
 - One of the supported operating systems:
-  - Linux (`ARM64`)
+  - Linux x86_64, ARM64, ARMv7, i686
   - macOS Intel
   - macOS Apple Silicon (M1/M2/M3/M4)
 
@@ -24,34 +24,35 @@ Dock Sight is a lightweight infrastructure dashboard for:
 
 ### 1) Choose your package
 
-Use the package that matches your OS and CPU:
-
 | System | Package name |
 |---|---|
+| Linux x86_64 | `dock-sight-linux-x86_64.tar.gz` |
 | Linux ARM64 | `dock-sight-linux-aarch64.tar.gz` |
+| Linux ARMv7 | `dock-sight-linux-armv7.tar.gz` |
+| Linux i686 | `dock-sight-linux-i686.tar.gz` |
 | macOS Intel | `dock-sight-macos-x86_64.tar.gz` |
 | macOS Apple Silicon | `dock-sight-macos-aarch64.tar.gz` |
 
 Release URL pattern:
 
 ```text
-https://github.com/towerforge/dock-sight/releases/download/v0.1.4/<package-name>
+https://github.com/towerforge/dock-sight/releases/download/v0.1.5/<package-name>
 ```
 
 ### 2) Download
 
-Linux server (ARM64) example:
+Linux x86_64 example:
 
 ```bash
 curl -fL -o dock-sight.tar.gz \
-https://github.com/towerforge/dock-sight/releases/download/v0.1.4/dock-sight-linux-aarch64.tar.gz
+https://github.com/towerforge/dock-sight/releases/download/v0.1.5/dock-sight-linux-x86_64.tar.gz
 ```
 
 macOS Apple Silicon example:
 
 ```bash
 curl -fL -o dock-sight.tar.gz \
-https://github.com/towerforge/dock-sight/releases/download/v0.1.4/dock-sight-macos-aarch64.tar.gz
+https://github.com/towerforge/dock-sight/releases/download/v0.1.5/dock-sight-macos-aarch64.tar.gz
 ```
 
 ### 3) Extract and run
@@ -69,8 +70,6 @@ http://localhost:8080
 ```
 
 ## Optional: systemd (Linux)
-
-Use this in your service unit:
 
 ```text
 ExecStart=/opt/dock-sight/dock-sight --port 8080
