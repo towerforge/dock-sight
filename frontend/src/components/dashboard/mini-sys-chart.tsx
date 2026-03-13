@@ -44,7 +44,7 @@ export const MiniSysChart: React.FC<Props> = ({ data, dataKey, colorHex, colorId
           <XAxis dataKey="time" domain={["dataMin", "dataMax"]} type="number" hide />
           <YAxis domain={isNetwork ? [null, null] : [0, 'auto']} hide />
           <Tooltip 
-              contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#f8fafc', fontSize: '12px', borderRadius: '6px' }}
+              contentStyle={{ backgroundColor: '#15191f', borderColor: '#2a2e35', color: '#f8fafc', fontSize: '12px', borderRadius: '6px' }}
               itemStyle={(value) => ({ color: Array.isArray(value) ? colorHex : colorHex }) as any}
               labelStyle={{ color: '#94a3b8', marginBottom: '4px', fontSize: '11px', fontWeight: 600 }}
               labelFormatter={(value) => formatTooltipTime(value)}
@@ -65,7 +65,7 @@ export const MiniSysChart: React.FC<Props> = ({ data, dataKey, colorHex, colorId
                 strokeWidth={2}
                 fill={`url(#grad-${colorId})`}
                 isAnimationActive={false}
-                dot={{ r: 2.5, fill: '#1e293b', stroke: secondColor(colorHex), strokeWidth: 2, fillOpacity: 1 }}
+                dot={{ r: 2.5, fill: '#15191f', stroke: secondColor(colorHex), strokeWidth: 2, fillOpacity: 1 }}
                 activeDot={{ r: 6, fill: secondColor(colorHex), stroke: '#fff', strokeWidth: 2 }}
               />
               <Area
@@ -76,7 +76,7 @@ export const MiniSysChart: React.FC<Props> = ({ data, dataKey, colorHex, colorId
                 strokeWidth={2}
                 fill={`url(#grad-${colorId}-tx)`}
                 isAnimationActive={false}
-                dot={{ r: 2.5, fill: '#1e293b', stroke: colorHex, strokeWidth: 2, fillOpacity: 1 }}
+                dot={{ r: 2.5, fill: '#15191f', stroke: colorHex, strokeWidth: 2, fillOpacity: 1 }}
                 activeDot={{ r: 6, fill: colorHex, stroke: '#fff', strokeWidth: 2 }}
               />
             </>
@@ -88,7 +88,7 @@ export const MiniSysChart: React.FC<Props> = ({ data, dataKey, colorHex, colorId
               strokeWidth={3} 
               fill={`url(#grad-${colorId})`} 
               isAnimationActive={false}
-              dot={{ r: 2.5, fill: '#1e293b', stroke: colorHex, strokeWidth: 2, fillOpacity: 1 }}
+              dot={{ r: 2.5, fill: '#15191f', stroke: colorHex, strokeWidth: 2, fillOpacity: 1 }}
               activeDot={{ r: 6, fill: colorHex, stroke: '#fff', strokeWidth: 2 }}
             />
           )}

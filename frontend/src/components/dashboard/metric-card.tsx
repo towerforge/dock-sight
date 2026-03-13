@@ -33,7 +33,7 @@ export default function MetricCard({
   const fill = progressBgClass.replace('text-', 'bg-');
   const labels = ['0%', '50%', '100%'];
   return (
-    <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm flex flex-col justify-between h-40 relative overflow-hidden">
+    <div className="p-3 rounded-2xl bg-card-bg border border-card-border shadow-sm flex flex-col justify-between h-40 relative overflow-hidden">
       <div>
         <h3 className="text-slate-400 font-medium text-sm flex items-center gap-2">
           <Icon size={16} className={progressBgClass} />{title}
@@ -44,7 +44,7 @@ export default function MetricCard({
 
       {viewMode === 'bars' ? (
         <div className="mt-auto">
-          <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2">
+          <div className="w-full bg-card-border h-2 rounded-full overflow-hidden mb-2">
             <div className={`${fill} h-full rounded-full transition-all duration-500`} style={{ width: `${percent}%` }} />
           </div>
           <div className="flex justify-between text-[10px] text-slate-500 font-medium uppercase tracking-wider">

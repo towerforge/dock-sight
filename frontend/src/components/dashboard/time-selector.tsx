@@ -28,7 +28,7 @@ export const TimeSelector: React.FC<Props> = ({ value, onChange }) => {
     <div className="relative z-50">
       <button 
         onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-        className="flex items-center justify-between gap-2 bg-slate-900 border border-slate-800 text-slate-300 text-sm font-medium px-3 py-2 rounded-lg shadow-sm h-[38px] hover:bg-slate-800/50 transition-colors w-24"
+        className="flex items-center justify-between gap-2 bg-card-bg border border-card-border text-slate-300 text-sm font-medium px-3 py-2 rounded-lg shadow-sm h-[38px] hover:bg-card-border/50 transition-colors w-24"
       >
         <div className="flex items-center gap-2">
           <Clock size={14} className="text-slate-500" />
@@ -38,7 +38,7 @@ export const TimeSelector: React.FC<Props> = ({ value, onChange }) => {
       </button>
       
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-32 bg-slate-900 border border-slate-800 rounded-lg shadow-xl overflow-hidden py-1">
+        <div className="absolute top-full right-0 mt-2 w-32 bg-card-bg border border-card-border rounded-lg shadow-xl overflow-hidden py-1">
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -46,7 +46,7 @@ export const TimeSelector: React.FC<Props> = ({ value, onChange }) => {
               className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between ${
                 value === opt.value 
                   ? 'bg-blue-500/10 text-blue-400 font-medium' 
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                  : 'text-slate-400 hover:bg-card-border hover:text-slate-200'
               }`}
             >
               {opt.label}

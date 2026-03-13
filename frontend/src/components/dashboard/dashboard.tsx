@@ -50,11 +50,11 @@ export default function Dashboard() {
           <TimeSelector value={refreshInterval} onChange={setRefreshInterval} />
           <PointCountSelector value={pointCount} onChange={setPointCount} />
 
-          <div className="bg-slate-900 p-1 rounded-lg border border-slate-800 flex shadow-sm h-[38px]">
-            <button onClick={() => setViewMode('bars')} className={`flex items-center gap-2 px-4 rounded-md text-sm font-medium transition-all ${viewMode === 'bars' ? 'bg-slate-800 text-white shadow-sm ring-1 ring-white/10' : 'text-slate-500 hover:text-slate-300'}`}>
+          <div className="bg-card-bg p-1 rounded-lg border border-card-border flex shadow-sm h-[38px]">
+            <button onClick={() => setViewMode('bars')} className={`flex items-center gap-2 px-4 rounded-md text-sm font-medium transition-all ${viewMode === 'bars' ? 'bg-card-border text-white shadow-sm ring-1 ring-white/10' : 'text-slate-500 hover:text-slate-300'}`}>
               <BarChart2 size={16} /> Table
             </button>
-            <button onClick={() => setViewMode('chart')} className={`flex items-center gap-2 px-4 rounded-md text-sm font-medium transition-all ${viewMode === 'chart' ? 'bg-slate-800 text-white shadow-sm ring-1 ring-white/10' : 'text-slate-500 hover:text-slate-300'}`}>
+            <button onClick={() => setViewMode('chart')} className={`flex items-center gap-2 px-4 rounded-md text-sm font-medium transition-all ${viewMode === 'chart' ? 'bg-card-border text-white shadow-sm ring-1 ring-white/10' : 'text-slate-500 hover:text-slate-300'}`}>
               <Activity size={16} /> Grid
             </button>
           </div>
@@ -125,18 +125,18 @@ export default function Dashboard() {
       </div>
 
       {/* SERVICES SECTION */}
-      <div className="rounded-2xl bg-slate-900/50 border border-slate-800/50 p-6">
+      <div className="rounded-2xl bg-card-bg border border-card-border p-6">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Server size={20} className="text-slate-400" />
             <span className="text-lg font-medium text-white">Docker Services</span>
-            <span className="bg-slate-800 text-slate-400 text-xs px-2 py-1 rounded-full">{filteredDocs.length}</span>
+            <span className="bg-card-border text-slate-400 text-xs px-2 py-1 rounded-full">{filteredDocs.length}</span>
           </div>
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-            <input 
+            <input
               type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-app-bg border border-card-border text-slate-200 text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
         </div>

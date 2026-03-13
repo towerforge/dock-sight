@@ -17,7 +17,7 @@ export const ServiceCard: React.FC<Props> = ({ service, historyData, pointCount 
   const limitedHistory = historyData.slice(-count);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col h-64 relative overflow-hidden group hover:border-slate-700 transition-colors">
+    <div className="bg-app-bg border border-card-border rounded-xl p-5 shadow-sm flex flex-col h-64 relative overflow-hidden group hover:border-slate-600 transition-colors">
       <div className="flex justify-between items-start mb-4 z-10">
         <div>
           <h3 className="text-white font-bold text-lg flex items-center gap-2 truncate">
@@ -52,11 +52,11 @@ export const ServiceCard: React.FC<Props> = ({ service, historyData, pointCount 
                 <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#2a2e35" vertical={false} />
             <XAxis dataKey="time" domain={['dataMin', 'dataMax']} type="number" hide />
             <YAxis hide domain={[0, 'auto']} />
             <Tooltip 
-              contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+              contentStyle={{ backgroundColor: '#15191f', borderColor: '#2a2e35', borderRadius: '8px', fontSize: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
               itemStyle={{ padding: 0, fontWeight: 500 }}
               labelStyle={{ color: '#94a3b8', marginBottom: '6px', fontSize: '11px', fontFamily: 'monospace' }}
               labelFormatter={(value) => formatTooltipTime(value)}
@@ -73,7 +73,7 @@ export const ServiceCard: React.FC<Props> = ({ service, historyData, pointCount 
               strokeWidth={2.5} 
               fill="url(#splitColorRam)" 
               isAnimationActive={false}
-              dot={{ r: 2, fill: '#1e293b', stroke: '#10b981', strokeWidth: 1.5 }}
+              dot={{ r: 2, fill: '#1f2329', stroke: '#10b981', strokeWidth: 1.5 }}
               activeDot={{ r: 5, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
             />
             
@@ -84,7 +84,7 @@ export const ServiceCard: React.FC<Props> = ({ service, historyData, pointCount 
               strokeWidth={2.5} 
               fill="url(#splitColorCpu)" 
               isAnimationActive={false}
-              dot={{ r: 2, fill: '#1e293b', stroke: '#3b82f6', strokeWidth: 1.5 }}
+              dot={{ r: 2, fill: '#1f2329', stroke: '#3b82f6', strokeWidth: 1.5 }}
               activeDot={{ r: 5, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
             />
           </AreaChart>
