@@ -52,7 +52,9 @@ CARGO_CMD ?= cargo
 
 LINUX_TARGETS ?= \
 	x86_64-unknown-linux-gnu \
+	x86_64-unknown-linux-musl \
 	aarch64-unknown-linux-gnu \
+	aarch64-unknown-linux-musl \
 	armv7-unknown-linux-gnueabihf \
 	i686-unknown-linux-gnu
 
@@ -70,7 +72,7 @@ MACOS_TARGETS ?= \
         package package-one \
         package-all package-all-linux package-all-macos \
         _package-linux-binaries _package-macos-binaries \
-        rust-targets clean dist-clean
+        checksums rust-targets clean dist-clean
 
 # ---------------------------------------------------------------------------
 # Help
@@ -100,6 +102,7 @@ help:
 	@echo "    make version                  Print the detected version"
 	@echo "    make rust-targets             List all targets used by package-all-*"
 	@echo "    make install-frontend         Install frontend dependencies"
+	@echo "    make checksums                Generate SHA256 checksums for dist artifacts"
 	@echo "    make clean                    Remove backend build artifacts"
 	@echo "    make dist-clean               Remove the dist directory"
 	@echo ""
@@ -185,10 +188,15 @@ _package-linux-binaries:
 	for target in $(LINUX_TARGETS); do \
 		echo "==> [linux] $$target (cross + Docker)"; \
 		$(MAKE) --no-print-directory build-backend CARGO_TARGET=$$target CARGO_CMD=cross; \
+		arch=$$(echo $$target | cut -d- -f1); \
+		case $$target in \
+			*-musl*) arch_label="$${arch}-musl" ;; \
+			*)       arch_label="$$arch" ;; \
+		esac; \
 		$(MAKE) --no-print-directory package-one \
 			CARGO_TARGET=$$target \
 			PLATFORM=linux \
-			ARTIFACT_ARCH=$$(echo $$target | cut -d- -f1); \
+			ARTIFACT_ARCH="$$arch_label"; \
 	done
 
 _package-macos-binaries:
@@ -206,6 +214,14 @@ _package-macos-binaries:
 # ---------------------------------------------------------------------------
 # Utilities
 # ---------------------------------------------------------------------------
+
+checksums:
+	@if [ ! -d "$(DIST_DIR)" ] || [ -z "$$(ls $(DIST_DIR)/*.tar.gz 2>/dev/null)" ]; then \
+		echo "ERROR: no .tar.gz files found in $(DIST_DIR)"; \
+		exit 1; \
+	fi
+	cd "$(DIST_DIR)" && sha256sum *.tar.gz > checksums.txt
+	@echo "$(DIST_DIR)/checksums.txt"
 
 rust-targets:
 	@for target in $(LINUX_TARGETS); do echo $$target; done
