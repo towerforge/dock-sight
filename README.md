@@ -6,6 +6,8 @@
 [![Repo size](https://img.shields.io/github/repo-size/towerforge/dock-sight?style=flat-square)](https://github.com/towerforge/dock-sight)
 [![License](https://img.shields.io/github/license/towerforge/dock-sight?style=flat-square)](LICENSE)
 
+![Demo](demo.gif)
+
 Dock Sight is a lightweight infrastructure dashboard for:
 
 - Host metrics (CPU, RAM, disk, network)

@@ -14,6 +14,9 @@ export default {
   theme: {
     extend: {
       colors: {
+        "app-bg": "#15191f",
+        "card-bg": "#1f2329",
+        "card-border": "#2a2e35",
         tremor: {
           brand: {
             faint: "#eff6ff",
@@ -24,7 +27,7 @@ export default {
             inverted: "#ffffff",
           },
           background: {
-            muted: "#f9fafb",
+            muted: "#1a1f15",
             subtle: "#f3f4f6",
             DEFAULT: "#ffffff",
             emphasis: "#374151",

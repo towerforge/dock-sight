@@ -20,7 +20,7 @@ export const ServiceBar: React.FC<Props> = ({ items }) => {
     <div className="w-full">
       <Table className="mt-0">
         <TableHead>
-          <TableRow className="border-b border-slate-800">
+          <TableRow className="border-b border-card-border">
             <TableHeaderCell className="text-slate-400 font-medium text-xs uppercase tracking-wider py-4">
               Name
             </TableHeaderCell>
@@ -41,7 +41,7 @@ export const ServiceBar: React.FC<Props> = ({ items }) => {
         
         <TableBody>
           {items.map((s) => (
-            <TableRow key={s.name} className="hover:bg-slate-800/30 transition-colors border-b border-slate-800/50 last:border-none">
+            <TableRow key={s.name} className="hover:bg-card-bg transition-colors border-b border-card-border/50 last:border-none">
               <TableCell className="py-3">
                 <Text className="font-medium text-white">
                   {s.name}
@@ -49,7 +49,7 @@ export const ServiceBar: React.FC<Props> = ({ items }) => {
               </TableCell>
               
               <TableCell className="text-center py-3">
-                <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-800 text-slate-300 text-xs font-bold">
+                <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-card-border text-slate-300 text-xs font-bold">
                   {s.containers}
                 </div>
               </TableCell>
