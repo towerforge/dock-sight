@@ -5,7 +5,11 @@
 #   curl -fsSL https://raw.githubusercontent.com/towerforge/dock-sight/main/install.sh | sh
 #
 # Env overrides:
+<<<<<<< HEAD
 #   DOCK_SIGHT_VERSION=0.1.8     install a specific version
+=======
+#   DOCK_SIGHT_VERSION=0.1.7     install a specific version
+>>>>>>> deed3a9e8a8c03ee0ebfa8e644cbb37956bdb620
 #   DOCK_SIGHT_INSTALL_DIR=/opt  install to a custom directory
 #   DOCK_SIGHT_VARIANT=musl      force musl binary on Linux (static, no glibc dep)
 #   DOCK_SIGHT_VARIANT=gnu       force glibc binary on Linux

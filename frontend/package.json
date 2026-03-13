@@ -1,7 +1,11 @@
 {
   "name": "frontend",
   "type": "module",
+<<<<<<< HEAD
   "version": "0.1.8",
+=======
+  "version": "0.1.7",
+>>>>>>> deed3a9e8a8c03ee0ebfa8e644cbb37956bdb620
   "engines": {
     "node": "24.x"
   },
