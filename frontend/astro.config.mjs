@@ -20,5 +20,12 @@ export default defineConfig({
         '@': `${__dirname}/src`,
       },
     },
+    server: {
+      proxy: {
+        '/sysinfo': 'http://localhost:8080',
+        '/docker-service': 'http://localhost:8080',
+        '/openapi.json': 'http://localhost:8080',
+      },
+    },
   },
 });
