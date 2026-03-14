@@ -3,6 +3,8 @@ use sysinfo::System;
 
 pub(crate) fn cpu_info(sys: &mut System) -> serde_json::Value {
 	sys.refresh_cpu_all();
+	std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
+	sys.refresh_cpu_all();
 	let cpus = sys.cpus();
 	let cpu_count = cpus.len();
 	let cpu_usage_percent = if cpu_count > 0 {
