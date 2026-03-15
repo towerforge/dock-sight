@@ -77,6 +77,37 @@ Options:
   -V, --version       Print version
 ```
 
+## Docker
+
+### docker run
+
+```bash
+docker run -d \
+  --name dock-sight \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  towerforge/dock-sight:latest
+```
+
+### docker-compose
+
+```yaml
+services:
+  dock-sight:
+    image: towerforge/dock-sight:latest
+    container_name: dock-sight
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+Open [http://localhost:8080](http://localhost:8080) in your browser.
+
+To use a different host port change `8080:8080` to e.g. `9090:8080`.
+
 ## Optional: systemd (Linux)
 
 ```ini
