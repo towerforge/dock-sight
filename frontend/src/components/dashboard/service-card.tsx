@@ -20,10 +20,10 @@ export const ServiceCard: React.FC<Props> = ({ service, historyData, pointCount 
     <div className="bg-app-bg border border-card-border rounded-xl p-5 shadow-sm flex flex-col h-64 relative overflow-hidden group hover:border-slate-600 transition-colors">
       <div className="flex justify-between items-start mb-4 z-10">
         <div>
-          <h3 className="text-white font-bold text-lg flex items-center gap-2 truncate">
-            <Box size={18} className="text-blue-500" />
+          <a href={`/service?name=${encodeURIComponent(service.name)}`} className="text-white hover:text-blue-400 transition-colors font-bold text-lg flex items-center gap-2 truncate">
+            <Box size={18} className="text-blue-500 shrink-0" />
             {service.name}
-          </h3>
+          </a>
           <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
             <span className="flex items-center gap-1">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> {service.containers} Cont.

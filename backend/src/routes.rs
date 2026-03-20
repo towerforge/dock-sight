@@ -11,6 +11,7 @@ use tower_http::cors::{CorsLayer, Any};
 use crate::routers::default::is_json_request;
 use crate::routers::sysinfo::sysinfo;
 use crate::routers::docker_services::services;
+use crate::routers::docker_service_detail::{service_info, service_images};
 use crate::openapi::ApiDoc; 
 use utoipa::OpenApi;
 use mime_guess;
@@ -22,6 +23,8 @@ pub fn create_router(dev_mode: bool) -> Router {
         .route("/default", get(is_json_request).options(|| async { StatusCode::OK }))
         .route("/sysinfo", get(sysinfo))
         .route("/docker-service", get(services))
+        .route("/docker-service/info", get(service_info))
+        .route("/docker-service/images", get(service_images))
         .route(
             "/openapi.json",
             get(|| async { axum::Json(ApiDoc::openapi()) })

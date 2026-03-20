@@ -35,7 +35,7 @@ export default function Dashboard() {
   const networkUsagePercent = Math.min((totalNetworkTraffic / networkHardwareLimit) * 100, 100);
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-0">
+    <div className="w-full">
       
       {/* HEADER */}
       <div className="mb-8 flex flex-col sm:flex-row justify-between items-end gap-4">

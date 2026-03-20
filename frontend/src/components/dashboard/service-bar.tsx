@@ -42,9 +42,9 @@ export const ServiceBar: React.FC<Props> = ({ items }) => {
           {items.map((s) => (
             <TableRow key={s.name} className="border-none transition-colors duration-150 hover:bg-white/5">
               <TableCell className="py-3">
-                <Text className="font-medium text-white">
+                <a href={`/service?name=${encodeURIComponent(s.name)}`} className="font-medium text-white hover:text-blue-400 transition-colors">
                   {s.name}
-                </Text>
+                </a>
               </TableCell>
 
               <TableCell className="text-center py-3">
