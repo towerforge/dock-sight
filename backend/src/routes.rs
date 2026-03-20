@@ -11,7 +11,7 @@ use tower_http::cors::{CorsLayer, Any};
 use crate::routers::default::is_json_request;
 use crate::routers::sysinfo::sysinfo;
 use crate::routers::docker_services::services;
-use crate::routers::docker_service_detail::{service_containers, service_images};
+use crate::routers::docker_service_detail::{service_containers, service_images, service_logs};
 use crate::routers::version::version;
 use crate::openapi::ApiDoc; 
 use utoipa::OpenApi;
@@ -26,6 +26,7 @@ pub fn create_router(dev_mode: bool) -> Router {
         .route("/docker-service", get(services))
         .route("/docker-service/containers", get(service_containers))
         .route("/docker-service/images", get(service_images))
+        .route("/docker-service/logs", get(service_logs))
         .route("/version", get(version))
         .route(
             "/openapi.json",

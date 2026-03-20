@@ -1,25 +1,33 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Box, Cpu, MemoryStick, Image } from 'lucide-react';
+import { ArrowLeft, Box, Cpu, MemoryStick, Image, ScrollText } from 'lucide-react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { formatBytes } from '@/lib/formatters';
 import type { ServiceHistoryPoint } from '@/types/dashboard';
 import { ServiceMetricCard } from './service-metric-card';
 import { InfoTab } from './containers-tab';
 import { ImagesTab } from './images-tab';
+import { LogsTab } from './logs-tab';
 import { HeaderControls } from '@/components/header-controls';
 
 const TABS = [
-  { id: 'info',   label: 'Containers', Icon: Box  },
-  { id: 'images', label: 'Images',       Icon: Image },
+  { id: 'info',   label: 'Containers', Icon: Box   },
+  { id: 'images', label: 'Images',     Icon: Image },
+  { id: 'logs',   label: 'Logs',       Icon: ScrollText },
 ] as const;
 
 const ServiceDetail: React.FC = () => {
   const params = new URLSearchParams(window.location.search);
   const serviceName = params.get('name') ?? '';
 
+  const validTabs = ['info', 'images', 'logs'] as const;
+  type TabId = typeof validTabs[number];
+  const initialTab = (validTabs as readonly string[]).includes(params.get('tab') ?? '')
+    ? (params.get('tab') as TabId)
+    : 'info';
+
   const [refreshInterval, setRefreshInterval] = useState(5000);
   const [pointCount, setPointCount] = useState(10);
-  const [activeTab, setActiveTab] = useState<'info' | 'images'>('info');
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
   const { dock, serviceHistory } = useDashboardData(refreshInterval);
@@ -96,7 +104,12 @@ const ServiceDetail: React.FC = () => {
           {TABS.map(({ id, label, Icon: TabIcon }) => (
             <button
               key={id}
-              onClick={() => setActiveTab(id)}
+              onClick={() => {
+                setActiveTab(id);
+                const p = new URLSearchParams(window.location.search);
+                p.set('tab', id);
+                window.history.replaceState(null, '', `?${p.toString()}`);
+              }}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-xl border transition-colors relative z-10 -mb-px ${
                 activeTab === id
                   ? 'bg-card-bg border-card-border border-b-[#1f2329] text-white'
@@ -110,6 +123,7 @@ const ServiceDetail: React.FC = () => {
         <div className="bg-card-bg border border-card-border rounded-b-xl rounded-tr-xl p-4 relative z-0 flex-1 overflow-y-auto">
           {activeTab === 'info'   && <InfoTab   serviceName={serviceName} />}
           {activeTab === 'images' && <ImagesTab serviceName={serviceName} />}
+          {activeTab === 'logs'   && <LogsTab   serviceName={serviceName} />}
         </div>
       </div>
 
