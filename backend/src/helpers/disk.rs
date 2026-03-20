@@ -1,31 +1,79 @@
 use serde_json::json;
+use std::collections::HashSet;
 use sysinfo::Disks;
+
+fn should_include_disk(d: &sysinfo::Disk) -> bool {
+	let mount = d.mount_point();
+	let fs = d.file_system().to_string_lossy().to_lowercase();
+
+	// Exclude virtual/pseudo filesystems (all platforms)
+	if matches!(
+		fs.as_str(),
+		"devfs" | "autofs" | "tmpfs" | "devtmpfs" | "sysfs" | "proc" | "procfs"
+			| "cgroup" | "cgroup2" | "pstore" | "debugfs" | "securityfs"
+			| "configfs" | "fusectl" | "hugetlbfs" | "mqueue" | "bpf" | "overlay"
+	) {
+		return false;
+	}
+
+	// On macOS only include the root volume and user-mounted external drives.
+	// All APFS internal volumes (/System/Volumes/*) share the container size
+	// and would cause double/triple counting.
+	#[cfg(target_os = "macos")]
+	{
+		return mount == std::path::Path::new("/")
+			|| mount.starts_with(std::path::Path::new("/Volumes/"));
+	}
+
+	#[cfg(not(target_os = "macos"))]
+	true
+}
 
 pub(crate) fn disk_info() -> serde_json::Value {
 	let disks = Disks::new_with_refreshed_list();
 
+	// Temporary debug: log all disks found by sysinfo before filtering
+	for d in disks.list() {
+		eprintln!(
+			"[disk debug] name={:?} mount={:?} fs={:?} total={}",
+			d.name(),
+			d.mount_point(),
+			d.file_system(),
+			d.total_space()
+		);
+	}
+
 	let mut total_disk_bytes: u64 = 0;
 	let mut available_disk_bytes: u64 = 0;
 	let mut disks_info: Vec<serde_json::Value> = Vec::new();
-	for d in disks.list() {
+
+	// Extra safety: deduplicate by device name in case two entries share the same device
+	let mut seen_names: HashSet<String> = HashSet::new();
+
+	for d in disks.list().iter().filter(|d| should_include_disk(d)) {
+		let name = d.name().to_string_lossy().to_string();
 		let total = d.total_space();
 		let available = d.available_space();
-		total_disk_bytes = total_disk_bytes.saturating_add(total);
-		available_disk_bytes = available_disk_bytes.saturating_add(available);
 		let used = total.saturating_sub(available);
 		let percent = if total > 0 {
 			(used as f64 / total as f64) * 100.0
 		} else {
 			0.0
 		};
-		disks_info.push(json!({
-			"name": d.name().to_string_lossy(),
-			"mount_point": d.mount_point().to_string_lossy(),
-			"total": total,
-			"available": available,
-			"used": used,
-			"percent": (percent * 10.0).round() / 10.0
-		}));
+
+		if seen_names.insert(name.clone()) {
+			total_disk_bytes = total_disk_bytes.saturating_add(total);
+			available_disk_bytes = available_disk_bytes.saturating_add(available);
+
+			disks_info.push(json!({
+				"name": name,
+				"mount_point": d.mount_point().to_string_lossy(),
+				"total": total,
+				"available": available,
+				"used": used,
+				"percent": (percent * 10.0).round() / 10.0
+			}));
+		}
 	}
 
 	let used_disk_bytes = total_disk_bytes.saturating_sub(available_disk_bytes);
