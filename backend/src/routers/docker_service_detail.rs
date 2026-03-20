@@ -14,7 +14,7 @@ pub struct ServiceQuery {
 
 // ── GET /docker-service/info?name=<service> ───────────────────────────────────
 
-pub async fn service_info(Query(q): Query<ServiceQuery>) -> impl IntoResponse {
+pub async fn service_containers(Query(q): Query<ServiceQuery>) -> impl IntoResponse {
     let docker = match Docker::connect_with_local_defaults() {
         Ok(d) => d,
         Err(e) => return error(e.to_string()),

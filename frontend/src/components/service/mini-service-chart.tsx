@@ -8,12 +8,15 @@ interface Props {
   dataKey: 'cpu' | 'ramPercent';
   colorHex: string;
   colorId: string;
+  pointCount?: number;
 }
 
-export const MiniServiceChart: React.FC<Props> = ({ data, dataKey, colorHex, colorId }) => (
+export const MiniServiceChart: React.FC<Props> = ({ data, dataKey, colorHex, colorId, pointCount }) => {
+  const limited = pointCount ? data.slice(-pointCount) : data;
+  return (
   <div className="h-24 w-full mt-auto relative">
     <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={data}>
+      <AreaChart data={limited}>
         <defs>
           <linearGradient id={`grad-svc-${colorId}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={colorHex} stopOpacity={0.2} />
@@ -41,4 +44,5 @@ export const MiniServiceChart: React.FC<Props> = ({ data, dataKey, colorHex, col
       </AreaChart>
     </ResponsiveContainer>
   </div>
-);
+  );
+};

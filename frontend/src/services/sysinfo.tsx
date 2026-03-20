@@ -11,8 +11,8 @@ export async function apiDockerService(): Promise<any> {
   return res.data;
 }
 
-export async function apiServiceInfo(name: string): Promise<any> {
-  const res = await axios.get('/docker-service/info', { params: { name } });
+export async function apiServiceContainers(name: string): Promise<any> {
+  const res = await axios.get('/docker-service/containers', { params: { name } });
   return res.data;
 }
 

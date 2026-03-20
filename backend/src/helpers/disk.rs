@@ -32,17 +32,6 @@ fn should_include_disk(d: &sysinfo::Disk) -> bool {
 pub(crate) fn disk_info() -> serde_json::Value {
 	let disks = Disks::new_with_refreshed_list();
 
-	// Temporary debug: log all disks found by sysinfo before filtering
-	for d in disks.list() {
-		eprintln!(
-			"[disk debug] name={:?} mount={:?} fs={:?} total={}",
-			d.name(),
-			d.mount_point(),
-			d.file_system(),
-			d.total_space()
-		);
-	}
-
 	let mut total_disk_bytes: u64 = 0;
 	let mut available_disk_bytes: u64 = 0;
 	let mut disks_info: Vec<serde_json::Value> = Vec::new();
