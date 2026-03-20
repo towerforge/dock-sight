@@ -10,3 +10,13 @@ export async function apiDockerService(): Promise<any> {
   const res = await axios.get('/docker-service');
   return res.data;
 }
+
+export async function apiServiceContainers(name: string): Promise<any> {
+  const res = await axios.get('/docker-service/containers', { params: { name } });
+  return res.data;
+}
+
+export async function apiServiceImages(name: string): Promise<any> {
+  const res = await axios.get('/docker-service/images', { params: { name } });
+  return res.data;
+}

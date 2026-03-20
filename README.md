@@ -2,9 +2,11 @@
 
 [![GitHub release](https://img.shields.io/github/v/release/towerforge/dock-sight?style=flat-square&color=blue)](https://github.com/towerforge/dock-sight/releases/latest)
 [![GitHub Release Date](https://img.shields.io/github/release-date/towerforge/dock-sight?style=flat-square&color=blue)](https://github.com/towerforge/dock-sight/releases/latest)
-[![GitHub Downloads](https://img.shields.io/github/downloads/towerforge/dock-sight/total?style=flat-square&color=green)](https://github.com/towerforge/dock-sight/releases)
-[![Repo size](https://img.shields.io/github/repo-size/towerforge/dock-sight?style=flat-square)](https://github.com/towerforge/dock-sight)
 [![License](https://img.shields.io/github/license/towerforge/dock-sight?style=flat-square)](LICENSE)
+[![Repo size](https://img.shields.io/github/repo-size/towerforge/dock-sight?style=flat-square)](https://github.com/towerforge/dock-sight)
+[![GitHub Downloads](https://img.shields.io/github/downloads/towerforge/dock-sight/total?style=flat-square&color=green)](https://github.com/towerforge/dock-sight/releases)
+[![Docker Pulls](https://img.shields.io/docker/pulls/towerforge/dock-sight?style=flat-square&color=blue)](https://hub.docker.com/r/towerforge/dock-sight)
+[![Docker Stars](https://img.shields.io/docker/stars/towerforge/dock-sight?style=flat-square&color=yellow)](https://hub.docker.com/r/towerforge/dock-sight)
 
 ![Demo](demo.gif)
 

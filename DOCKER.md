@@ -1,5 +1,7 @@
 # Dock Sight
 
+![Dock Sight demo](https://raw.githubusercontent.com/towerforge/dock-sight/main/demo.gif)
+
 Lightweight infrastructure dashboard for Docker hosts — monitor CPU, RAM, disk, network and Docker services from your browser.
 
 - Real-time host metrics (CPU, RAM, disk, network)
