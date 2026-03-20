@@ -1,13 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Box, Cpu, MemoryStick, Image, BarChart2, Activity } from 'lucide-react';
+import { ArrowLeft, Box, Cpu, MemoryStick, Image } from 'lucide-react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { formatBytes } from '@/lib/formatters';
 import type { ServiceHistoryPoint } from '@/types/dashboard';
 import { ServiceMetricCard } from './service-metric-card';
 import { InfoTab } from './containers-tab';
 import { ImagesTab } from './images-tab';
-import { TimeSelector } from '@/components/dashboard/time-selector';
-import { PointCountSelector } from '@/components/dashboard/point-count-selector';
+import { HeaderControls } from '@/components/header-controls';
 
 const TABS = [
   { id: 'info',   label: 'Containers', Icon: Box  },
@@ -44,7 +43,6 @@ const ServiceDetail: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 min-h-[calc(100vh-4rem)]">
-
       {/* Header */}
       <div className="flex items-center gap-4">
         <a href="/" className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm">
@@ -62,17 +60,13 @@ const ServiceDetail: React.FC = () => {
               }
             </div>
           )}
-          <div className="flex items-center gap-2 ml-auto">
-            <TimeSelector value={refreshInterval} onChange={setRefreshInterval} />
-            <PointCountSelector value={pointCount} onChange={setPointCount} />
-            <div className="bg-card-bg p-1 rounded-lg border border-card-border flex shadow-sm h-[38px]">
-              <button onClick={() => setViewMode('table')} className={`flex items-center gap-2 px-3 rounded-md text-sm font-medium transition-all ${viewMode === 'table' ? 'bg-card-border text-white shadow-sm ring-1 ring-white/10' : 'text-slate-500 hover:text-slate-300'}`}>
-                <BarChart2 size={15} /> Table
-              </button>
-              <button onClick={() => setViewMode('grid')} className={`flex items-center gap-2 px-3 rounded-md text-sm font-medium transition-all ${viewMode === 'grid' ? 'bg-card-border text-white shadow-sm ring-1 ring-white/10' : 'text-slate-500 hover:text-slate-300'}`}>
-                <Activity size={15} /> Grid
-              </button>
-            </div>
+          <div className="ml-auto">
+            <HeaderControls
+              refreshInterval={refreshInterval} onRefreshIntervalChange={setRefreshInterval}
+              pointCount={pointCount} onPointCountChange={setPointCount}
+              viewMode={viewMode} onViewModeChange={setViewMode}
+              viewOptions={[{ value: 'table', label: 'Table' }, { value: 'grid', label: 'Grid' }]}
+            />
           </div>
         </div>
       </div>
@@ -80,14 +74,14 @@ const ServiceDetail: React.FC = () => {
       {/* Metric cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <ServiceMetricCard
-          title="CPU Load" Icon={Cpu} iconClass="text-blue-400" fillClass="bg-blue-500"
+          title="CPU" Icon={Cpu} iconClass="text-blue-400" fillClass="bg-blue-500"
           percent={service?.info.cpu.percent ?? 0}
           mainValue={`${(service?.info.cpu.percent ?? 0).toFixed(1)}%`}
           data={history} dataKey="cpu" colorHex="#3b82f6" colorId="cpu"
           pointCount={pointCount} viewMode={viewMode}
         />
         <ServiceMetricCard
-          title="RAM Usage" Icon={MemoryStick} iconClass="text-emerald-400" fillClass="bg-emerald-500"
+          title="RAM" Icon={MemoryStick} iconClass="text-emerald-400" fillClass="bg-emerald-500"
           percent={service?.info.ram.percent ?? 0}
           mainValue={`${(service?.info.ram.percent ?? 0).toFixed(1)}%`}
           subtitle={service ? formatBytes(service.info.ram.used) : undefined}

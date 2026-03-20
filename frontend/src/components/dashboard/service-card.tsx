@@ -61,8 +61,8 @@ export const ServiceCard: React.FC<Props> = ({ service, historyData, pointCount 
               labelStyle={{ color: '#94a3b8', marginBottom: '6px', fontSize: '11px', fontFamily: 'monospace' }}
               labelFormatter={(value) => formatTooltipTime(value)}
               formatter={(val?: number, name?: string) => {
-                if (val == null) return ['', name === 'cpu' ? 'CPU Load' : 'RAM Usage'];
-                return [`${val.toFixed(1)}%`, name === 'cpu' ? 'CPU Load' : 'RAM Usage'];
+                if (val == null) return ['', name === 'cpu' ? 'CPU' : 'RAM'];
+                return [`${val.toFixed(1)}%`, name === 'cpu' ? 'CPU' : 'RAM'];
               }}
             />
             
