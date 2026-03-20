@@ -58,7 +58,6 @@ const ServiceDetail: React.FC = () => {
         </a>
         <div className="w-px h-5 bg-card-border" />
         <div className="flex items-center gap-3 flex-1">
-          <Box size={20} className="text-blue-500 shrink-0" />
           <h1 className="text-xl font-bold text-white truncate">{serviceName}</h1>
           {service && (
             <div className="flex items-center gap-3 ml-1">

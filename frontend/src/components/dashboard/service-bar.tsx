@@ -40,11 +40,13 @@ export const ServiceBar: React.FC<Props> = ({ items }) => {
 
         <TableBody className="divide-y divide-card-border/30">
           {items.map((s) => (
-            <TableRow key={s.name} className="border-none transition-colors duration-150 hover:bg-white/5">
+            <TableRow
+              key={s.name}
+              onClick={() => window.location.href = `/service?name=${encodeURIComponent(s.name)}`}
+              className="border-none transition-colors duration-150 hover:bg-white/5 cursor-pointer"
+            >
               <TableCell className="py-3">
-                <a href={`/service?name=${encodeURIComponent(s.name)}`} className="font-medium text-white hover:text-blue-400 transition-colors">
-                  {s.name}
-                </a>
+                <span className="font-medium text-white">{s.name}</span>
               </TableCell>
 
               <TableCell className="text-center py-3">
