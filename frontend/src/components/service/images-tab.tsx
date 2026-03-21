@@ -48,18 +48,12 @@ export const ImagesTab: React.FC<{ serviceName: string }> = ({ serviceName }) =>
       )}
 
       <div className="flex flex-col divide-y divide-slate-600/60">
-        {unusedCount > 0 && unusedCount < sorted.length && (
-          <div className="text-slate-500 text-xs pb-3 text-right">
-            {unusedCount} unused
-          </div>
-        )}
         {sorted.map((img) => (
           <div key={img.id} className={`w-full flex flex-col gap-4 py-5 first:pt-1 ${!img.in_use ? 'opacity-50' : ''}`}>
 
             {/* Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full shrink-0 ${img.in_use ? 'bg-emerald-500' : 'bg-slate-500'}`} />
                 <span className="text-white font-bold text-base">{img.name}</span>
                 <span className="text-slate-500 font-mono text-xs">{img.id}</span>
               </div>
@@ -70,9 +64,8 @@ export const ImagesTab: React.FC<{ serviceName: string }> = ({ serviceName }) =>
                 {!img.in_use && (
                   <button
                     onClick={() => {
-                      const id = `${img.name}:${img.tag}`;
-                      setConfirmId(id);
-                      setConfirmName(id);
+                      setConfirmId(img.delete_id);
+                      setConfirmName(`${img.name}:${img.tag}`);
                     }}
                     className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     title="Delete image"

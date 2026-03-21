@@ -50,18 +50,12 @@ export const InfoTab: React.FC<{ serviceName: string }> = ({ serviceName }) => {
       )}
 
       <div className="flex flex-col divide-y divide-slate-600/60">
-        {stoppedCount > 0 && stoppedCount < sorted.length && (
-          <div className="text-slate-500 text-xs pb-3 text-right">
-            {stoppedCount} stopped
-          </div>
-        )}
         {sorted.map((c: any) => (
           <div key={c.id} className={`w-full flex flex-col gap-4 py-5 first:pt-1 ${!c.running ? 'opacity-50' : ''}`}>
 
             {/* Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full shrink-0 ${c.running ? 'bg-emerald-500' : 'bg-red-500'}`} />
                 <span className="text-white font-bold text-base">{c.name}</span>
                 <span className="text-slate-500 font-mono text-xs">{c.id}</span>
               </div>
@@ -72,13 +66,23 @@ export const InfoTab: React.FC<{ serviceName: string }> = ({ serviceName }) => {
                     : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
                 }`}>{c.status}</span>
                 {!c.running && (
-                  <button
-                    onClick={() => { setConfirmId(c.id); setConfirmName(c.name); }}
-                    className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                    title="Delete container"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                  c.image ? (
+                    <button
+                      disabled
+                      className="p-1 rounded text-slate-600 cursor-not-allowed"
+                      title="Delete the image first before removing this container"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setConfirmId(c.id); setConfirmName(c.name); }}
+                      className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      title="Delete container"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )
                 )}
               </div>
             </div>
