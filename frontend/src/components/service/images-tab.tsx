@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image, HardDrive, Info, Trash2 } from 'lucide-react';
+import { HardDrive, Info, Trash2 } from 'lucide-react';
 import { apiServiceImages, apiDeleteImage } from '@/services/sysinfo';
 import { formatBytes } from '@/lib/formatters';
 import { Row, ConfirmModal } from './ui';
