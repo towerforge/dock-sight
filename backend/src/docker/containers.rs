@@ -2,9 +2,15 @@ use axum::{Json, response::IntoResponse, http::StatusCode, extract::Query};
 use bollard::Docker;
 use bollard::models::ContainerSummary;
 use futures_util::future::join_all;
+use serde::Deserialize;
 use serde_json::json;
 
 use super::{ServiceQuery, list_containers, get_service_name, error};
+
+#[derive(Deserialize)]
+pub struct ContainerIdQuery {
+    pub id: String,
+}
 
 pub async fn service_containers(Query(q): Query<ServiceQuery>) -> impl IntoResponse {
     let docker = match Docker::connect_with_local_defaults() {
@@ -12,7 +18,7 @@ pub async fn service_containers(Query(q): Query<ServiceQuery>) -> impl IntoRespo
         Err(e) => return error(e.to_string()),
     };
 
-    let containers = match list_containers(&docker).await {
+    let containers = match list_containers(&docker, true).await {
         Ok(c) => c,
         Err(e) => return error(e.to_string()),
     };
@@ -26,6 +32,18 @@ pub async fn service_containers(Query(q): Query<ServiceQuery>) -> impl IntoRespo
     let results: Vec<_> = join_all(tasks).await.into_iter().flatten().collect();
 
     (StatusCode::OK, Json(json!({ "name": q.name, "containers": results })))
+}
+
+pub async fn delete_container(Query(q): Query<ContainerIdQuery>) -> impl IntoResponse {
+    let docker = match Docker::connect_with_local_defaults() {
+        Ok(d) => d,
+        Err(e) => return error(e.to_string()),
+    };
+
+    match docker.remove_container(&q.id, None).await {
+        Ok(_) => (StatusCode::OK, Json(json!({ "ok": true }))),
+        Err(e) => error(e.to_string()),
+    }
 }
 
 async fn inspect_container_info(docker: &Docker, c: &ContainerSummary) -> Option<serde_json::Value> {

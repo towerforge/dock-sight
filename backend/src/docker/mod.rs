@@ -4,8 +4,8 @@ pub mod images;
 pub mod logs;
 
 pub use services::services;
-pub use containers::service_containers;
-pub use images::service_images;
+pub use containers::{service_containers, delete_container};
+pub use images::{service_images, delete_image};
 pub use logs::service_logs;
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
@@ -22,8 +22,8 @@ pub struct ServiceQuery {
     pub name: String,
 }
 
-pub(crate) async fn list_containers(docker: &Docker) -> Result<Vec<ContainerSummary>, bollard::errors::Error> {
-    docker.list_containers(Some(ListContainersOptions { all: false, ..Default::default() })).await
+pub(crate) async fn list_containers(docker: &Docker, all: bool) -> Result<Vec<ContainerSummary>, bollard::errors::Error> {
+    docker.list_containers(Some(ListContainersOptions { all, ..Default::default() })).await
 }
 
 pub(crate) fn get_service_name(c: &ContainerSummary) -> String {

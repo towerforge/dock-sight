@@ -18,7 +18,7 @@ pub async fn service_logs(Query(q): Query<ServiceQuery>) -> Sse<impl Stream<Item
             Err(_) => return,
         };
 
-        let containers = match list_containers(&docker).await {
+        let containers = match list_containers(&docker, false).await {
             Ok(c) => c,
             Err(_) => return,
         };

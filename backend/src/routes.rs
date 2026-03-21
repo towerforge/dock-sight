@@ -13,7 +13,7 @@ use serde_json::json;
 use mime_guess;
 
 use crate::system::routes::sysinfo;
-use crate::docker::{services, service_containers, service_images, service_logs};
+use crate::docker::{services, service_containers, delete_container, service_images, delete_image, service_logs};
 use crate::openapi::ApiDoc;
 use utoipa::OpenApi;
 
@@ -23,7 +23,7 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
     let cors = if dev_mode {
         CorsLayer::new()
             .allow_origin(Any)
-            .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+            .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::OPTIONS])
             .allow_headers(Any)
     } else {
         let origins = [
@@ -36,7 +36,7 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
 
         CorsLayer::new()
             .allow_origin(origins)
-            .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+            .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::OPTIONS])
             .allow_headers(Any)
     };
 
@@ -44,8 +44,8 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
         .route("/default", get(is_json_request).options(|| async { StatusCode::OK }))
         .route("/sysinfo", get(sysinfo))
         .route("/docker-service", get(services))
-        .route("/docker-service/containers", get(service_containers))
-        .route("/docker-service/images", get(service_images))
+        .route("/docker-service/containers", get(service_containers).delete(delete_container))
+        .route("/docker-service/images", get(service_images).delete(delete_image))
         .route("/docker-service/logs", get(service_logs))
         .route("/version", get(version))
         .route(
