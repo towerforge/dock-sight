@@ -4,8 +4,8 @@ use std::{net::SocketAddr, str::FromStr};
 use tokio::net::TcpListener;
 
 mod routes;
-mod helpers;
-pub mod routers;
+pub mod system;
+pub mod docker;
 pub mod openapi;
 
 #[derive(RustEmbed)]
@@ -26,7 +26,7 @@ struct Args {
 #[tokio::main]
 async fn main() {
     let args: Args = Args::parse();
-    let app = routes::create_router(args.dev);
+    let app = routes::create_router(args.dev, args.port);
     let addr = SocketAddr::from_str(&format!("0.0.0.0:{}", args.port)).unwrap();
 
     let mode_label = if args.dev {

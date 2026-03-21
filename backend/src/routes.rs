@@ -1,24 +1,44 @@
 use axum::{
-    routing::{get},
+    routing::get,
     Router,
-    http::StatusCode,
+    http::{HeaderMap, StatusCode},
     extract::Path,
     response::{IntoResponse, Response},
     body::Body,
+    Json,
 };
 use tower_http::cors::{CorsLayer, Any};
-
-use crate::routers::default::is_json_request;
-use crate::routers::sysinfo::sysinfo;
-use crate::routers::docker_services::services;
-use crate::routers::docker_service_detail::{service_containers, service_images, service_logs};
-use crate::routers::version::version;
-use crate::openapi::ApiDoc; 
-use utoipa::OpenApi;
+use axum::http::HeaderValue;
+use serde_json::json;
 use mime_guess;
 
-pub fn create_router(dev_mode: bool) -> Router {
+use crate::system::routes::sysinfo;
+use crate::docker::{services, service_containers, service_images, service_logs};
+use crate::openapi::ApiDoc;
+use utoipa::OpenApi;
+
+pub fn create_router(dev_mode: bool, port: u16) -> Router {
     use axum::http::Method;
+
+    let cors = if dev_mode {
+        CorsLayer::new()
+            .allow_origin(Any)
+            .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+            .allow_headers(Any)
+    } else {
+        let origins = [
+            format!("http://localhost:{}", port),
+            format!("http://127.0.0.1:{}", port),
+        ]
+        .into_iter()
+        .filter_map(|o| o.parse::<HeaderValue>().ok())
+        .collect::<Vec<_>>();
+
+        CorsLayer::new()
+            .allow_origin(origins)
+            .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+            .allow_headers(Any)
+    };
 
     let mut router = Router::new()
         .route("/default", get(is_json_request).options(|| async { StatusCode::OK }))
@@ -32,12 +52,7 @@ pub fn create_router(dev_mode: bool) -> Router {
             "/openapi.json",
             get(|| async { axum::Json(ApiDoc::openapi()) })
         )
-        .layer(
-            CorsLayer::new()
-                .allow_origin(Any)
-                .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-                .allow_headers(Any),
-        );
+        .layer(cors);
 
     if !dev_mode {
         router = router
@@ -46,6 +61,25 @@ pub fn create_router(dev_mode: bool) -> Router {
     }
 
     router
+}
+
+async fn is_json_request(headers: HeaderMap) -> impl IntoResponse {
+    if let Some(content_type) = headers.get("Content-Type") {
+        if let Ok(content_type_str) = content_type.to_str() {
+            if content_type_str.contains("application/json") {
+                return (StatusCode::OK, Json(json!({"ok": true})));
+            }
+        }
+    }
+    (
+        StatusCode::BAD_REQUEST,
+        Json(json!({"ok": false, "error": "request is not JSON"})),
+    )
+}
+
+async fn version() -> impl IntoResponse {
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+    (StatusCode::OK, Json(json!({ "version": VERSION })))
 }
 
 pub async fn static_handler(Path(path): Path<String>) -> impl IntoResponse {

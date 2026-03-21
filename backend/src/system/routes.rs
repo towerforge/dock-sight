@@ -4,7 +4,7 @@ use axum::Json;
 use serde_json::json;
 use sysinfo::System;
 
-use crate::helpers::{ram, cpu, disk, network};
+use crate::system::metrics::{ram, cpu, disk, network};
 
 pub async fn sysinfo() -> impl IntoResponse {
 	let mut sys = System::new_all();
@@ -12,8 +12,6 @@ pub async fn sysinfo() -> impl IntoResponse {
 	let ram = ram::ram_info(&mut sys);
 	let cpu = cpu::cpu_info(&mut sys);
 	let disk = disk::disk_info();
-
-	// ✅ ARA coincideix amb la signatura de network_info
 	let network = network::network_info(&mut sys);
 
 	(

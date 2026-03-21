@@ -8,9 +8,9 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::time::Duration;
 
-type ServiceAgg = (f64, u64, u64, u32); // cpu_sum, mem_used_sum, mem_limit_sum, count
+use super::{get_service_name, error};
 
-// ===================== HTTP HANDLER =====================
+type ServiceAgg = (f64, u64, u64, u32); // cpu_sum, mem_used_sum, mem_limit_sum, count
 
 pub async fn services() -> impl IntoResponse {
     let docker = match Docker::connect_with_local_defaults() {
@@ -68,13 +68,8 @@ async fn measure_container(
     let id = c.id.as_deref()?;
     let service_name = get_service_name(c);
 
-    // 1️⃣ Primera mostra
     let first = get_stats(docker, id).await?;
-
-    // Interval real de mostreig (com docker stats)
     tokio::time::sleep(Duration::from_millis(500)).await;
-
-    // 2️⃣ Segona mostra
     let second = get_stats(docker, id).await?;
 
     let cpu = calc_cpu_between(&first, &second);
@@ -92,21 +87,11 @@ fn calc_cpu_between(a: &ContainerStatsResponse, b: &ContainerStatsResponse) -> f
     let cpu_a = match a.cpu_stats.as_ref() { Some(v) => v, None => return 0.0 };
     let cpu_b = match b.cpu_stats.as_ref() { Some(v) => v, None => return 0.0 };
 
-    let usage_a = cpu_a
-        .cpu_usage
-        .as_ref()
-        .and_then(|u| u.total_usage)
-        .unwrap_or(0);
-
-    let usage_b = cpu_b
-        .cpu_usage
-        .as_ref()
-        .and_then(|u| u.total_usage)
-        .unwrap_or(0);
+    let usage_a = cpu_a.cpu_usage.as_ref().and_then(|u| u.total_usage).unwrap_or(0);
+    let usage_b = cpu_b.cpu_usage.as_ref().and_then(|u| u.total_usage).unwrap_or(0);
 
     let system_a = cpu_a.system_cpu_usage.unwrap_or(0);
     let system_b = cpu_b.system_cpu_usage.unwrap_or(0);
-
     let online_cpus = cpu_b.online_cpus.unwrap_or(1);
 
     let cpu_delta = usage_b.saturating_sub(usage_a) as f64;
@@ -119,7 +104,6 @@ fn calc_cpu_between(a: &ContainerStatsResponse, b: &ContainerStatsResponse) -> f
     }
 }
 
-
 fn calc_memory(stats: &ContainerStatsResponse) -> (u64, u64) {
     let mem = match stats.memory_stats.as_ref() {
         Some(m) => m,
@@ -127,29 +111,9 @@ fn calc_memory(stats: &ContainerStatsResponse) -> (u64, u64) {
     };
 
     let usage = mem.usage.unwrap_or(0);
-
-    let cache = mem
-        .stats
-        .as_ref()
-        .and_then(|s| s.get("cache"))
-        .copied()
-        .unwrap_or(0);
-
+    let cache = mem.stats.as_ref().and_then(|s| s.get("cache")).copied().unwrap_or(0);
     let real_used = usage.saturating_sub(cache);
     let limit = mem.limit.unwrap_or(real_used);
 
     (real_used, limit)
-}
-
-
-fn get_service_name(c: &ContainerSummary) -> String {
-    c.labels
-        .as_ref()
-        .and_then(|l| l.get("com.docker.swarm.service.name"))
-        .cloned()
-        .unwrap_or_else(|| "standalone".into())
-}
-
-fn error(msg: String) -> (StatusCode, Json<serde_json::Value>) {
-    (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "error": msg })))
 }
