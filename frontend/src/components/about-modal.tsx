@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, RefreshCw, AlertCircle, ExternalLink, Github } from 'lucide-react';
+import { Tag, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react';
 import { APP_VERSION } from '@/generated/version';
 import { Modal } from './modal';
 
@@ -28,11 +28,9 @@ export const AboutModal: React.FC<Props> = ({ onClose }) => {
     <Modal onClose={onClose}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-          <Github size={20} className="text-blue-400" />
-        </div>
+        <img src="/logo.svg" alt="Dock Sight" className="w-14 h-14" />
         <div>
-          <h2 className="text-white font-bold text-lg">Dock Sight</h2>
+          <h2 className="text-white font-bold text-xl">Dock Sight</h2>
           <a
             href={GITHUB_URL}
             target="_blank"

@@ -47,9 +47,9 @@ export const ConfirmModal: React.FC<{
         <div className="w-9 h-9 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
           <Trash2 size={16} className="text-red-400" />
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-white font-semibold text-sm">{title}</p>
-          <p className="text-slate-400 text-xs mt-0.5">{description}</p>
+          <p className="text-slate-400 text-xs mt-0.5 break-all">{description}</p>
         </div>
       </div>
       <div className="flex gap-2 justify-end">

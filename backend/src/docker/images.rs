@@ -72,19 +72,26 @@ async fn inspect_image(docker: &Docker, image_name: &str, in_use: bool) -> Optio
         })
         .unwrap_or_default();
 
-    let (name, tag) = inspect.repo_tags.as_ref()
-        .and_then(|tags| tags.first())
+    let first_tag = inspect.repo_tags.as_ref().and_then(|tags| tags.first().cloned());
+
+    let (name, tag) = first_tag.as_deref()
         .map(|full| {
             if let Some(pos) = full.rfind(':') {
                 (full[..pos].to_string(), full[pos + 1..].to_string())
             } else {
-                (full.clone(), "latest".to_string())
+                (full.to_string(), "latest".to_string())
             }
         })
         .unwrap_or_else(|| (image_name.to_string(), "latest".to_string()));
 
+    // Use the repo tag for deletion if available, otherwise fall back to the full sha256 id
+    let delete_id = first_tag.unwrap_or_else(|| {
+        inspect.id.as_deref().unwrap_or(image_name).to_string()
+    });
+
     Some(json!({
         "id": id,
+        "delete_id": delete_id,
         "name": name,
         "tag": tag,
         "size": inspect.size.unwrap_or(0),
