@@ -50,7 +50,7 @@ const ServiceDetail: React.FC = () => {
   const isHighLoad = (service?.info.cpu.percent ?? 0) > 70;
 
   return (
-    <div className="flex flex-col gap-6 min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-col gap-6 h-full">
       {/* Header */}
       <div className="flex items-center gap-4">
         <a href="/" className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm">
@@ -98,7 +98,7 @@ const ServiceDetail: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 min-h-0">
         <div className="flex gap-1">
           {TABS.map(({ id, label, Icon: TabIcon }) => (
             <button
@@ -119,7 +119,7 @@ const ServiceDetail: React.FC = () => {
             </button>
           ))}
         </div>
-        <div className="bg-card-bg border border-card-border rounded-b-xl rounded-tr-xl p-4 relative z-0 flex-1 overflow-y-auto">
+        <div className={`bg-card-bg border border-card-border rounded-b-xl rounded-tr-xl p-4 relative z-0 flex-1 min-h-0 ${activeTab === 'logs' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}>
           {activeTab === 'info'   && <InfoTab   serviceName={serviceName} />}
           {activeTab === 'images' && <ImagesTab serviceName={serviceName} />}
           {activeTab === 'logs'   && <LogsTab   serviceName={serviceName} />}
