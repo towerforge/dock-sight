@@ -3,7 +3,6 @@ use std::collections::HashSet;
 use sysinfo::Disks;
 
 fn should_include_disk(d: &sysinfo::Disk) -> bool {
-	let mount = d.mount_point();
 	let fs = d.file_system().to_string_lossy().to_lowercase();
 
 	// Exclude virtual/pseudo filesystems (all platforms)
@@ -21,6 +20,7 @@ fn should_include_disk(d: &sysinfo::Disk) -> bool {
 	// and would cause double/triple counting.
 	#[cfg(target_os = "macos")]
 	{
+		let mount = d.mount_point();
 		return mount == std::path::Path::new("/")
 			|| mount.starts_with(std::path::Path::new("/Volumes/"));
 	}
