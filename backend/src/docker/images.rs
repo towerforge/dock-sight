@@ -19,7 +19,7 @@ pub async fn delete_image(Query(q): Query<ImageIdQuery>) -> impl IntoResponse {
         Err(e) => return error(e.to_string()),
     };
 
-    let opts = bollard::query_parameters::RemoveImageOptions { force: true, noprune: false };
+    let opts = bollard::query_parameters::RemoveImageOptions { force: true, noprune: false, platforms: None };
     match docker.remove_image(&q.id, Some(opts), None).await {
         Ok(_) => (StatusCode::OK, Json(json!({ "ok": true }))),
         Err(e) => error(e.to_string()),
