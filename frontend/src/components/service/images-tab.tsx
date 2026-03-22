@@ -33,7 +33,6 @@ export const ImagesTab: React.FC<{ serviceName: string }> = ({ serviceName }) =>
   if (!images.length) return <div className="text-slate-500 text-sm py-8 text-center">No images found.</div>;
 
   const sorted = [...images].sort((a, b) => Number(b.in_use) - Number(a.in_use));
-  const unusedCount = sorted.filter((img) => !img.in_use).length;
 
   return (
     <>

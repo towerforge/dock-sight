@@ -66,23 +66,13 @@ export const InfoTab: React.FC<{ serviceName: string }> = ({ serviceName }) => {
                     : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
                 }`}>{c.status}</span>
                 {!c.running && (
-                  c.image ? (
-                    <button
-                      disabled
-                      className="p-1 rounded text-slate-600 cursor-not-allowed"
-                      title="Delete the image first before removing this container"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => { setConfirmId(c.id); setConfirmName(c.name); }}
-                      className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                      title="Delete container"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )
+                  <button
+                    onClick={() => { setConfirmId(c.id); setConfirmName(c.name); }}
+                    className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    title="Delete container"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 )}
               </div>
             </div>
