@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Server, Cpu, CircuitBoard, HardDrive, Activity } from 'lucide-react';
+import { Search, Server, Cpu, CircuitBoard, HardDrive, Activity, Trash2 } from 'lucide-react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { formatBytes } from '@/lib/formatters';
 import { ServiceCard } from '@/components/dashboard/service-card';
 import { ServiceBar } from '@/components/dashboard/service-bar';
 import MetricCard from '@/components/dashboard/metric-card';
+import { CleanupTab } from '@/components/dashboard/cleanup-tab';
 import { HeaderControls } from '@/components/header-controls';
 
 export default function Dashboard() {
@@ -12,6 +13,7 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'bars' | 'chart'>('bars');
   const [refreshInterval, setRefreshInterval] = useState(5000);
   const [pointCount, setPointCount] = useState(10);
+  const [bottomTab, setBottomTab] = useState<'services' | 'cleanup'>('services');
 
   // Hook managing real-time system and docker data
   const { sys, dock, sysHistory, serviceHistory } = useDashboardData(refreshInterval);
@@ -112,37 +114,64 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* SERVICES SECTION */}
-      <div className="rounded-2xl bg-card-bg border border-card-border p-6 flex-1 min-h-0 overflow-y-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <Server size={20} className="text-slate-400" />
-            <span className="text-lg font-medium text-white">Docker Services</span>
-            <span className="bg-card-border text-slate-400 text-xs px-2 py-1 rounded-full">{filteredDocs.length}</span>
-          </div>
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-            <input
-              type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-app-bg border border-card-border text-slate-200 text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-blue-500 transition-colors"
-            />
-          </div>
+      {/* BOTTOM SECTION */}
+      <div className="rounded-2xl bg-card-bg border border-card-border flex-1 min-h-0 flex flex-col">
+
+        {/* Tab bar */}
+        <div className="flex items-center gap-1 px-6 pt-4 pb-0 border-b border-card-border shrink-0">
+          <button
+            onClick={() => setBottomTab('services')}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-lg transition-colors border-b-2 -mb-px ${
+              bottomTab === 'services'
+                ? 'text-white border-blue-500'
+                : 'text-slate-500 border-transparent hover:text-slate-300'
+            }`}
+          >
+            <Server size={14} />
+            Services
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-card-border text-slate-400">{filteredDocs.length}</span>
+          </button>
+          <button
+            onClick={() => setBottomTab('cleanup')}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-lg transition-colors border-b-2 -mb-px ${
+              bottomTab === 'cleanup'
+                ? 'text-white border-red-500'
+                : 'text-slate-500 border-transparent hover:text-slate-300'
+            }`}
+          >
+            <Trash2 size={14} />
+            Cleanup
+          </button>
         </div>
 
-        {viewMode === 'bars' ? (
-          <ServiceBar items={filteredDocs} />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDocs.map((s) => (
-              <ServiceCard
-                key={s.name}
-                service={s}
-                historyData={serviceHistory[s.name] || []}
-                pointCount={pointCount}
-              />
-            ))}
-          </div>
-        )}
+        {/* Tab content */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-6">
+          {bottomTab === 'services' ? (
+            <>
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+                <div className="relative w-full sm:w-72">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                  <input
+                    type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-app-bg border border-card-border text-slate-200 text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                </div>
+              </div>
+              {viewMode === 'bars' ? (
+                <ServiceBar items={filteredDocs} />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredDocs.map((s) => (
+                    <ServiceCard key={s.name} service={s} historyData={serviceHistory[s.name] || []} pointCount={pointCount} />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <CleanupTab />
+          )}
+        </div>
+
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ use serde_json::json;
 use mime_guess;
 
 use crate::system::routes::sysinfo;
-use crate::docker::{services, service_containers, delete_container, service_images, delete_image, service_logs};
+use crate::docker::{services, service_containers, delete_container, service_images, delete_image, service_logs, cleanup_preview, run_cleanup};
 use crate::openapi::ApiDoc;
 use utoipa::OpenApi;
 
@@ -47,6 +47,7 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
         .route("/docker-service/containers", get(service_containers).delete(delete_container))
         .route("/docker-service/images", get(service_images).delete(delete_image))
         .route("/docker-service/logs", get(service_logs))
+        .route("/docker-service/cleanup", get(cleanup_preview).delete(run_cleanup))
         .route("/version", get(version))
         .route(
             "/openapi.json",
