@@ -1,5 +1,5 @@
 use axum::{
-    routing::get,
+    routing::{get, post},
     Router,
     http::{HeaderMap, StatusCode},
     extract::Path,
@@ -12,6 +12,7 @@ use axum::http::HeaderValue;
 use serde_json::json;
 use mime_guess;
 
+use crate::auth::{AuthState, middleware::require_auth, routes as auth_routes};
 use crate::system::routes::sysinfo;
 use crate::docker::{services, service_containers, delete_container, service_images, delete_image, service_logs, cleanup_preview, run_cleanup};
 use crate::openapi::ApiDoc;
@@ -19,6 +20,8 @@ use utoipa::OpenApi;
 
 pub fn create_router(dev_mode: bool, port: u16) -> Router {
     use axum::http::Method;
+
+    let auth_state = AuthState::new();
 
     let cors = if dev_mode {
         CorsLayer::new()
@@ -40,7 +43,16 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
             .allow_headers(Any)
     };
 
-    let mut router = Router::new()
+    // Public auth routes — no session required
+    let auth_router = Router::new()
+        .route("/api/auth/status", get(auth_routes::status))
+        .route("/api/auth/setup", post(auth_routes::setup))
+        .route("/api/auth/login", post(auth_routes::login))
+        .route("/api/auth/logout", post(auth_routes::logout))
+        .with_state(auth_state.clone());
+
+    // API routes — protected in production, open in dev mode
+    let api_routes = Router::new()
         .route("/default", get(is_json_request).options(|| async { StatusCode::OK }))
         .route("/sysinfo", get(sysinfo))
         .route("/docker-service", get(services))
@@ -49,10 +61,20 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
         .route("/docker-service/logs", get(service_logs))
         .route("/docker-service/cleanup", get(cleanup_preview).delete(run_cleanup))
         .route("/version", get(version))
-        .route(
-            "/openapi.json",
-            get(|| async { axum::Json(ApiDoc::openapi()) })
-        )
+        .route("/openapi.json", get(|| async { axum::Json(ApiDoc::openapi()) }));
+
+    let api_router = if dev_mode {
+        api_routes
+    } else {
+        api_routes.layer(axum::middleware::from_fn_with_state(
+            auth_state.clone(),
+            require_auth,
+        ))
+    };
+
+    let mut router = Router::new()
+        .merge(auth_router)
+        .merge(api_router)
         .layer(cors);
 
     if !dev_mode {

@@ -1,14 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Server, Cpu, CircuitBoard, HardDrive, Activity, Trash2 } from 'lucide-react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useAuth } from '@/hooks/use-auth';
 import { formatBytes } from '@/lib/formatters';
 import { ServiceCard } from '@/components/dashboard/service-card';
 import { ServiceBar } from '@/components/dashboard/service-bar';
 import MetricCard from '@/components/dashboard/metric-card';
 import { CleanupTab } from '@/components/dashboard/cleanup-tab';
 import { HeaderControls } from '@/components/header-controls';
+import { AuthView } from '@/components/auth/auth-view';
 
 export default function Dashboard() {
+  const { status: authStatus, loading: authLoading, logout, refresh: refreshAuth } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'bars' | 'chart'>('bars');
   const [refreshInterval, setRefreshInterval] = useState(5000);
@@ -24,6 +27,23 @@ export default function Dashboard() {
       .filter((s) => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [dock, searchTerm]);
+
+  if (authLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="text-slate-500 text-sm">Loading…</div>
+      </div>
+    );
+  }
+
+  if (!authStatus?.authenticated) {
+    return (
+      <AuthView
+        setupRequired={authStatus?.setup_required ?? false}
+        onAuthenticated={refreshAuth}
+      />
+    );
+  }
 
   // Network Logic: Calculate throughput and percentage relative to hardware capacity
   const totalNetworkTraffic = (sys?.network?.total_rx ?? 0) + (sys?.network?.total_tx ?? 0);
@@ -48,6 +68,7 @@ export default function Dashboard() {
           pointCount={pointCount} onPointCountChange={setPointCount}
           viewMode={viewMode} onViewModeChange={setViewMode}
           viewOptions={[{ value: 'bars', label: 'Table' }, { value: 'chart', label: 'Grid' }]}
+          onLogout={logout}
         />
       </div>
 

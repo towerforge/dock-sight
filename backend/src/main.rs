@@ -4,6 +4,7 @@ use std::{net::SocketAddr, str::FromStr};
 use tokio::net::TcpListener;
 
 mod routes;
+pub mod auth;
 pub mod system;
 pub mod docker;
 pub mod openapi;

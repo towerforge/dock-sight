@@ -20,3 +20,5 @@ utoipa = "5.4.0"
 sysinfo = "0.38.0"
 bollard = "0.20.0"
 futures-util = "0.3.31"
+bcrypt = "0.15"
+uuid = { version = "1", features = ["v4"] }

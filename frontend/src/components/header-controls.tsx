@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart2, Activity, Info } from 'lucide-react';
+import { BarChart2, Activity, Info, LogOut } from 'lucide-react';
 import { TimeSelector } from '@/components/dashboard/time-selector';
 import { PointCountSelector } from '@/components/dashboard/point-count-selector';
 import { AboutModal } from '@/components/about-modal';
@@ -12,6 +12,7 @@ interface Props {
   viewMode: string;
   onViewModeChange: (v: any) => void;
   viewOptions: { value: string; label: string }[];
+  onLogout?: () => void;
 }
 
 export const HeaderControls: React.FC<Props> = ({
@@ -19,6 +20,7 @@ export const HeaderControls: React.FC<Props> = ({
   pointCount, onPointCountChange,
   viewMode, onViewModeChange,
   viewOptions,
+  onLogout,
 }) => {
   const [showAbout, setShowAbout] = useState(false);
 
@@ -50,6 +52,15 @@ export const HeaderControls: React.FC<Props> = ({
         >
           <Info size={16} />
         </button>
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            title="Sign out"
+            className="flex items-center justify-center w-[38px] h-[38px] rounded-lg border border-card-border bg-card-bg text-slate-400 hover:text-white hover:border-slate-500 transition-colors shadow-sm"
+          >
+            <LogOut size={16} />
+          </button>
+        )}
       </div>
     </>
   );
