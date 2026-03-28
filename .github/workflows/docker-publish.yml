@@ -4,6 +4,9 @@ on:
   release:
     types: [published]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -43,3 +46,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: towerforge/dock-sight
           readme-filepath: ./DOCKER.md
+          short-description: ${{ github.event.repository.description }}
