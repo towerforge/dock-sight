@@ -33,10 +33,10 @@ export default function Dashboard() {
   const networkUsagePercent = Math.min((totalNetworkTraffic / networkHardwareLimit) * 100, 100);
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col">
 
       {/* HEADER */}
-      <div className="mb-8 flex flex-col sm:flex-row justify-between items-end gap-4">
+      <div className="mb-8 flex flex-col sm:flex-row justify-between items-end gap-4 shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Dock Sight</h1>
           <p className="text-slate-400">Real-time control panel</p>
@@ -50,7 +50,7 @@ export default function Dashboard() {
       </div>
 
       {/* GLOBAL METRICS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 shrink-0">
         <MetricCard
           title="CPU"
           Icon={Cpu}
@@ -113,7 +113,7 @@ export default function Dashboard() {
       </div>
 
       {/* SERVICES SECTION */}
-      <div className="rounded-2xl bg-card-bg border border-card-border p-6">
+      <div className="rounded-2xl bg-card-bg border border-card-border p-6 flex-1 min-h-0 overflow-y-auto">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Server size={20} className="text-slate-400" />
