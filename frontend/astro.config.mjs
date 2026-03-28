@@ -7,6 +7,8 @@ import { dirname } from 'node:path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const BACKEND = `http://localhost:${process.env.BACKEND_PORT ?? 8080}`;
+
 export default defineConfig({
   integrations: [
     react(),
@@ -22,9 +24,10 @@ export default defineConfig({
     },
     server: {
       proxy: {
-        '/sysinfo': 'http://localhost:8080',
-        '/docker-service': 'http://localhost:8080',
-        '/openapi.json': 'http://localhost:8080',
+        '/sysinfo': BACKEND,
+        '/docker-service': BACKEND,
+        '/openapi.json': BACKEND,
+        '/api': BACKEND,
       },
     },
   },

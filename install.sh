@@ -5,7 +5,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/towerforge/dock-sight/main/install.sh | sh
 #
 # Env overrides:
-#   DOCK_SIGHT_VERSION=0.2.7     install a specific version
+#   DOCK_SIGHT_VERSION=0.3.0     install a specific version
 #   DOCK_SIGHT_INSTALL_DIR=/opt  install to a custom directory
 #   DOCK_SIGHT_VARIANT=musl      force musl binary on Linux (static, no glibc dep)
 #   DOCK_SIGHT_VARIANT=gnu       force glibc binary on Linux
@@ -141,7 +141,7 @@ printf "  ${B_CYAN}██║  ██║██║   ██║██║     ██
 printf "  ${B_CYAN}██████╔╝╚██████╔╝╚██████╗██║  ██╗  ███████║██║╚██████╔╝██║  ██║   ██║   ${RESET}\n"
 printf "  ${B_CYAN}╚═════╝  ╚═════╝  ╚═════╝╚═╝  ╚═╝  ╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝  ${RESET}\n"
 printf "\n"
-printf "  ${DIM}Docker services & system metrics dashboard${RESET}\n"
+printf "  ${DIM}Docker services & system metrics dashboard — password protected${RESET}\n"
 printf "\n"
 printf "  ${DIM}────────────────────────────────────────────${RESET}\n"
 printf "\n"
@@ -288,4 +288,7 @@ printf "  ${B_GREEN}${BOLD}All done!${RESET}\n"
 printf "\n"
 printf "  ${BOLD}Start:${RESET}  ${CYAN}${BINARY} --port 8080${RESET}\n"
 printf "  ${BOLD}Open:${RESET}   ${CYAN}http://localhost:8080${RESET}\n"
+printf "\n"
+printf "  ${DIM}On first open you will be asked to set a password.${RESET}\n"
+printf "  ${DIM}Sessions stay valid for 24 h (override: SESSION_DURATION_HOURS=N).${RESET}\n"
 printf "\n"

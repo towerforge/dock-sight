@@ -23,11 +23,11 @@
 
 ## Overview
 
-Dock Sight runs as a single binary and serves a real-time dashboard in your browser. No agents, no configuration files, no external dependencies.
+Dock Sight runs as a single binary and serves a real-time dashboard in your browser. No agents, no external dependencies.
 
 **Host metrics** — CPU, RAM, disk, and network usage with historical charts.
 **Docker services** — Container status, resource consumption, images, and live logs.
-**Zero setup** — Drop the binary, run it, open the browser.
+**Password protection** — On first launch the browser prompts you to set a password. Every subsequent visit requires it (session valid for 24 h by default).
 
 ## Requirements
 
@@ -74,6 +74,14 @@ Options:
 ```
 
 Open [http://localhost:8080](http://localhost:8080) in your browser.
+On first launch you will be prompted to set a password before the dashboard is accessible.
+
+### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `DATA_DIR` | `.` | Directory where `config.json` is stored (password hash) |
+| `SESSION_DURATION_HOURS` | `24` | How many hours a login session stays valid |
 
 ## Docker
 
@@ -83,8 +91,12 @@ docker run -d \
   --restart unless-stopped \
   -p 8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
+  -v dock-sight-data:/data \
+  -e DATA_DIR=/data \
   towerforge/dock-sight:latest
 ```
+
+The `-v dock-sight-data:/data` volume keeps your password hash across container recreations (e.g. after `docker pull` + `up -d`). Without it the password persists across restarts but is lost if the container is removed and recreated.
 
 <details>
 <summary>docker-compose</summary>
@@ -99,6 +111,12 @@ services:
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - dock-sight-data:/data
+    environment:
+      - DATA_DIR=/data
+
+volumes:
+  dock-sight-data:
 ```
 
 </details>
@@ -109,6 +127,15 @@ services:
 ```ini
 [Service]
 ExecStart=/usr/local/bin/dock-sight --port 8080
+Restart=always
+```
+
+The password hash is saved as `config.json` in the working directory. Set `DATA_DIR` if you want it elsewhere:
+
+```ini
+[Service]
+ExecStart=/usr/local/bin/dock-sight --port 8080
+Environment=DATA_DIR=/etc/dock-sight
 Restart=always
 ```
 
