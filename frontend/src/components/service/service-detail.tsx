@@ -98,8 +98,8 @@ const ServiceDetail: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex gap-1">
+      <div className="rounded-2xl bg-card-bg border border-card-border flex-1 min-h-0 flex flex-col">
+        <div className="flex items-center gap-1 px-6 pt-4 pb-0 border-b border-card-border shrink-0">
           {TABS.map(({ id, label, Icon: TabIcon }) => (
             <button
               key={id}
@@ -109,17 +109,17 @@ const ServiceDetail: React.FC = () => {
                 p.set('tab', id);
                 window.history.replaceState(null, '', `?${p.toString()}`);
               }}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-xl border transition-colors relative z-10 -mb-px ${
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
                 activeTab === id
-                  ? 'bg-card-bg border-card-border border-b-[#1f2329] text-white'
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                  ? 'text-white border-blue-500'
+                  : 'text-slate-500 border-transparent hover:text-slate-300'
               }`}
             >
               <TabIcon size={14} />{label}
             </button>
           ))}
         </div>
-        <div className={`bg-card-bg border border-card-border rounded-b-xl rounded-tr-xl p-4 relative z-0 flex-1 min-h-0 ${activeTab === 'logs' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}>
+        <div className={`flex-1 min-h-0 p-4 ${activeTab === 'logs' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}>
           {activeTab === 'info'   && <InfoTab   serviceName={serviceName} />}
           {activeTab === 'images' && <ImagesTab serviceName={serviceName} />}
           {activeTab === 'logs'   && <LogsTab   serviceName={serviceName} />}

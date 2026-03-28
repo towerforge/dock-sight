@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Info, HardDrive, Network, RotateCcw, Trash2 } from 'lucide-react';
-import { apiServiceContainers, apiDeleteContainer } from '@/services/sysinfo';
+import { apiServiceContainers, apiDeleteContainer, apiServiceImages } from '@/services/sysinfo';
 import { Row, Section, Chip, ConfirmModal } from './ui';
 
 export const InfoTab: React.FC<{ serviceName: string }> = ({ serviceName }) => {
   const [data, setData] = useState<any>(null);
+  const [serviceImageNames, setServiceImageNames] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [confirmName, setConfirmName] = useState<string>('');
+  const [confirmImage, setConfirmImage] = useState<string>('');
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    apiServiceContainers(serviceName)
-      .then((d: any) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+    Promise.all([
+      apiServiceContainers(serviceName),
+      apiServiceImages(serviceName),
+    ]).then(([containers, images]: [any, any[]]) => {
+      setData(containers);
+      setServiceImageNames(new Set(images.map((img: any) => `${img.name}:${img.tag}`)));
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, [serviceName]);
+
+  const getLinkedServiceImage = (containerImage: string): string => {
+    // Strip digest hash (e.g. "name:tag@sha256:...") to get "name:tag"
+    const normalized = containerImage.split('@')[0];
+    return serviceImageNames.has(normalized) ? normalized : '';
+  };
 
   const handleDelete = async () => {
     if (!confirmId) return;
@@ -46,6 +59,8 @@ export const InfoTab: React.FC<{ serviceName: string }> = ({ serviceName }) => {
           onConfirm={handleDelete}
           onCancel={() => setConfirmId(null)}
           loading={deleting}
+          warning={confirmImage ? `This container has a linked image "${confirmImage}". Delete the image first before removing the container.` : undefined}
+          maxWidth={confirmImage ? 'max-w-md' : 'max-w-sm'}
         />
       )}
 
@@ -67,7 +82,7 @@ export const InfoTab: React.FC<{ serviceName: string }> = ({ serviceName }) => {
                 }`}>{c.status}</span>
                 {!c.running && (
                   <button
-                    onClick={() => { setConfirmId(c.id); setConfirmName(c.name); }}
+                    onClick={() => { setConfirmId(c.id); setConfirmName(c.name); setConfirmImage(getLinkedServiceImage(c.image || '')); }}
                     className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     title="Delete container"
                   >

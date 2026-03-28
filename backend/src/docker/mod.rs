@@ -2,11 +2,13 @@ pub mod services;
 pub mod containers;
 pub mod images;
 pub mod logs;
+pub mod cleanup;
 
 pub use services::services;
 pub use containers::{service_containers, delete_container};
 pub use images::{service_images, delete_image};
 pub use logs::service_logs;
+pub use cleanup::{cleanup_preview, run_cleanup};
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 

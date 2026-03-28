@@ -28,3 +28,13 @@ export async function apiDeleteContainer(id: string): Promise<void> {
 export async function apiDeleteImage(id: string): Promise<void> {
   await axios.delete('/docker-service/images', { params: { id } });
 }
+
+export async function apiCleanupPreview(): Promise<any> {
+  const res = await axios.get('/docker-service/cleanup');
+  return res.data;
+}
+
+export async function apiRunCleanup(): Promise<any> {
+  const res = await axios.delete('/docker-service/cleanup');
+  return res.data;
+}

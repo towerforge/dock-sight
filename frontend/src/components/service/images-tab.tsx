@@ -22,7 +22,7 @@ export const ImagesTab: React.FC<{ serviceName: string }> = ({ serviceName }) =>
     setDeleting(true);
     try {
       await apiDeleteImage(confirmId);
-      setImages((prev) => prev.filter((img) => `${img.name}:${img.tag}` !== confirmId));
+      setImages((prev) => prev.filter((img) => img.delete_id !== confirmId));
     } finally {
       setDeleting(false);
       setConfirmId(null);
