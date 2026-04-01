@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
+import { AlertCircle, ChevronDown } from "lucide-react"
 import styles from "@/css/ui/select.module.css"
 
 interface Option {
@@ -199,9 +200,7 @@ export function Select({
                     {selectedOption ? selectedOption.label : (placeholder ?? "")}
                 </span>
                 <span className={`${styles.arrow} ${open ? styles.arrowOpen : ""}`}>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-                        <path d="M2.22 4.47a.75.75 0 0 1 1.06 0L6 7.19l2.72-2.72a.75.75 0 1 1 1.06 1.06L6.53 8.78a.75.75 0 0 1-1.06 0L2.22 5.53a.75.75 0 0 1 0-1.06Z"/>
-                    </svg>
+                    <ChevronDown size={14} />
                 </span>
             </div>
 
@@ -209,9 +208,7 @@ export function Select({
 
             {error && (
                 <span className={`${styles.message} ${styles.errorMsg}`}>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-                        <path d="M6 1a5 5 0 1 1 0 10A5 5 0 0 1 6 1Zm0 7.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM6 3a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 1 0v-3A.5.5 0 0 0 6 3Z"/>
-                    </svg>
+                    <AlertCircle size={12} />
                     {error}
                 </span>
             )}

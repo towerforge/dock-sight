@@ -1,3 +1,9 @@
+import { Page } from "@/components/ui"
+
 export default function Service() {
-  return <h1>Service</h1>
+  return (
+    <Page maxWidth="full" size={3}>
+      <h1>Service</h1>
+    </Page>
+  )
 }

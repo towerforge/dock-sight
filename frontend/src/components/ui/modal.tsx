@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
+import { X } from "lucide-react"
 import styles from "@/css/ui/modal.module.css"
 
 interface Props {
@@ -33,7 +34,7 @@ export function Modal({ open, onClose, title, children }: Props) {
             <div className={styles.panel}>
                 <div className={styles.header}>
                     <span className={styles.title}>{title}</span>
-                    <button type="button" className={styles.close} onClick={onClose} aria-label="Cerrar">✕</button>
+                    <button type="button" className={styles.close} onClick={onClose} aria-label="Cerrar"><X size={16} /></button>
                 </div>
                 <div className={styles.body}>
                     {children}

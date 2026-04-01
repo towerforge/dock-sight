@@ -15,17 +15,18 @@
     display: flex;
     align-items: center;
     height: 36px;
-    background-color: var(--fill-1);
+    background-color: var(--layer-1);
     border-radius: var(--radius-1);
-    border: 2px solid transparent;
-    transition: background 0.1s, border-color 0.15s;
+    border: 1px solid var(--stroke-1);
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.control:hover { background-color: var(--state-1); }
+.control:hover { border-color: var(--text-3); }
 
 .control:focus-within {
-    background-color: var(--layer-1);
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+    outline: none;
 }
 
 .input {
