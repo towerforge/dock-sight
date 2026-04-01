@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { SidebarLayout } from "@/layouts/SidebarLayout"
-import { Button, Input, Select, Card, CardHeader, CardBody, CardFooter, Grid, Col, Text, Modal, Page } from "@/components/ui"
+import { Button, Input, Select, Card, CardHeader, CardBody, CardFooter, Grid, Col, Text, Modal, Page, Tabs, TabBar, Tab, TabPanel } from "@/components/ui"
 
 const OPTIONS = [
     { value: "1", label: "Opción 1" },
@@ -88,6 +88,34 @@ export default function Home() {
                             <CardHeader title="Outlined" />
                             <CardBody><Text variant="caption">Solo borde</Text></CardBody>
                         </Card>
+                    </Col>
+                </Grid>
+
+                <Text variant="body" as="h2" style={{ marginBottom: 12 }}>Tabs</Text>
+                <Grid gap={16} style={{ marginBottom: 32 }}>
+                    <Col span={12}>
+                        <Tabs defaultTab="planning">
+                            <TabBar actions={<Button size="sm" variant={3}>+ New view</Button>}>
+                                <Tab id="planning" badge={3}>Feature planning</Tab>
+                                <Tab id="area">By area</Tab>
+                                <Tab id="sprint">Current sprint</Tab>
+                            </TabBar>
+                            <TabPanel id="planning">
+                                <Card style={{ margin: "16px 0" }}>
+                                    <CardBody><Text variant="caption">Contenido de Feature planning</Text></CardBody>
+                                </Card>
+                            </TabPanel>
+                            <TabPanel id="area">
+                                <Card style={{ margin: "16px 0" }}>
+                                    <CardBody><Text variant="caption">Contenido de By area</Text></CardBody>
+                                </Card>
+                            </TabPanel>
+                            <TabPanel id="sprint">
+                                <Card style={{ margin: "16px 0" }}>
+                                    <CardBody><Text variant="caption">Contenido de Current sprint</Text></CardBody>
+                                </Card>
+                            </TabPanel>
+                        </Tabs>
                     </Col>
                 </Grid>
 

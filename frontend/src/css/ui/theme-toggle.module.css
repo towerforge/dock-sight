@@ -18,10 +18,13 @@
     border-radius: calc(var(--radius-1) - 2px);
     cursor: pointer;
     font-size: 14px;
-    transition: background 0.15s;
+    color: var(--text-2);
+    transition: background 0.15s, color 0.15s;
 }
 
-.btn:hover { background: var(--state-2); }
+.btn:hover { color: var(--text-1); }
+
+.btn:hover { background: var(--state-2); color: var(--text-1); }
 
 .active {
     background: var(--layer-1);

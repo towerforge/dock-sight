@@ -1,12 +1,14 @@
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; background: var(--layer-2); color: var(--text-1); }
+a { color: var(--text-2); text-decoration: none; }
+a:hover { color: var(--text-1); }
 
 /* ── Light ──────────────────────────────────────────── */
 :root {
-  --accent:   #AF52DE;
-  --accent-2: #9e3fcf;
-  --accent-3: #8d2ebf;
-  --accent-bg: rgba(175, 82, 222, 0.08);
+  --accent:   #804edd;
+  --accent-2: #6e3dc4;
+  --accent-3: #5d2dab;
+  --accent-bg: rgba(128, 78, 221, 0.08);
 
   --text-1: #1f2328;
   --text-2: #59636e;
@@ -20,7 +22,7 @@ body { margin: 0; background: var(--layer-2); color: var(--text-1); }
   --layer-2: #f6f8fa;
 
   --stroke-1: #d1d9e0;
-  --stroke-2: #AF52DE;
+  --stroke-2: #804edd;
 
   --state-1: #eff2f5;
   --state-2: #e6eaef;
@@ -29,6 +31,10 @@ body { margin: 0; background: var(--layer-2); color: var(--text-1); }
 
   --radius-1: 6px;
   --radius-2: 10px;
+
+  --tab-active-bg:  #ffffff;
+  --tab-border:     #d1d9e0;
+  --tab-hover-bg:   rgba(0, 0, 0, 0.04);
 
   --shadow-1: 0 1px 1px 0 rgba(31, 35, 40, 0.04), 0 1px 2px 0 rgba(31, 35, 40, 0.03);
   --shadow-2: 0 0 0 1px #d1d9e080, 0 6px 12px -3px rgba(37, 41, 46, 0.04), 0 6px 18px 0 rgba(37, 41, 46, 0.12);
@@ -45,10 +51,10 @@ body { margin: 0; background: var(--layer-2); color: var(--text-1); }
 /* ── Dark (sistema) ─────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --accent:   #BF5AF2;
-    --accent-2: #af3ee8;
-    --accent-3: #9d2ed3;
-    --accent-bg: rgba(191, 90, 242, 0.12);
+    --accent:   #804edd;
+    --accent-2: #6e3dc4;
+    --accent-3: #5d2dab;
+    --accent-bg: rgba(128, 78, 221, 0.12);
 
     --text-1: #e6edf3;
     --text-2: #7d8590;
@@ -61,7 +67,7 @@ body { margin: 0; background: var(--layer-2); color: var(--text-1); }
     --layer-2: #0d1117;
 
     --stroke-1: #30363d;
-    --stroke-2: #BF5AF2;
+    --stroke-2: #804edd;
 
     --state-1: rgba(177, 186, 196, 0.08);
     --state-2: rgba(177, 186, 196, 0.16);
@@ -70,15 +76,19 @@ body { margin: 0; background: var(--layer-2); color: var(--text-1); }
 
     --shadow-1: 0 1px 1px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-2: 0 0 0 1px #30363d, 0 6px 12px -3px rgba(0, 0, 0, 0.4), 0 6px 18px 0 rgba(0, 0, 0, 0.5);
+
+    --tab-active-bg:  #1e2329;
+    --tab-border:     #272d34;
+    --tab-hover-bg:   rgba(255, 255, 255, 0.04);
   }
 }
 
 /* ── Dark (manual) ──────────────────────────────────── */
 [data-theme="dark"] {
-  --accent:   #BF5AF2;
-  --accent-2: #af3ee8;
-  --accent-3: #9d2ed3;
-  --accent-bg: rgba(191, 90, 242, 0.12);
+  --accent:   #804edd;
+  --accent-2: #6e3dc4;
+  --accent-3: #5d2dab;
+  --accent-bg: rgba(128, 78, 221, 0.12);
 
   --text-1: #e6edf3;
   --text-2: #7d8590;
@@ -91,7 +101,7 @@ body { margin: 0; background: var(--layer-2); color: var(--text-1); }
   --layer-2: #0d1117;
 
   --stroke-1: #30363d;
-  --stroke-2: #BF5AF2;
+  --stroke-2: #804edd;
 
   --state-1: rgba(177, 186, 196, 0.08);
   --state-2: rgba(177, 186, 196, 0.16);
@@ -100,4 +110,8 @@ body { margin: 0; background: var(--layer-2); color: var(--text-1); }
 
   --shadow-1: 0 1px 1px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-2: 0 0 0 1px #30363d, 0 6px 12px -3px rgba(0, 0, 0, 0.4), 0 6px 18px 0 rgba(0, 0, 0, 0.5);
+
+  --tab-active-bg:  #1e2329;
+  --tab-border:     #272d34;
+  --tab-hover-bg:   rgba(255, 255, 255, 0.04);
 }
