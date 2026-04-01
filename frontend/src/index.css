@@ -1,0 +1,81 @@
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+
+:root {
+  /* Accent */
+  --accent:   #AF52DE;
+  --accent-2: #9e3fcf;
+  --accent-3: #8d2ebf;
+  --accent-bg: rgba(175, 82, 222, 0.08);
+
+  /* Text */
+  --text-1: #0f0f0f;
+  --text-2: #6b7280;
+  --text-3: #9ca3af;
+  --text-on-accent: #fff;
+
+  /* Fill */
+  --fill-1: #f4f4f5;
+  --fill-2: #e4e4e7;
+
+  /* Layers */
+  --layer-1: #ffffff;
+  --layer-2: #f9f9fb;
+
+  /* Strokes */
+  --stroke-1: #e4e4e7;
+  --stroke-2: #aa3bff;
+
+  /* States */
+  --state-1: rgba(0, 0, 0, 0.04);
+  --state-2: rgba(0, 0, 0, 0.08);
+
+  /* Danger */
+  --color-danger: #ef4444;
+
+  /* Radius */
+  --radius-1: 6px;
+  --radius-2: 10px;
+
+  /* Shadows */
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+
+  /* Typography */
+  --font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-family);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent:   #BF5AF2;
+    --accent-2: #af3ee8;
+    --accent-3: #9d2ed3;
+    --accent-bg: rgba(191, 90, 242, 0.12);
+
+    --text-1: #f3f4f6;
+    --text-2: #9ca3af;
+    --text-3: #6b7280;
+
+    --fill-1: #27272a;
+    --fill-2: #3f3f46;
+
+    --layer-1: #1c1c1e;
+    --layer-2: #27272a;
+
+    --stroke-1: #3f3f46;
+    --stroke-2: #c084fc;
+
+    --state-1: rgba(255, 255, 255, 0.05);
+    --state-2: rgba(255, 255, 255, 0.1);
+
+    --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}

@@ -15,7 +15,7 @@ export default defineConfig({
         name: 'Dock Sight',
         short_name: 'Dock Sight',
         description: 'Dock Sight',
-        theme_color: '#aa3bff',
+        theme_color: '#AF52DE',
         background_color: '#0f0f0f',
         display: 'standalone',
         start_url: '/',
