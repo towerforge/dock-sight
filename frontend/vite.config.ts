@@ -3,6 +3,7 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+import pkg from './package.json'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -30,6 +31,16 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+    },
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
+  server: {
+    proxy: {
+      '/sysinfo':       `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
+      '/docker-service': `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
+      '/api':           `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
     },
   },
 })
