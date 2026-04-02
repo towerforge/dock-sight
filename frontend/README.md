@@ -1,89 +1,75 @@
-# Dock Sight — Frontend
+# React + TypeScript + Vite
 
-Astro + React frontend for the Dock Sight dashboard. Built as a static site embedded into the backend binary at compile time.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Stack
+Currently, two official plugins are available:
 
-| Layer | Technology |
-|---|---|
-| Framework | Astro 5 (static output) |
-| UI | React 19 + TypeScript |
-| Styling | Tailwind CSS 3 |
-| Charts | Recharts |
-| Icons | Lucide React |
-| HTTP | Axios |
-| Package manager | pnpm |
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Pages
+## React Compiler
 
-| Route | Component | Description |
-|---|---|---|
-| `/` | `dashboard/dashboard.tsx` | Host metrics and Docker services overview |
-| `/service?name=<name>` | `service/service-detail.tsx` | Per-service detail: containers, images, logs |
-| `/logs?name=<name>` | `logs-fullscreen.tsx` | Fullscreen log viewer (opens in new tab) |
+The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
 
-## Project structure
+Note: This will impact Vite dev & build performances.
 
-```
-src/
-├── components/
-│   ├── dashboard/          # Dashboard view (metric cards, service list)
-│   ├── service/            # Service detail view
-│   │   ├── containers-tab.tsx
-│   │   ├── images-tab.tsx
-│   │   ├── logs-tab.tsx
-│   │   ├── service-detail.tsx
-│   │   └── ui.tsx          # Shared primitives (Row, Chip, ConfirmModal…)
-│   ├── logs-fullscreen.tsx # Fullscreen wrapper for LogsTab
-│   └── modal.tsx           # Base modal component
-├── hooks/
-│   └── use-dashboard-data.ts  # Polling hook for metrics + service history
-├── layouts/
-│   └── Layout.astro
-├── lib/
-│   └── formatters.ts       # formatBytes, etc.
-├── pages/
-│   ├── index.astro
-│   ├── service.astro
-│   └── logs.astro
-├── services/
-│   └── sysinfo.tsx         # API calls to the backend
-├── types/
-│   └── dashboard.ts
-└── generated/
-    └── version.ts          # Auto-generated from Cargo.toml at build time
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-## Development
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-The frontend dev server proxies all API requests to the backend running on port 8080. Start both processes:
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-```bash
-# Backend (from repo root)
-make dev-backend
-
-# Frontend
-pnpm dev
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-
-Frontend runs at `http://localhost:4321`. API proxy is configured in `astro.config.mjs`:
-
-```
-/sysinfo          → http://localhost:8080
-/docker-service   → http://localhost:8080
-/openapi.json     → http://localhost:8080
-```
-
-## Commands
-
-| Command | Description |
-|---|---|
-| `pnpm dev` | Start dev server at `localhost:4321` |
-| `pnpm build` | Sync version from Cargo.toml, then build to `./dist/` |
-| `pnpm preview` | Preview the production build locally |
-
-## Build output
-
-`pnpm build` writes the static site to `dist/`. The backend embeds this directory at compile time via `rust-embed`, serving it as part of the single binary in production mode.
-
-The version shown in the UI is synced from `backend/Cargo.toml` during build by `scripts/sync-cargo-version.mjs`, which writes `src/generated/version.ts`.
