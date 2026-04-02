@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { PanelRight, Server, Trash2, FlaskConical, Info, LogOut, Box, Image as ImageIcon, ScrollText, ArrowLeft, BarChart2 } from 'lucide-react'
+import { PanelRight, Server, Trash2, FlaskConical, Info, LogOut, Box, Image as ImageIcon, ScrollText, ArrowLeft, BarChart2, LayoutGrid } from 'lucide-react'
 import { CircuitBoard, HardDrive, Activity } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui'
 import { useDashboard } from '@/context/DashboardContext'
@@ -167,6 +167,9 @@ export default function MainLayout() {
                     <>
                         <NavLink to="/" end className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
                             <Server size={15} />Services
+                        </NavLink>
+                        <NavLink to="/metrics" className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
+                            <BarChart2 size={15} />Metrics
                         </NavLink>
                         <NavLink to="/cleanup" className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
                             <Trash2 size={15} />Cleanup

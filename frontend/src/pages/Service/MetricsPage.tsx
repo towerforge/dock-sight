@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Cpu, MemoryStick } from 'lucide-react'
 import { useDashboard } from '@/context/DashboardContext'
@@ -7,71 +7,62 @@ import { Page } from '@/components/ui'
 import { MiniSysChart } from '@/components/dashboard/MiniSysChart'
 import type { ServiceHistoryPoint } from '@/types/dashboard'
 
-const POINTS = [5, 10, 20, 50]
+const INTERVALS = [2000, 5000, 10000, 30000]
+const POINTS    = [5, 10, 20, 50]
 
 export default function MetricsPage() {
     const [searchParams] = useSearchParams()
     const name = searchParams.get('name') ?? ''
-    const { dock, serviceHistory } = useDashboard()
-    const [viewMode, setViewMode] = useState<'bars' | 'chart'>('bars')
-    const [pointCount, setPointCount] = useState(10)
+    const { dock, serviceHistory, refreshInterval, setRefreshInterval, pointCount, setPointCount } = useDashboard()
 
     const service = useMemo(() => dock.find(s => s.name === name) ?? null, [dock, name])
     const history: ServiceHistoryPoint[] = serviceHistory[name] ?? []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const chartData = history.map(p => ({ time: p.time, cpu: p.cpu, ram: p.ramPercent, disk: 0 })) as any
 
     return (
         <Page>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 16 }}>
-                <ControlSelect label="Points" value={pointCount} options={POINTS} format={v => `${v}`} onChange={setPointCount} />
-                <ViewToggle value={viewMode} onChange={setViewMode} />
+                <ControlSelect label="Refresh" value={refreshInterval} options={INTERVALS} format={v => `${v / 1000}s`} onChange={setRefreshInterval} />
+                <ControlSelect label="Points"  value={pointCount}      options={POINTS}    format={v => `${v}`}           onChange={setPointCount} />
             </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-                <ServiceMetricCard
-                    title="CPU" Icon={Cpu} colorHex="#3b82f6" colorId="svc-cpu"
-                    percent={service?.info.cpu.percent ?? 0}
+                <MetricCard
+                    label="CPU" Icon={Cpu} colorHex="#3b82f6" colorId="svc-cpu"
                     mainValue={`${(service?.info.cpu.percent ?? 0).toFixed(1)}%`}
-                    data={history} dataKey="cpu" viewMode={viewMode} pointCount={pointCount}
+                    data={chartData} dataKey="cpu" pointCount={pointCount}
                 />
-                <ServiceMetricCard
-                    title="RAM" Icon={MemoryStick} colorHex="#10b981" colorId="svc-ram"
-                    percent={service?.info.ram.percent ?? 0}
+                <MetricCard
+                    label="RAM" Icon={MemoryStick} colorHex="#10b981" colorId="svc-ram"
                     mainValue={`${(service?.info.ram.percent ?? 0).toFixed(1)}%`}
                     subtitle={service ? formatBytes(service.info.ram.used) : undefined}
-                    data={history} dataKey="ramPercent" viewMode={viewMode} pointCount={pointCount}
+                    data={chartData} dataKey="ram" pointCount={pointCount}
                 />
             </div>
         </Page>
     )
 }
 
-function ServiceMetricCard({ title, Icon, colorHex, colorId, percent, mainValue, subtitle, data, dataKey, viewMode, pointCount }: {
-    title: string; Icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>; colorHex: string; colorId: string
-    percent: number; mainValue: string; subtitle?: string
-    data: ServiceHistoryPoint[]; dataKey: 'cpu' | 'ramPercent'
-    viewMode: 'bars' | 'chart'; pointCount: number
+function MetricCard({ label, Icon, colorHex, colorId, mainValue, subtitle, data, dataKey, pointCount }: {
+    label: string
+    Icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
+    colorHex: string; colorId: string
+    mainValue: string; subtitle?: string
+    data: Parameters<typeof MiniSysChart>[0]['data']
+    dataKey: 'cpu' | 'ram'
+    pointCount: number
 }) {
     return (
-        <div style={{ padding: 16, borderRadius: 'var(--radius-2)', background: 'var(--layer-1)', border: '1px solid var(--stroke-1)', boxShadow: 'var(--shadow-1)', display: 'flex', flexDirection: 'column', minHeight: 140 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-2)', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>
-                <Icon size={14} style={{ color: colorHex }} />{title}
+        <div style={{ padding: 16, borderRadius: 'var(--radius-2)', background: 'var(--layer-1)', border: '1px solid var(--stroke-1)', boxShadow: 'var(--shadow-1)', display: 'flex', flexDirection: 'column', minHeight: 160 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--text-2)', marginBottom: 4 }}>
+                <Icon size={14} style={{ color: colorHex }} />{label}
             </div>
             <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-1)' }}>{mainValue}</div>
             {subtitle && <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{subtitle}</div>}
-            {viewMode === 'bars' ? (
-                <div style={{ marginTop: 'auto', paddingTop: 12 }}>
-                    <div style={{ width: '100%', background: 'var(--fill-2)', height: 6, borderRadius: 99, overflow: 'hidden' }}>
-                        <div style={{ width: `${percent}%`, height: '100%', background: colorHex, borderRadius: 99, transition: 'width 0.5s' }} />
-                    </div>
-                </div>
-            ) : (
-                <div style={{ flex: 1, minHeight: 80 }}>
-                    <MiniSysChart
-                        data={data.map(p => ({ time: p.time, cpu: p.cpu, ram: p.ramPercent, disk: 0 }))}
-                        dataKey={dataKey === 'ramPercent' ? 'ram' : 'cpu'}
-                        colorHex={colorHex} colorId={colorId} pointCount={pointCount}
-                    />
-                </div>
-            )}
+            <div style={{ flex: 1, minHeight: 80, marginTop: 12 }}>
+                <MiniSysChart data={data} dataKey={dataKey} colorHex={colorHex} colorId={colorId} pointCount={pointCount} />
+            </div>
         </div>
     )
 }
@@ -83,20 +74,6 @@ function ControlSelect({ label, value, options, format, onChange }: { label: str
             <select value={value} onChange={e => onChange(Number(e.target.value))} style={{ background: 'var(--layer-1)', border: '1px solid var(--stroke-1)', borderRadius: 'var(--radius-1)', padding: '4px 8px', fontSize: 13, color: 'var(--text-1)', cursor: 'pointer' }}>
                 {options.map(o => <option key={o} value={o}>{format(o)}</option>)}
             </select>
-        </div>
-    )
-}
-
-function ViewToggle({ value, onChange }: { value: 'bars' | 'chart'; onChange: (v: 'bars' | 'chart') => void }) {
-    const btn = (v: 'bars' | 'chart', label: string) => (
-        <button key={v} onClick={() => onChange(v)} style={{ padding: '4px 10px', fontSize: 13, border: 'none', borderRadius: 'calc(var(--radius-1) - 2px)', cursor: 'pointer', background: value === v ? 'var(--layer-1)' : 'transparent', color: value === v ? 'var(--text-1)' : 'var(--text-2)', boxShadow: value === v ? 'var(--shadow-1)' : undefined, transition: 'all 0.15s' }}>
-            {label}
-        </button>
-    )
-    return (
-        <div style={{ display: 'inline-flex', background: 'var(--fill-1)', border: '1px solid var(--stroke-1)', borderRadius: 'var(--radius-1)', padding: 2, gap: 2 }}>
-            {btn('bars', 'Table')}
-            {btn('chart', 'Grid')}
         </div>
     )
 }

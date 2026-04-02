@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import { apiServiceContainers, apiDeleteContainer, apiServiceImages } from '@/services/api'
 import { Button, Modal } from '@/components/ui'
-import { Table, TableHead, TableBody, Th, Tr, Td, TableCell } from '@/components/ui/table'
+import { Table, TableHead, TableBody, Th, Tr, Td } from '@/components/ui/table'
 
 function StatChip({ label, value, color }: { label: string; value: number; color?: string }) {
     return (
@@ -104,14 +104,7 @@ export function ContainersTab({ serviceName }: { serviceName: string }) {
                 <TableBody>
                     {sorted.map((c: any) => (
                         <Tr key={c.id} style={{ opacity: c.running ? 1 : 0.5 }}>
-                            <Td>
-                                <TableCell>
-                                    <div>
-                                        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-1)' }}>{c.name}</div>
-                                        <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'monospace' }}>{c.id}</div>
-                                    </div>
-                                </TableCell>
-                            </Td>
+                            <Td style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</Td>
                             <Td shrink>
                                 <span style={{
                                     fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,

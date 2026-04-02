@@ -2,10 +2,21 @@ import { useState, useEffect, useCallback } from 'react'
 import { Trash2, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react'
 import { apiCleanupPreview, apiRunCleanup } from '@/services/api'
 import { formatBytes } from '@/lib/formatters'
-import { Button, Modal, Table, TableHead, TableBody, Th, Tr, Td, TableCell, Text } from '@/components/ui'
+import { Button, Modal, Table, TableHead, TableBody, Th, Tr, Td } from '@/components/ui'
 
 interface Container { id: string; name: string; image: string; status: string }
 interface Image     { id: string; tag: string; size: number }
+
+function shortImage(image: string) { return image.split('@')[0] }
+
+function StatChip({ label, value, color }: { label: string; value: number | string; color?: string }) {
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 'var(--radius-1)', background: 'var(--fill-1)', border: '1px solid var(--stroke-1)', fontSize: 12 }}>
+            <span style={{ color: 'var(--text-3)' }}>{label}</span>
+            <span style={{ fontWeight: 700, color: color ?? 'var(--text-1)' }}>{value}</span>
+        </div>
+    )
+}
 
 export function CleanupTab() {
     const [containers, setContainers] = useState<Container[]>([])
@@ -60,7 +71,7 @@ export function CleanupTab() {
                 </div>
             </Modal>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
                 {/* Result banner */}
                 {result && (
@@ -73,15 +84,12 @@ export function CleanupTab() {
                     </div>
                 )}
 
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                        <Text variant="body" style={{ fontWeight: 500, marginBottom: 2 }}>Unused resources</Text>
-                        <Text variant="caption">
-                            {isEmpty ? 'Nothing to clean up' : `${containers.length} containers · ${images.length} images · ~${formatBytes(totalSpace)} to free`}
-                        </Text>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                {/* Stats + actions */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <StatChip label="Containers" value={containers.length} color={containers.length > 0 ? '#f59e0b' : 'var(--text-3)'} />
+                    <StatChip label="Images" value={images.length} color={images.length > 0 ? '#f59e0b' : 'var(--text-3)'} />
+                    {totalSpace > 0 && <StatChip label="To free" value={`~${formatBytes(totalSpace)}`} />}
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
                         <Button variant={4} onClick={fetchPreview}><RefreshCw size={14} /></Button>
                         <Button variant={5} onClick={() => setConfirm(true)} disabled={isEmpty || running}>
                             <Trash2 size={13} />{running ? 'Cleaning…' : 'Clean All'}
@@ -99,25 +107,24 @@ export function CleanupTab() {
 
                         {containers.length > 0 && (
                             <div>
-                                <Text variant="caption" style={{ marginBottom: 8, display: 'block', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                     Stopped containers ({containers.length})
-                                </Text>
+                                </p>
                                 <Table>
                                     <TableHead>
                                         <Th>Name</Th>
+                                        <Th shrink>ID</Th>
                                         <Th>Image</Th>
-                                        <Th align="right" shrink>Status</Th>
+                                        <Th shrink align="right">Status</Th>
                                     </TableHead>
                                     <TableBody>
                                         {containers.map(c => (
                                             <Tr key={c.id}>
-                                                <Td>
-                                                    <TableCell>{c.name}</TableCell>
-                                                    <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-3)', marginLeft: 8 }}>{c.id}</span>
-                                                </Td>
-                                                <Td muted>{c.image}</Td>
-                                                <Td align="right" shrink>
-                                                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--fill-2)', border: '1px solid var(--stroke-1)', color: 'var(--text-2)' }}>
+                                                <Td style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</Td>
+                                                <Td shrink muted style={{ fontFamily: 'monospace', fontSize: 11 }}>{c.id}</Td>
+                                                <Td muted style={{ fontFamily: 'monospace', fontSize: 12 }}>{shortImage(c.image)}</Td>
+                                                <Td shrink align="right">
+                                                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--fill-2)', border: '1px solid var(--stroke-1)', color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
                                                         {c.status}
                                                     </span>
                                                 </Td>
@@ -130,21 +137,21 @@ export function CleanupTab() {
 
                         {images.length > 0 && (
                             <div>
-                                <Text variant="caption" style={{ marginBottom: 8, display: 'block', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                     Unused images ({images.length})
-                                </Text>
+                                </p>
                                 <Table>
                                     <TableHead>
                                         <Th>Tag</Th>
                                         <Th shrink>ID</Th>
-                                        <Th align="right" shrink>Size</Th>
+                                        <Th shrink align="right">Size</Th>
                                     </TableHead>
                                     <TableBody>
                                         {images.map(img => (
                                             <Tr key={img.id}>
-                                                <Td>{img.tag}</Td>
+                                                <Td style={{ fontFamily: 'monospace', fontSize: 12 }}>{img.tag}</Td>
                                                 <Td shrink muted style={{ fontFamily: 'monospace', fontSize: 11 }}>{img.id}</Td>
-                                                <Td align="right" shrink muted>{formatBytes(img.size)}</Td>
+                                                <Td shrink align="right" muted>{formatBytes(img.size)}</Td>
                                             </Tr>
                                         ))}
                                     </TableBody>

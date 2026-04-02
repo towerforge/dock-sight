@@ -10,6 +10,7 @@ import ImagesPage from '@/pages/Service/ImagesPage'
 import LogsPage from '@/pages/Service/LogsPage'
 import MetricsPage from '@/pages/Service/MetricsPage'
 import Cleanup from '@/pages/Cleanup'
+import Metrics from '@/pages/Metrics'
 
 const Dev = import.meta.env.DEV ? lazy(() => import('@/pages/Dev')) : null
 
@@ -28,6 +29,7 @@ function App() {
             <Route path="metrics"    element={<MetricsPage />} />
           </Route>
           <Route path="/cleanup" element={<Cleanup />} />
+          <Route path="/metrics" element={<Metrics />} />
           {Dev && <Route path="/_dev" element={<Suspense><Dev /></Suspense>} />}
           {!import.meta.env.DEV && <Route path="/_dev" element={<Navigate to="/" replace />} />}
         </Route>
