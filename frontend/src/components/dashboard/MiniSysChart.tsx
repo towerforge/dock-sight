@@ -45,15 +45,17 @@ export function MiniSysChart({ data, dataKey, colorHex, colorId, pointCount = 10
                         </linearGradient>
                     </defs>
                     <XAxis dataKey="time" domain={['dataMin', 'dataMax']} type="number" hide />
-                    <YAxis domain={isNetwork ? [undefined, undefined] : [0, 'auto']} hide />
+                    <YAxis domain={isNetwork ? undefined : [0, 'auto']} hide />
                     <Tooltip
                         contentStyle={TOOLTIP_STYLE}
                         labelStyle={LABEL_STYLE}
                         labelFormatter={(v) => formatTooltipTime(v)}
-                        formatter={(value?: number) => {
-                            if (value == null) return ['']
-                            if (isNetwork) return [formatBytes(Math.abs(value))]
-                            return [`${value.toFixed(1)}%`]
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        formatter={(value: any) => {
+                            const n = typeof value === 'number' ? value : parseFloat(value)
+                            if (isNaN(n)) return ['']
+                            if (isNetwork) return [formatBytes(Math.abs(n))]
+                            return [`${n.toFixed(1)}%`]
                         }}
                     />
                     {isNetwork ? (
