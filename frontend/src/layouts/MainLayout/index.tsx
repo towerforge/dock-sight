@@ -168,6 +168,9 @@ export default function MainLayout() {
                         <NavLink to="/" end className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
                             <Server size={15} />Services
                         </NavLink>
+                        <NavLink to="/metrics" className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
+                            <BarChart2 size={15} />Metrics
+                        </NavLink>
                         <NavLink to="/cleanup" className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
                             <Trash2 size={15} />Cleanup
                         </NavLink>

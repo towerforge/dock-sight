@@ -17,7 +17,7 @@
 }
 
 .th {
-    padding: 16px 16px;
+    padding: 10px 16px;
     text-align: left;
     font-size: 12px;
     font-weight: 600;
@@ -26,7 +26,8 @@
     white-space: nowrap;
 }
 
-.th.right { text-align: right; }
+.th.right  { text-align: right; }
+.th.shrink { width: 1%; white-space: nowrap; }
 
 /* Rows */
 .tr {

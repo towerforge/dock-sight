@@ -3,7 +3,7 @@ import { Trash2 } from 'lucide-react'
 import { apiServiceImages, apiDeleteImage } from '@/services/api'
 import { formatBytes } from '@/lib/formatters'
 import { Button, Modal } from '@/components/ui'
-import { Table, TableHead, TableBody, Th, Tr, Td, TableCell } from '@/components/ui/table'
+import { Table, TableHead, TableBody, Th, Tr, Td } from '@/components/ui/table'
 
 function StatChip({ label, value, color }: { label: string; value: number | string; color?: string }) {
     return (
@@ -81,14 +81,7 @@ export function ImagesTab({ serviceName }: { serviceName: string }) {
                 <TableBody>
                     {sorted.map(img => (
                         <Tr key={img.id} style={{ opacity: img.in_use ? 1 : 0.5 }}>
-                            <Td>
-                                <TableCell>
-                                    <div>
-                                        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-1)' }}>{img.name}</div>
-                                        <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'monospace' }}>{img.id}</div>
-                                    </div>
-                                </TableCell>
-                            </Td>
+                            <Td style={{ fontWeight: 600, fontSize: 13 }}>{img.name}</Td>
                             <Td shrink>
                                 <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                                     {img.tag}
