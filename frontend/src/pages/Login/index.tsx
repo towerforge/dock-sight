@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { AuthView } from '@/components/auth/AuthView'
 
 export default function Login() {
-    const { status, loading, refresh } = useAuth()
+    const { status, loading } = useAuth()
     const navigate = useNavigate()
 
     useEffect(() => {

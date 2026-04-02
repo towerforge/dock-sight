@@ -75,9 +75,10 @@ export function ServiceCard({ service, historyData, pointCount = 10 }: Props) {
                             labelStyle={LABEL_STYLE}
                             itemStyle={{ padding: 0, fontWeight: 500 }}
                             labelFormatter={(v) => formatTooltipTime(v)}
-                            formatter={(val?: number, name?: string) => {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            formatter={(val: any, name: any) => {
                                 if (val == null) return ['', name === 'cpu' ? 'CPU' : 'RAM']
-                                return [`${val.toFixed(1)}%`, name === 'cpu' ? 'CPU' : 'RAM']
+                                return [`${Number(val).toFixed(1)}%`, name === 'cpu' ? 'CPU' : 'RAM']
                             }}
                         />
                         <Area type="monotone" dataKey="ramPercent" stroke="#10b981" strokeWidth={2.5}
