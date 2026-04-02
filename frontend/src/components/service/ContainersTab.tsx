@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react'
-import { Box, Info, HardDrive, Network, RotateCcw, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { apiServiceContainers, apiDeleteContainer, apiServiceImages } from '@/services/api'
 import { Button, Modal } from '@/components/ui'
+import { Table, TableHead, TableBody, Th, Tr, Td, TableCell } from '@/components/ui/table'
 
-const labelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--text-3)', marginBottom: 2 }
-const valueStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text-1)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
-const chipStyle: React.CSSProperties = { fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'var(--fill-2)', border: '1px solid var(--stroke-1)', color: 'var(--text-2)', fontFamily: 'monospace' }
-
-function InfoRow({ icon, label, value, mono }: { icon: React.ReactNode; label: string; value: string; mono?: boolean }) {
+function StatChip({ label, value, color }: { label: string; value: number; color?: string }) {
     return (
-        <div>
-            <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 3 }}>{icon}{label}</div>
-            <div style={{ ...valueStyle, fontFamily: mono ? 'monospace' : undefined }}>{value}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 'var(--radius-1)', background: 'var(--fill-1)', border: '1px solid var(--stroke-1)', fontSize: 12 }}>
+            <span style={{ color: 'var(--text-3)' }}>{label}</span>
+            <span style={{ fontWeight: 700, color: color ?? 'var(--text-1)' }}>{value}</span>
         </div>
     )
+}
+
+const chipStyle: React.CSSProperties = {
+    fontSize: 11, padding: '1px 6px', borderRadius: 4,
+    background: 'var(--fill-2)', border: '1px solid var(--stroke-1)',
+    color: 'var(--text-2)', fontFamily: 'monospace', whiteSpace: 'nowrap',
 }
 
 export function ContainersTab({ serviceName }: { serviceName: string }) {
@@ -57,8 +60,21 @@ export function ContainersTab({ serviceName }: { serviceName: string }) {
 
     const sorted = [...data.containers].sort((a: any, b: any) => Number(b.running) - Number(a.running))
 
+    const running = sorted.filter((c: any) => c.running).length
+    const stopped = sorted.length - running
+    const totalPorts = sorted.reduce((n: number, c: any) => n + (c.ports?.length ?? 0), 0)
+    const totalMounts = sorted.reduce((n: number, c: any) => n + (c.mounts?.length ?? 0), 0)
+
     return (
         <>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                <StatChip label="Total" value={sorted.length} />
+                <StatChip label="Running" value={running} color="#10b981" />
+                <StatChip label="Stopped" value={stopped} color="var(--text-3)" />
+                {totalPorts > 0 && <StatChip label="Ports exposed" value={totalPorts} />}
+                {totalMounts > 0 && <StatChip label="Mounts" value={totalMounts} />}
+            </div>
+
             <Modal open={!!confirmId} onClose={() => setConfirmId(null)} title="Delete container">
                 <p style={{ fontSize: 14, color: 'var(--text-2)', marginBottom: confirmImage ? 12 : 16 }}>
                     Remove "{confirmName}"? This action cannot be undone.
@@ -74,26 +90,55 @@ export function ContainersTab({ serviceName }: { serviceName: string }) {
                 </div>
             </Modal>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                {sorted.map((c: any, i: number) => (
-                    <div key={c.id} style={{
-                        padding: '20px 0',
-                        borderTop: i > 0 ? '1px solid var(--stroke-1)' : undefined,
-                        opacity: c.running ? 1 : 0.5,
-                        display: 'flex', flexDirection: 'column', gap: 16,
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-1)' }}>{c.name}</span>
-                                <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-3)' }}>{c.id}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <Table>
+                <TableHead>
+                    <Th>Name</Th>
+                    <Th shrink>Status</Th>
+                    <Th>Image</Th>
+                    <Th>Ports</Th>
+                    <Th>Networks</Th>
+                    <Th shrink>Restart</Th>
+                    <Th shrink>Created</Th>
+                    <Th shrink></Th>
+                </TableHead>
+                <TableBody>
+                    {sorted.map((c: any) => (
+                        <Tr key={c.id} style={{ opacity: c.running ? 1 : 0.5 }}>
+                            <Td>
+                                <TableCell>
+                                    <div>
+                                        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-1)' }}>{c.name}</div>
+                                        <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'monospace' }}>{c.id}</div>
+                                    </div>
+                                </TableCell>
+                            </Td>
+                            <Td shrink>
                                 <span style={{
                                     fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
                                     background: c.running ? 'rgba(16,185,129,0.1)' : 'rgba(148,163,184,0.1)',
                                     color: c.running ? '#10b981' : 'var(--text-2)',
                                     border: `1px solid ${c.running ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.2)'}`,
+                                    whiteSpace: 'nowrap',
                                 }}>{c.status}</span>
+                            </Td>
+                            <Td muted>
+                                <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{c.image || '—'}</span>
+                            </Td>
+                            <Td>
+                                {c.ports?.length > 0
+                                    ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>{c.ports.map((p: string) => <span key={p} style={chipStyle}>{p}</span>)}</div>
+                                    : <span style={{ color: 'var(--text-3)', fontSize: 12 }}>—</span>
+                                }
+                            </Td>
+                            <Td>
+                                {c.networks?.length > 0
+                                    ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>{c.networks.map((n: string) => <span key={n} style={chipStyle}>{n}</span>)}</div>
+                                    : <span style={{ color: 'var(--text-3)', fontSize: 12 }}>—</span>
+                                }
+                            </Td>
+                            <Td shrink muted>{c.restart_policy || '—'}</Td>
+                            <Td shrink muted>{c.created ? new Date(c.created).toLocaleDateString() : '—'}</Td>
+                            <Td shrink>
                                 {!c.running && (
                                     <button
                                         onClick={() => { setConfirmId(c.id); setConfirmName(c.name); setConfirmImage(getLinkedImage(c.image ?? '')) }}
@@ -103,49 +148,11 @@ export function ContainersTab({ serviceName }: { serviceName: string }) {
                                         <Trash2 size={13} />
                                     </button>
                                 )}
-                            </div>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
-                            <InfoRow icon={<Box size={11} />}       label="Image"   value={c.image || '—'} mono />
-                            <InfoRow icon={<RotateCcw size={11} />} label="Restart" value={c.restart_policy || '—'} />
-                            <InfoRow icon={<Info size={11} />}      label="Created" value={c.created ? new Date(c.created).toLocaleString() : '—'} />
-                        </div>
-
-                        {(c.ports?.length > 0 || c.networks?.length > 0 || c.mounts?.length > 0) && (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, paddingTop: 8, borderTop: '1px solid var(--stroke-1)' }}>
-                                {c.ports?.length > 0 && (
-                                    <div>
-                                        <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 3, marginBottom: 6 }}><Network size={11} />Ports</div>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>{c.ports.map((p: string) => <span key={p} style={chipStyle}>{p}</span>)}</div>
-                                    </div>
-                                )}
-                                {c.networks?.length > 0 && (
-                                    <div>
-                                        <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 3, marginBottom: 6 }}><Network size={11} />Networks</div>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>{c.networks.map((n: string) => <span key={n} style={chipStyle}>{n}</span>)}</div>
-                                    </div>
-                                )}
-                                {c.mounts?.length > 0 && (
-                                    <div>
-                                        <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 3, marginBottom: 6 }}><HardDrive size={11} />Mounts</div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                            {c.mounts.map((m: any, j: number) => (
-                                                <div key={j} style={{ ...chipStyle, display: 'flex', gap: 4 }}>
-                                                    <span style={{ color: 'var(--text-3)' }}>{m.type}</span>
-                                                    <span>{m.source}</span>
-                                                    <span style={{ color: 'var(--text-3)' }}>→</span>
-                                                    <span>{m.destination}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
+                            </Td>
+                        </Tr>
+                    ))}
+                </TableBody>
+            </Table>
         </>
     )
 }

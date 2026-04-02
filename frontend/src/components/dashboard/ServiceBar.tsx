@@ -25,7 +25,7 @@ export function ServiceBar({ items }: Props) {
                     <Tr
                         key={s.name}
                         style={{ cursor: 'pointer' }}
-                        onClick={() => navigate(`/service?name=${encodeURIComponent(s.name)}`)}
+                        onClick={() => navigate(`/service/containers?name=${encodeURIComponent(s.name)}`)}
                     >
                         <Td>
                             <TableCell icon={<Box size={14} style={{ color: '#3b82f6' }} />}>

@@ -37,7 +37,7 @@ export function ServiceCard({ service, historyData, pointCount = 10 }: Props) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, zIndex: 1 }}>
                 <div>
                     <Link
-                        to={`/service?name=${encodeURIComponent(service.name)}`}
+                        to={`/service/containers?name=${encodeURIComponent(service.name)}`}
                         style={{ color: 'var(--text-1)', fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', gap: 6 }}
                     >
                         <Box size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
