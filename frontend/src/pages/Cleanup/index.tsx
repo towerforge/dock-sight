@@ -1,5 +1,5 @@
 import { Page } from '@/components/ui'
-import { CleanupTab } from '@/components/dashboard/CleanupTab'
+import { CleanupTab } from '@/pages/cleanup/cleanup-tab'
 
 export default function Cleanup() {
     return (

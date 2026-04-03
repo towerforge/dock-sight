@@ -1,18 +1,18 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { DashboardProvider } from '@/context/DashboardContext'
-import MainLayout from '@/layouts/MainLayout'
-import Login from '@/pages/Login'
-import Home from '@/pages/Home'
-import ServiceLayout from '@/pages/Service'
-import ContainersPage from '@/pages/Service/ContainersPage'
-import ImagesPage from '@/pages/Service/ImagesPage'
-import LogsPage from '@/pages/Service/LogsPage'
-import MetricsPage from '@/pages/Service/MetricsPage'
-import Cleanup from '@/pages/Cleanup'
-import Metrics from '@/pages/Metrics'
+import { DashboardProvider } from '@/context/dashboard-context'
+import MainLayout from '@/layouts/main-layout'
+import Login from '@/pages/login'
+import Home from '@/pages/home'
+import ServiceLayout from '@/pages/service'
+import ContainersPage from '@/pages/service/containers/containers-page'
+import ImagesPage from '@/pages/service/images/images-page'
+import LogsPage from '@/pages/service/logs/logs-page'
+import MetricsPage from '@/pages/service/metrics/metrics-page'
+import Cleanup from '@/pages/cleanup'
+import Metrics from '@/pages/metrics'
 
-const Dev = import.meta.env.DEV ? lazy(() => import('@/pages/Dev')) : null
+const Dev = import.meta.env.DEV ? lazy(() => import('@/pages/dev')) : null
 
 function App() {
   return (

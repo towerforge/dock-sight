@@ -1,5 +1,5 @@
 import { Sun, Monitor, Moon } from "lucide-react"
-import { useTheme, type Theme } from "@/hooks/useTheme"
+import { useTheme, type Theme } from "@/hooks/use-theme"
 import styles from "@/css/ui/theme-toggle.module.css"
 
 const OPTIONS: { value: Theme; icon: React.ReactNode }[] = [

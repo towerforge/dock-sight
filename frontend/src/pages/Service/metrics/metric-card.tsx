@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import type { SysHistoryPoint } from '@/types/dashboard'
-import { MiniSysChart } from './MiniSysChart'
+import { MiniSysChart } from '../../../components/dashboard/mini-sys-chart'
 
 type DataKey = 'cpu' | 'ram' | 'disk' | 'network'
 

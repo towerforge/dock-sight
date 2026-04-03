@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import { apiServiceImages, apiDeleteImage } from '@/services/api'
 import { formatBytes } from '@/lib/formatters'
-import { Button, Modal } from '@/components/ui'
-import { Table, TableHead, TableBody, Th, Tr, Td } from '@/components/ui/table'
+import { Button, Modal, Table } from '@/components/ui'
+import type { Column } from '@/components/ui'
 
 function StatChip({ label, value, color }: { label: string; value: number | string; color?: string }) {
     return (
@@ -48,6 +48,75 @@ export function ImagesTab({ serviceName }: { serviceName: string }) {
     const unused = sorted.length - inUse
     const totalSize = sorted.reduce((n, i) => n + (i.size ?? 0), 0)
 
+    const columns: Column<any>[] = [
+        {
+            key: 'name',
+            header: 'Name',
+            render: img => <span style={{ fontWeight: 600, fontSize: 13 }}>{img.name}</span>,
+        },
+        {
+            key: 'tag',
+            header: 'Tag',
+            shrink: true,
+            render: img => (
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                    {img.tag}
+                </span>
+            ),
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            shrink: true,
+            render: img => (
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, whiteSpace: 'nowrap',
+                    background: img.in_use ? 'rgba(16,185,129,0.1)' : 'rgba(148,163,184,0.1)',
+                    color: img.in_use ? '#10b981' : 'var(--text-2)',
+                    border: `1px solid ${img.in_use ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.2)'}`,
+                }}>{img.in_use ? 'In use' : 'Unused'}</span>
+            ),
+        },
+        {
+            key: 'size',
+            header: 'Size',
+            shrink: true,
+            align: 'right',
+            render: img => <span style={{ color: 'var(--text-2)' }}>{formatBytes(img.size)}</span>,
+        },
+        {
+            key: 'arch',
+            header: 'Arch',
+            shrink: true,
+            render: img => <span style={{ color: 'var(--text-2)' }}>{img.architecture || '—'}</span>,
+        },
+        {
+            key: 'os',
+            header: 'OS',
+            shrink: true,
+            render: img => <span style={{ color: 'var(--text-2)' }}>{img.os || '—'}</span>,
+        },
+        {
+            key: 'created',
+            header: 'Created',
+            shrink: true,
+            render: img => <span style={{ color: 'var(--text-2)' }}>{img.created ? new Date(img.created).toLocaleDateString() : '—'}</span>,
+        },
+        {
+            key: 'actions',
+            header: '',
+            shrink: true,
+            render: img => !img.in_use ? (
+                <button
+                    onClick={e => { e.stopPropagation(); setConfirmId(img.delete_id); setConfirmName(`${img.name}:${img.tag}`) }}
+                    style={{ padding: 4, borderRadius: 4, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-3)' }}
+                    title="Delete image"
+                >
+                    <Trash2 size={13} />
+                </button>
+            ) : null,
+        },
+    ]
+
     return (
         <>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -67,52 +136,12 @@ export function ImagesTab({ serviceName }: { serviceName: string }) {
                 </div>
             </Modal>
 
-            <Table>
-                <TableHead>
-                    <Th>Name</Th>
-                    <Th shrink>Tag</Th>
-                    <Th shrink>Status</Th>
-                    <Th shrink align="right">Size</Th>
-                    <Th shrink>Arch</Th>
-                    <Th shrink>OS</Th>
-                    <Th shrink>Created</Th>
-                    <Th shrink></Th>
-                </TableHead>
-                <TableBody>
-                    {sorted.map(img => (
-                        <Tr key={img.id} style={{ opacity: img.in_use ? 1 : 0.5 }}>
-                            <Td style={{ fontWeight: 600, fontSize: 13 }}>{img.name}</Td>
-                            <Td shrink>
-                                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
-                                    {img.tag}
-                                </span>
-                            </Td>
-                            <Td shrink>
-                                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, whiteSpace: 'nowrap',
-                                    background: img.in_use ? 'rgba(16,185,129,0.1)' : 'rgba(148,163,184,0.1)',
-                                    color: img.in_use ? '#10b981' : 'var(--text-2)',
-                                    border: `1px solid ${img.in_use ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.2)'}`,
-                                }}>{img.in_use ? 'In use' : 'Unused'}</span>
-                            </Td>
-                            <Td shrink align="right" muted>{formatBytes(img.size)}</Td>
-                            <Td shrink muted>{img.architecture || '—'}</Td>
-                            <Td shrink muted>{img.os || '—'}</Td>
-                            <Td shrink muted>{img.created ? new Date(img.created).toLocaleDateString() : '—'}</Td>
-                            <Td shrink>
-                                {!img.in_use && (
-                                    <button
-                                        onClick={() => { setConfirmId(img.delete_id); setConfirmName(`${img.name}:${img.tag}`) }}
-                                        style={{ padding: 4, borderRadius: 4, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-3)' }}
-                                        title="Delete image"
-                                    >
-                                        <Trash2 size={13} />
-                                    </button>
-                                )}
-                            </Td>
-                        </Tr>
-                    ))}
-                </TableBody>
-            </Table>
+            <Table
+                columns={columns}
+                data={sorted}
+                keyExtractor={img => img.id}
+                rowStyle={img => ({ opacity: img.in_use ? 1 : 0.5 })}
+            />
         </>
     )
 }

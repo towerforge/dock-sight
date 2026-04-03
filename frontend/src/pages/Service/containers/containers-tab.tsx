@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import { apiServiceContainers, apiDeleteContainer, apiServiceImages } from '@/services/api'
-import { Button, Modal } from '@/components/ui'
-import { Table, TableHead, TableBody, Th, Tr, Td } from '@/components/ui/table'
+import { Button, Modal, Table } from '@/components/ui'
+import type { Column } from '@/components/ui'
 
 function StatChip({ label, value, color }: { label: string; value: number; color?: string }) {
     return (
@@ -65,6 +65,73 @@ export function ContainersTab({ serviceName }: { serviceName: string }) {
     const totalPorts = sorted.reduce((n: number, c: any) => n + (c.ports?.length ?? 0), 0)
     const totalMounts = sorted.reduce((n: number, c: any) => n + (c.mounts?.length ?? 0), 0)
 
+    const columns: Column<any>[] = [
+        {
+            key: 'name',
+            header: 'Name',
+            render: c => <span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span>,
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            shrink: true,
+            render: c => (
+                <span style={{
+                    fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+                    background: c.running ? 'rgba(16,185,129,0.1)' : 'rgba(148,163,184,0.1)',
+                    color: c.running ? '#10b981' : 'var(--text-2)',
+                    border: `1px solid ${c.running ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.2)'}`,
+                    whiteSpace: 'nowrap',
+                }}>{c.status}</span>
+            ),
+        },
+        {
+            key: 'image',
+            header: 'Image',
+            render: c => <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-2)' }}>{c.image || '—'}</span>,
+        },
+        {
+            key: 'ports',
+            header: 'Ports',
+            render: c => c.ports?.length > 0
+                ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>{c.ports.map((p: string) => <span key={p} style={chipStyle}>{p}</span>)}</div>
+                : <span style={{ color: 'var(--text-3)', fontSize: 12 }}>—</span>,
+        },
+        {
+            key: 'networks',
+            header: 'Networks',
+            render: c => c.networks?.length > 0
+                ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>{c.networks.map((n: string) => <span key={n} style={chipStyle}>{n}</span>)}</div>
+                : <span style={{ color: 'var(--text-3)', fontSize: 12 }}>—</span>,
+        },
+        {
+            key: 'restart',
+            header: 'Restart',
+            shrink: true,
+            render: c => <span style={{ color: 'var(--text-2)' }}>{c.restart_policy || '—'}</span>,
+        },
+        {
+            key: 'created',
+            header: 'Created',
+            shrink: true,
+            render: c => <span style={{ color: 'var(--text-2)' }}>{c.created ? new Date(c.created).toLocaleDateString() : '—'}</span>,
+        },
+        {
+            key: 'actions',
+            header: '',
+            shrink: true,
+            render: c => !c.running ? (
+                <button
+                    onClick={e => { e.stopPropagation(); setConfirmId(c.id); setConfirmName(c.name); setConfirmImage(getLinkedImage(c.image ?? '')) }}
+                    style={{ padding: 4, borderRadius: 4, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-3)' }}
+                    title="Delete container"
+                >
+                    <Trash2 size={13} />
+                </button>
+            ) : null,
+        },
+    ]
+
     return (
         <>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -90,62 +157,12 @@ export function ContainersTab({ serviceName }: { serviceName: string }) {
                 </div>
             </Modal>
 
-            <Table>
-                <TableHead>
-                    <Th>Name</Th>
-                    <Th shrink>Status</Th>
-                    <Th>Image</Th>
-                    <Th>Ports</Th>
-                    <Th>Networks</Th>
-                    <Th shrink>Restart</Th>
-                    <Th shrink>Created</Th>
-                    <Th shrink></Th>
-                </TableHead>
-                <TableBody>
-                    {sorted.map((c: any) => (
-                        <Tr key={c.id} style={{ opacity: c.running ? 1 : 0.5 }}>
-                            <Td style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</Td>
-                            <Td shrink>
-                                <span style={{
-                                    fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
-                                    background: c.running ? 'rgba(16,185,129,0.1)' : 'rgba(148,163,184,0.1)',
-                                    color: c.running ? '#10b981' : 'var(--text-2)',
-                                    border: `1px solid ${c.running ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.2)'}`,
-                                    whiteSpace: 'nowrap',
-                                }}>{c.status}</span>
-                            </Td>
-                            <Td muted>
-                                <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{c.image || '—'}</span>
-                            </Td>
-                            <Td>
-                                {c.ports?.length > 0
-                                    ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>{c.ports.map((p: string) => <span key={p} style={chipStyle}>{p}</span>)}</div>
-                                    : <span style={{ color: 'var(--text-3)', fontSize: 12 }}>—</span>
-                                }
-                            </Td>
-                            <Td>
-                                {c.networks?.length > 0
-                                    ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>{c.networks.map((n: string) => <span key={n} style={chipStyle}>{n}</span>)}</div>
-                                    : <span style={{ color: 'var(--text-3)', fontSize: 12 }}>—</span>
-                                }
-                            </Td>
-                            <Td shrink muted>{c.restart_policy || '—'}</Td>
-                            <Td shrink muted>{c.created ? new Date(c.created).toLocaleDateString() : '—'}</Td>
-                            <Td shrink>
-                                {!c.running && (
-                                    <button
-                                        onClick={() => { setConfirmId(c.id); setConfirmName(c.name); setConfirmImage(getLinkedImage(c.image ?? '')) }}
-                                        style={{ padding: 4, borderRadius: 4, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-3)' }}
-                                        title="Delete container"
-                                    >
-                                        <Trash2 size={13} />
-                                    </button>
-                                )}
-                            </Td>
-                        </Tr>
-                    ))}
-                </TableBody>
-            </Table>
+            <Table
+                columns={columns}
+                data={sorted}
+                keyExtractor={c => c.id}
+                rowStyle={c => ({ opacity: c.running ? 1 : 0.5 })}
+            />
         </>
     )
 }

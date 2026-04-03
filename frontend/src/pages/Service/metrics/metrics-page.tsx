@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Cpu, MemoryStick } from 'lucide-react'
-import { useDashboard } from '@/context/DashboardContext'
+import { useDashboard } from '@/context/dashboard-context'
 import { formatBytes } from '@/lib/formatters'
 import { Page } from '@/components/ui'
-import { MiniSysChart } from '@/components/dashboard/MiniSysChart'
+import { MiniSysChart } from '@/components/dashboard/mini-sys-chart'
 import type { ServiceHistoryPoint } from '@/types/dashboard'
 
 const INTERVALS = [2000, 5000, 10000, 30000]
@@ -21,7 +21,7 @@ export default function MetricsPage() {
     const chartData = history.map(p => ({ time: p.time, cpu: p.cpu, ram: p.ramPercent, disk: 0 })) as any
 
     return (
-        <Page>
+        <Page maxWidth="full" size={2}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 16 }}>
                 <ControlSelect label="Refresh" value={refreshInterval} options={INTERVALS} format={v => `${v / 1000}s`} onChange={setRefreshInterval} />
                 <ControlSelect label="Points"  value={pointCount}      options={POINTS}    format={v => `${v}`}           onChange={setPointCount} />

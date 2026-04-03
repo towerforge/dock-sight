@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react'
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 
-import { useDashboard } from '@/context/DashboardContext'
-import { ServiceBar } from '@/components/dashboard/ServiceBar'
+import { useDashboard } from '@/context/dashboard-context'
+import { ServiceBar } from '@/pages/home/service-bar'
 import { Input, Page } from '@/components/ui'
 
 export default function Home() {

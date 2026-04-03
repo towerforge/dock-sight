@@ -1,11 +1,42 @@
 import { useState } from "react"
 import { Folder, FileText } from "lucide-react"
-import { Button, Input, Select, Card, CardHeader, CardBody, CardFooter, Grid, Col, Text, Modal, Page, Tabs, TabBar, Tab, TabPanel, Table, TableHead, TableBody, Th, Tr, Td, TableCell } from "@/components/ui"
+import { Button, Input, Select, Card, CardHeader, CardBody, CardFooter, Grid, Col, Text, Modal, Page, Tabs, TabBar, Tab, TabPanel, Table, TableCell } from "@/components/ui"
+import type { Column } from "@/components/ui"
 
 const OPTIONS = [
     { value: "1", label: "Opción 1" },
     { value: "2", label: "Opción 2" },
     { value: "3", label: "Opción 3" },
+]
+
+type FileRow = { name: string; commit: string; ago: string; icon: typeof Folder }
+
+const devTableData: FileRow[] = [
+    { name: '.github/workflows', commit: 'Release/main v0.3.1', ago: '4 días', icon: Folder },
+    { name: 'backend',           commit: 'Release/main v0.3.1', ago: '4 días', icon: Folder },
+    { name: 'frontend',          commit: 'Release/main v0.3.1', ago: '4 días', icon: Folder },
+    { name: 'Dockerfile',        commit: 'Release/main v0.1.10', ago: '3 semanas', icon: FileText },
+    { name: 'README.md',         commit: 'Release/main v0.3.0', ago: '4 días', icon: FileText },
+]
+
+const devTableColumns: Column<FileRow>[] = [
+    {
+        key: 'name',
+        header: 'Nombre',
+        render: row => <TableCell icon={<row.icon size={16} />}>{row.name}</TableCell>,
+    },
+    {
+        key: 'commit',
+        header: 'Último commit',
+        render: row => <span style={{ color: 'var(--text-2)' }}>{row.commit}</span>,
+    },
+    {
+        key: 'ago',
+        header: 'Hace',
+        shrink: true,
+        align: 'right',
+        render: row => <span style={{ color: 'var(--text-2)' }}>{row.ago}</span>,
+    },
 ]
 
 export default function Dev() {
@@ -103,40 +134,11 @@ export default function Dev() {
             <Text variant="body" as="h2" style={{ marginBottom: 12 }}>Table</Text>
             <Grid gap={16} style={{ marginBottom: 32 }}>
                 <Col span={12}>
-                    <Table>
-                        <TableHead>
-                            <Th>Nombre</Th>
-                            <Th>Último commit</Th>
-                            <Th align="right" shrink>Hace</Th>
-                        </TableHead>
-                        <TableBody>
-                            <Tr>
-                                <Td><TableCell icon={<Folder size={16} />}>.github/workflows</TableCell></Td>
-                                <Td muted>Release/main v0.3.1</Td>
-                                <Td align="right" muted shrink>4 días</Td>
-                            </Tr>
-                            <Tr>
-                                <Td><TableCell icon={<Folder size={16} />}>backend</TableCell></Td>
-                                <Td muted>Release/main v0.3.1</Td>
-                                <Td align="right" muted shrink>4 días</Td>
-                            </Tr>
-                            <Tr>
-                                <Td><TableCell icon={<Folder size={16} />}>frontend</TableCell></Td>
-                                <Td muted>Release/main v0.3.1</Td>
-                                <Td align="right" muted shrink>4 días</Td>
-                            </Tr>
-                            <Tr>
-                                <Td><TableCell icon={<FileText size={16} />}>Dockerfile</TableCell></Td>
-                                <Td muted>Release/main v0.1.10</Td>
-                                <Td align="right" muted shrink>3 semanas</Td>
-                            </Tr>
-                            <Tr>
-                                <Td><TableCell icon={<FileText size={16} />}>README.md</TableCell></Td>
-                                <Td muted>Release/main v0.3.0</Td>
-                                <Td align="right" muted shrink>4 días</Td>
-                            </Tr>
-                        </TableBody>
-                    </Table>
+                    <Table
+                        columns={devTableColumns}
+                        data={devTableData}
+                        keyExtractor={row => row.name}
+                    />
                 </Col>
             </Grid>
 

@@ -3,11 +3,11 @@ import { NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'reac
 import { PanelRight, Server, Trash2, FlaskConical, Info, LogOut, Box, Image as ImageIcon, ScrollText, ArrowLeft, BarChart2 } from 'lucide-react'
 import { CircuitBoard, HardDrive, Activity } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui'
-import { useDashboard } from '@/context/DashboardContext'
-import { useAuth } from '@/hooks/useAuth'
+import { useDashboard } from '@/context/dashboard-context'
+import { useAuth } from '@/hooks/use-auth'
 import { formatBytes } from '@/lib/formatters'
-import { MiniSysChart } from '@/components/dashboard/MiniSysChart'
-import { AboutModal } from '@/components/AboutModal'
+import { MiniSysChart } from '@/components/dashboard/mini-sys-chart'
+import { AboutModal } from '@/components/about-modal'
 import styles from './MainLayout.module.css'
 
 const METRICS = [
