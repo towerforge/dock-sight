@@ -14,11 +14,6 @@ function Tag({ value }: { value: string }) {
     )
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-    return (
-        <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{children}</p>
-    )
-}
 
 type KVRow = { id: string; label: string; value: React.ReactNode; onClick?: () => void }
 type PortRow = { id: string; host: string; container: string }
