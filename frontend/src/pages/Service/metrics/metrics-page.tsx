@@ -4,7 +4,7 @@ import { Cpu, MemoryStick } from 'lucide-react'
 import { useDashboard } from '@/context/dashboard-context'
 import { formatBytes } from '@/lib/formatters'
 import { Page } from '@/components/ui'
-import { MiniSysChart } from '@/components/dashboard/mini-sys-chart'
+import { MetricCard } from './metric-card'
 import type { ServiceHistoryPoint } from '@/types/dashboard'
 
 const INTERVALS = [2000, 5000, 10000, 30000]
@@ -36,34 +36,11 @@ export default function MetricsPage() {
                 <MetricCard
                     label="RAM" Icon={MemoryStick} colorHex="#10b981" colorId="svc-ram"
                     mainValue={`${(service?.info.ram.percent ?? 0).toFixed(1)}%`}
-                    subtitle={service ? formatBytes(service.info.ram.used) : undefined}
+                    lines={service ? [formatBytes(service.info.ram.used)] : undefined}
                     data={chartData} dataKey="ram" pointCount={pointCount}
                 />
             </div>
         </Page>
-    )
-}
-
-function MetricCard({ label, Icon, colorHex, colorId, mainValue, subtitle, data, dataKey, pointCount }: {
-    label: string
-    Icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>
-    colorHex: string; colorId: string
-    mainValue: string; subtitle?: string
-    data: Parameters<typeof MiniSysChart>[0]['data']
-    dataKey: 'cpu' | 'ram'
-    pointCount: number
-}) {
-    return (
-        <div style={{ padding: 16, borderRadius: 'var(--radius-2)', background: 'var(--layer-1)', border: '1px solid var(--stroke-1)', boxShadow: 'var(--shadow-1)', display: 'flex', flexDirection: 'column', minHeight: 160 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--text-2)', marginBottom: 4 }}>
-                <Icon size={14} style={{ color: colorHex }} />{label}
-            </div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-1)' }}>{mainValue}</div>
-            {subtitle && <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{subtitle}</div>}
-            <div style={{ flex: 1, minHeight: 80, marginTop: 12 }}>
-                <MiniSysChart data={data} dataKey={dataKey} colorHex={colorHex} colorId={colorId} pointCount={pointCount} />
-            </div>
-        </div>
     )
 }
 

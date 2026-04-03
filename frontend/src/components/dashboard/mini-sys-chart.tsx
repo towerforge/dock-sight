@@ -31,7 +31,7 @@ export function MiniSysChart({ data, dataKey, colorHex, colorId, pointCount = 10
         : limited
 
     return (
-        <div style={{ height: 96, width: '100%', marginTop: 'auto' }}>
+        <div style={{ height: 128, width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                     <defs>
