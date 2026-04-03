@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from 'react'
-import { useDashboardData } from '@/hooks/useDashboardData'
+import { useDashboardData } from '@/hooks/use-dashboard-data'
 import type { SystemStats, DockerService, SysHistoryPoint, ServiceHistoryPoint } from '@/types/dashboard'
 
 interface DashboardCtx {

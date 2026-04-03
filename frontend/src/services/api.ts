@@ -32,6 +32,9 @@ export const apiDeleteImage    = (id: string)     => del<void>(`/docker-service/
 export const apiCleanupPreview = ()               => get<any>('/docker-service/cleanup')
 export const apiRunCleanup     = ()               => del<any>('/docker-service/cleanup')
 
+export const apiCreateService = (body: { name: string; image: string; replicas?: number; ports?: string[]; env?: string[] }) =>
+    post<{ id?: string }>('/docker-service', body)
+
 export const apiAuthStatus = () => get<{ setup_required: boolean; authenticated: boolean }>('/api/auth/status')
 export const apiAuthSetup  = (password: string, confirm_password: string) => post<void>('/api/auth/setup', { password, confirm_password })
 export const apiAuthLogin  = (password: string) => post<void>('/api/auth/login', { password })

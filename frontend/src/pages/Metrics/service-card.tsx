@@ -27,33 +27,32 @@ export function ServiceCard({ service, historyData, pointCount = 10 }: Props) {
             background: 'var(--layer-1)',
             border: '1px solid var(--stroke-1)',
             borderRadius: 'var(--radius-2)',
-            padding: 20,
+            padding: 16,
             boxShadow: 'var(--shadow-1)',
             display: 'flex',
             flexDirection: 'column',
             height: 256,
             overflow: 'hidden',
         }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, zIndex: 1 }}>
-                <div>
-                    <Link
-                        to={`/service/containers?name=${encodeURIComponent(service.name)}`}
-                        style={{ color: 'var(--text-1)', fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', gap: 6 }}
-                    >
-                        <Box size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
-                        {service.name}
-                    </Link>
-                    <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--text-2)' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
-                            {service.containers} Cont.
-                        </span>
-                        <span>RAM: {formatBytes(service.info.ram.used)}</span>
-                    </div>
-                </div>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                <Link
+                    to={`/service/containers?name=${encodeURIComponent(service.name)}`}
+                    style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 15, fontWeight: 600, color: 'var(--text-1)' }}
+                >
+                    <Box size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
+                    {service.name}
+                </Link>
                 <StatusBadge highLoad={isHighLoad} />
             </div>
 
+            {/* Detail lines */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--text-2)', fontFamily: 'monospace' }}>{service.containers} containers</span>
+                <span style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'monospace' }}>{formatBytes(service.info.ram.used)} RAM</span>
+            </div>
+
+            {/* Chart */}
             <div style={{ flex: 1, minHeight: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={limited}>
@@ -93,14 +92,15 @@ export function ServiceCard({ service, historyData, pointCount = 10 }: Props) {
                 </ResponsiveContainer>
             </div>
 
-            <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#3b82f6' }}>
-                    <span style={{ width: 8, height: 2, background: '#3b82f6', display: 'inline-block' }} />
-                    CPU: {service.info.cpu.percent.toFixed(1)}%
+            {/* Legend */}
+            <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: 'monospace', color: '#3b82f6' }}>
+                    <span style={{ width: 8, height: 2, background: '#3b82f6', display: 'inline-block', borderRadius: 1 }} />
+                    CPU {service.info.cpu.percent.toFixed(1)}%
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#10b981' }}>
-                    <span style={{ width: 8, height: 2, background: '#10b981', display: 'inline-block' }} />
-                    RAM: {service.info.ram.percent.toFixed(1)}%
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: 'monospace', color: '#10b981' }}>
+                    <span style={{ width: 8, height: 2, background: '#10b981', display: 'inline-block', borderRadius: 1 }} />
+                    RAM {service.info.ram.percent.toFixed(1)}%
                 </span>
             </div>
         </div>

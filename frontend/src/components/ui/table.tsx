@@ -1,65 +1,105 @@
 import styles from "@/css/ui/table.module.css"
 
-interface TableProps extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactNode
+export interface Column<T> {
+    key: string
+    header: string
+    align?: "left" | "right"
+    shrink?: boolean
+    render: (row: T) => React.ReactNode
 }
 
-export function Table({ children, className = "", ...props }: TableProps) {
+interface TableProps<T> {
+    columns: Column<T>[]
+    data: T[]
+    keyExtractor: (row: T) => string
+    emptyMessage?: string
+    onRowClick?: (row: T) => void
+    rowStyle?: (row: T) => React.CSSProperties
+}
+
+export function Table<T>({
+    columns,
+    data,
+    keyExtractor,
+    emptyMessage = "No results found.",
+    onRowClick,
+    rowStyle,
+}: TableProps<T>) {
+    if (data.length === 0) {
+        return (
+            <div className={styles.empty}>
+                {emptyMessage}
+            </div>
+        )
+    }
+
+    const contentCols = columns.filter(col => col.header !== "")
+    const actionCol   = columns.find(col => col.header === "")
+
     return (
-        <div className={`${styles.wrap} ${className}`} {...props}>
-            <table className={styles.table}>
-                {children}
-            </table>
-        </div>
+        <>
+            <div className={styles.tableView}>
+                <div className={styles.wrap}>
+                    <table className={styles.table}>
+                        <thead className={styles.thead}>
+                            <tr className={styles.tr}>
+                                {columns.map(col => {
+                                    const cls = [
+                                        styles.th,
+                                        col.align === "right" ? styles.right : "",
+                                        col.shrink ? styles.shrink : "",
+                                    ].filter(Boolean).join(" ")
+                                    return <th key={col.key} className={cls}>{col.header}</th>
+                                })}
+                            </tr>
+                        </thead>
+                        <tbody className={styles.tbody}>
+                            {data.map(row => (
+                                <tr
+                                    key={keyExtractor(row)}
+                                    className={styles.tr}
+                                    style={{ cursor: onRowClick ? "pointer" : undefined, ...rowStyle?.(row) }}
+                                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                                >
+                                    {columns.map(col => {
+                                        const cls = [
+                                            styles.td,
+                                            col.align === "right" ? styles.right : "",
+                                            col.shrink ? styles.shrink : "",
+                                        ].filter(Boolean).join(" ")
+                                        return <td key={col.key} className={cls}>{col.render(row)}</td>
+                                    })}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div className={styles.cardView}>
+                {data.map(row => (
+                    <div
+                        key={keyExtractor(row)}
+                        className={styles.card}
+                        style={{ cursor: onRowClick ? "pointer" : undefined, ...rowStyle?.(row) }}
+                        onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    >
+                        {contentCols.map(col => (
+                            <div key={col.key} className={styles.cardRow}>
+                                <span className={styles.cardLabel}>{col.header}</span>
+                                <span className={styles.cardValue}>{col.render(row)}</span>
+                            </div>
+                        ))}
+                        {actionCol && (
+                            <div className={styles.cardActions}>
+                                {actionCol.render(row)}
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </>
     )
-}
-
-export function TableHead({ children }: { children: React.ReactNode }) {
-    return <thead className={styles.thead}><tr className={styles.tr}>{children}</tr></thead>
-}
-
-interface ThProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
-    align?: "left" | "right"
-    shrink?: boolean
-}
-
-export function Th({ align, shrink, className = "", children, ...props }: ThProps) {
-    const cls = [
-        styles.th,
-        align === "right" ? styles.right : "",
-        shrink ? styles.shrink : "",
-        className,
-    ].join(" ")
-    return <th className={cls} {...props}>{children}</th>
-}
-
-interface TrProps extends React.HTMLAttributes<HTMLTableRowElement> {
-    children: React.ReactNode
-}
-
-export function TableBody({ children }: { children: React.ReactNode }) {
-    return <tbody className={styles.tbody}>{children}</tbody>
-}
-
-export function Tr({ className = "", children, ...props }: TrProps) {
-    return <tr className={`${styles.tr} ${className}`} {...props}>{children}</tr>
-}
-
-interface TdProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
-    align?: "left" | "right"
-    muted?: boolean
-    shrink?: boolean
-}
-
-export function Td({ align, muted, shrink, className = "", children, ...props }: TdProps) {
-    const cls = [
-        styles.td,
-        align === "right" ? styles.right : "",
-        muted ? styles.muted : "",
-        shrink ? styles.shrink : "",
-        className,
-    ].join(" ")
-    return <td className={cls} {...props}>{children}</td>
 }
 
 export function TableCell({ icon, children }: { icon?: React.ReactNode; children: React.ReactNode }) {

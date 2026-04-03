@@ -12,6 +12,10 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] }),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/sysinfo/, /^\/docker-service/],
+      },
       manifest: {
         name: 'Dock Sight',
         short_name: 'Dock Sight',

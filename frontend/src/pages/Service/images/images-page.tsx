@@ -1,14 +1,14 @@
 import { useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/ui'
-import { ContainersTab } from '@/components/service/ContainersTab'
+import { ImagesTab } from '@/pages/service/images/images-tab'
 
-export default function ContainersPage() {
+export default function ImagesPage() {
     const [searchParams] = useSearchParams()
     const name = searchParams.get('name') ?? ''
 
     return (
         <Page maxWidth="full" size={2}>
-            <ContainersTab serviceName={name} />
+            <ImagesTab serviceName={name} />
         </Page>
     )
 }

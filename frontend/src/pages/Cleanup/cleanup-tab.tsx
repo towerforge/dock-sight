@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { Trash2, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react'
 import { apiCleanupPreview, apiRunCleanup } from '@/services/api'
 import { formatBytes } from '@/lib/formatters'
-import { Button, Modal, Table, TableHead, TableBody, Th, Tr, Td } from '@/components/ui'
+import { Button, Modal, Table } from '@/components/ui'
+import type { Column } from '@/components/ui'
 
 interface Container { id: string; name: string; image: string; status: string }
 interface Image     { id: string; tag: string; size: number }
@@ -17,6 +18,57 @@ function StatChip({ label, value, color }: { label: string; value: number | stri
         </div>
     )
 }
+
+const containerColumns: Column<Container>[] = [
+    {
+        key: 'name',
+        header: 'Name',
+        render: c => <span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span>,
+    },
+    {
+        key: 'id',
+        header: 'ID',
+        shrink: true,
+        render: c => <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-2)' }}>{c.id}</span>,
+    },
+    {
+        key: 'image',
+        header: 'Image',
+        render: c => <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-2)' }}>{shortImage(c.image)}</span>,
+    },
+    {
+        key: 'status',
+        header: 'Status',
+        shrink: true,
+        align: 'right',
+        render: c => (
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--fill-2)', border: '1px solid var(--stroke-1)', color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
+                {c.status}
+            </span>
+        ),
+    },
+]
+
+const imageColumns: Column<Image>[] = [
+    {
+        key: 'tag',
+        header: 'Tag',
+        render: img => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{img.tag}</span>,
+    },
+    {
+        key: 'id',
+        header: 'ID',
+        shrink: true,
+        render: img => <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-2)' }}>{img.id}</span>,
+    },
+    {
+        key: 'size',
+        header: 'Size',
+        shrink: true,
+        align: 'right',
+        render: img => <span style={{ color: 'var(--text-2)' }}>{formatBytes(img.size)}</span>,
+    },
+]
 
 export function CleanupTab() {
     const [containers, setContainers] = useState<Container[]>([])
@@ -73,7 +125,6 @@ export function CleanupTab() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-                {/* Result banner */}
                 {result && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 'var(--radius-2)', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', padding: '10px 16px' }}>
                         <CheckCircle2 size={16} style={{ color: '#10b981', flexShrink: 0 }} />
@@ -84,7 +135,6 @@ export function CleanupTab() {
                     </div>
                 )}
 
-                {/* Stats + actions */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <StatChip label="Containers" value={containers.length} color={containers.length > 0 ? '#f59e0b' : 'var(--text-3)'} />
                     <StatChip label="Images" value={images.length} color={images.length > 0 ? '#f59e0b' : 'var(--text-3)'} />
@@ -110,28 +160,11 @@ export function CleanupTab() {
                                 <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                     Stopped containers ({containers.length})
                                 </p>
-                                <Table>
-                                    <TableHead>
-                                        <Th>Name</Th>
-                                        <Th shrink>ID</Th>
-                                        <Th>Image</Th>
-                                        <Th shrink align="right">Status</Th>
-                                    </TableHead>
-                                    <TableBody>
-                                        {containers.map(c => (
-                                            <Tr key={c.id}>
-                                                <Td style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</Td>
-                                                <Td shrink muted style={{ fontFamily: 'monospace', fontSize: 11 }}>{c.id}</Td>
-                                                <Td muted style={{ fontFamily: 'monospace', fontSize: 12 }}>{shortImage(c.image)}</Td>
-                                                <Td shrink align="right">
-                                                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--fill-2)', border: '1px solid var(--stroke-1)', color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
-                                                        {c.status}
-                                                    </span>
-                                                </Td>
-                                            </Tr>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                <Table
+                                    columns={containerColumns}
+                                    data={containers}
+                                    keyExtractor={c => c.id}
+                                />
                             </div>
                         )}
 
@@ -140,22 +173,11 @@ export function CleanupTab() {
                                 <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                     Unused images ({images.length})
                                 </p>
-                                <Table>
-                                    <TableHead>
-                                        <Th>Tag</Th>
-                                        <Th shrink>ID</Th>
-                                        <Th shrink align="right">Size</Th>
-                                    </TableHead>
-                                    <TableBody>
-                                        {images.map(img => (
-                                            <Tr key={img.id}>
-                                                <Td style={{ fontFamily: 'monospace', fontSize: 12 }}>{img.tag}</Td>
-                                                <Td shrink muted style={{ fontFamily: 'monospace', fontSize: 11 }}>{img.id}</Td>
-                                                <Td shrink align="right" muted>{formatBytes(img.size)}</Td>
-                                            </Tr>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                <Table
+                                    columns={imageColumns}
+                                    data={images}
+                                    keyExtractor={img => img.id}
+                                />
                             </div>
                         )}
 

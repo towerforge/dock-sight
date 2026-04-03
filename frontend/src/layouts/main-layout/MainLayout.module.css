@@ -62,7 +62,7 @@
 }
 
 .panel {
-    width: 280px;
+    width: 320px;
     flex-shrink: 0;
     border-left: 1px solid var(--stroke-1);
     background: var(--layer-1);

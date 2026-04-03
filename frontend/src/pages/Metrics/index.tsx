@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
-import { useDashboard } from '@/context/DashboardContext'
-import { ServiceCard } from '@/components/dashboard/ServiceCard'
+import { useAuth } from '@/hooks/use-auth'
+import { useDashboard } from '@/context/dashboard-context'
+import { ServiceCard } from '@/pages/metrics/service-card'
 import { Input, Page, Grid, Col } from '@/components/ui'
 
 const INTERVALS = [2000, 5000, 10000, 30000]

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
-import { AuthView } from '@/components/auth/AuthView'
+import { useAuth } from '@/hooks/use-auth'
+import { AuthView } from '@/components/auth/auth-view'
 
 export default function Login() {
     const { status, loading } = useAuth()
