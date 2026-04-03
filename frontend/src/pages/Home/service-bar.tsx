@@ -70,7 +70,7 @@ export function ServiceBar({ items }: Props) {
             columns={columns}
             data={items}
             keyExtractor={s => s.name}
-            onRowClick={s => navigate(`/service/containers?name=${encodeURIComponent(s.name)}`)}
+            onRowClick={s => navigate(`/service/overview?name=${encodeURIComponent(s.name)}`)}
         />
     )
 }

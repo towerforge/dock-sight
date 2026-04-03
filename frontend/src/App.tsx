@@ -5,6 +5,7 @@ import MainLayout from '@/layouts/main-layout'
 import Login from '@/pages/login'
 import Home from '@/pages/home'
 import ServiceLayout from '@/pages/service'
+import OverviewPage from '@/pages/service/overview/overview-page'
 import ContainersPage from '@/pages/service/containers/containers-page'
 import ImagesPage from '@/pages/service/images/images-page'
 import LogsPage from '@/pages/service/logs/logs-page'
@@ -22,7 +23,8 @@ function App() {
         <Route element={<DashboardProvider><MainLayout /></DashboardProvider>}>
           <Route path="/" element={<Home />} />
           <Route path="/service" element={<ServiceLayout />}>
-            <Route index element={<Navigate to="containers" replace />} />
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview"   element={<OverviewPage />} />
             <Route path="containers" element={<ContainersPage />} />
             <Route path="images"     element={<ImagesPage />} />
             <Route path="logs"       element={<LogsPage />} />
