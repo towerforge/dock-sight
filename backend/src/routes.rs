@@ -113,7 +113,7 @@ pub async fn static_handler(Path(path): Path<String>) -> impl IntoResponse {
     };
 
     if !lookup_path.contains('.') {
-        lookup_path.push_str("/index.html");
+        lookup_path = "index.html".to_string();
     }
 
     match super::Assets::get(&lookup_path) {
