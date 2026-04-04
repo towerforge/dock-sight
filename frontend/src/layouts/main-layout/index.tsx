@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { PanelRight, Server, Trash2, FlaskConical, Info, LogOut, Box, Image as ImageIcon, ScrollText, ArrowLeft, BarChart2, LayoutDashboard } from 'lucide-react'
+import { PanelRight, Server, Trash2, FlaskConical, Info, LogOut, Box, Image as ImageIcon, ScrollText, ArrowLeft, BarChart2, LayoutDashboard, Network } from 'lucide-react'
 import { CircuitBoard, HardDrive, Activity } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui'
 import { useDashboard } from '@/context/dashboard-context'
@@ -22,10 +22,11 @@ type Section = 'main' | 'service'
 interface NavItem { to: string; label: string; Icon: React.ElementType; end?: boolean; dev?: boolean }
 
 const MAIN_NAV: NavItem[] = [
-    { to: '/',        label: 'Services', Icon: Server,       end: true  },
-    { to: '/metrics', label: 'Metrics',  Icon: BarChart2                },
-    { to: '/cleanup', label: 'Cleanup',  Icon: Trash2                   },
-    { to: '/_dev',    label: 'Dev',      Icon: FlaskConical, dev: true  },
+    { to: '/',         label: 'Services',  Icon: Server,       end: true  },
+    { to: '/metrics',  label: 'Metrics',   Icon: BarChart2                },
+    { to: '/topology', label: 'Topology',  Icon: Network                  },
+    { to: '/cleanup',  label: 'Cleanup',   Icon: Trash2                   },
+    { to: '/_dev',     label: 'Dev',       Icon: FlaskConical, dev: true  },
 ]
 
 const SERVICE_NAV = [

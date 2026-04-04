@@ -12,6 +12,14 @@ use std::time::Duration;
 
 use super::{get_service_name, error};
 
+async fn build_network_map(docker: &Docker) -> HashMap<String, String> {
+    docker.list_networks(None::<bollard::query_parameters::ListNetworksOptions>).await
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|n| Some((n.id?, n.name?)))
+        .collect()
+}
+
 type Metrics = (f64, u64, u64, u32); // cpu, mem_used, mem_limit, count
 
 pub async fn services() -> impl IntoResponse {
@@ -25,6 +33,8 @@ pub async fn services() -> impl IntoResponse {
         Ok(s) => s,
         Err(e) => return error(e.to_string()),
     };
+
+    let net_map = build_network_map(&docker).await;
 
     // Running containers for CPU/RAM metrics
     let containers = match docker.list_containers(Some(ListContainersOptions {
@@ -51,6 +61,7 @@ pub async fn services() -> impl IntoResponse {
     let list_tasks = swarm_services.iter().map(|svc| {
         let docker = &docker;
         let metrics = &metrics;
+        let net_map = &net_map;
         async move {
             let name = svc.spec.as_ref()
                 .and_then(|s| s.name.as_deref())
@@ -80,10 +91,23 @@ pub async fn services() -> impl IntoResponse {
                 (mem_used as f64 / mem_limit as f64) * 100.0
             } else { 0.0 };
 
+            // Use endpoint.virtual_ips — works for both stack and standalone services
+            let networks: Vec<&str> = svc.endpoint.as_ref()
+                .and_then(|e| e.virtual_ips.as_ref())
+                .map(|vips| {
+                    vips.iter()
+                        .filter_map(|vip| vip.network_id.as_deref())
+                        .filter_map(|id| net_map.get(id).map(String::as_str))
+                        .filter(|n| *n != "docker_gwbridge")
+                        .collect()
+                })
+                .unwrap_or_default();
+
             json!({
                 "name": name,
                 "containers": count,
                 "last_deployed": last_deployed,
+                "networks": networks,
                 "info": {
                     "cpu": { "percent": (cpu * 10.0).round() / 10.0 },
                     "ram": {
