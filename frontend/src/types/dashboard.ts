@@ -8,6 +8,7 @@ export interface SystemStats {
 export interface DockerService {
     name: string
     containers: number
+    last_deployed: number
     info: {
         cpu: { percent: number }
         ram: { used: number; percent: number }

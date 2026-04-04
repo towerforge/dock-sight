@@ -138,7 +138,7 @@ function SystemPanel() {
                     const dataKey = key === 'net' ? 'network' : key
                     const { percent, lines } = values[key]
                     return (
-                        <div key={key} style={{ paddingTop: i === 0 ? 0 : 20, marginTop: i === 0 ? 0 : 20, borderTop: i === 0 ? 'none' : '1px solid var(--stroke-1)' }}>
+                        <div key={key} style={{ paddingBottom: i === METRICS.length ? 0 : 20, marginBottom: i === METRICS.length ? 0 : 20, borderBottom: '1px solid var(--stroke-1)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 15, color: 'var(--text-1)', fontWeight: 600 }}>
                                     <Icon size={16} style={{ color: colorHex }} />{label}
