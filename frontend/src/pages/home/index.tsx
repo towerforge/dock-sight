@@ -33,7 +33,7 @@ export default function Home() {
             <CreateServiceModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                onCreated={() => window.location.reload()}
+                onCreated={() => {}}
             />
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                 <Input

@@ -4,6 +4,7 @@ import type { Column } from '@/components/ui'
 import { Box } from 'lucide-react'
 import type { DockerService } from '@/types/dashboard'
 import { StatusBadge } from '../metrics/service-card'
+import { formatRelativeTime } from '@/lib/formatters'
 
 interface Props {
     items: DockerService[]
@@ -57,11 +58,23 @@ export function ServiceBar({ items }: Props) {
             ),
         },
         {
+            key: 'last_deployed',
+            header: 'Last image',
+            shrink: true,
+            render: s => (
+                <span style={{ fontSize: 12, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
+                    {formatRelativeTime(s.last_deployed)}
+                </span>
+            ),
+        },
+        {
             key: 'status',
             header: 'Status',
             align: 'right',
             shrink: true,
-            render: s => <StatusBadge highLoad={s.info.cpu.percent > 70} />,
+            render: s => s.containers === 0
+                ? <StatusBadge paused />
+                : <StatusBadge highLoad={s.info.cpu.percent > 70} />,
         },
     ]
 

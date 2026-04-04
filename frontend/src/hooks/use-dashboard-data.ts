@@ -65,5 +65,7 @@ export function useDashboardData(refreshInterval: number) {
         return () => clearInterval(id)
     }, [refreshInterval])
 
-    return { sys, dock, sysHistory, serviceHistory }
+    const refresh = () => setTick(t => t + 1)
+
+    return { sys, dock, sysHistory, serviceHistory, refresh }
 }

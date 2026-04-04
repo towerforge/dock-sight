@@ -11,6 +11,7 @@ interface DashboardCtx {
     setRefreshInterval: (v: number) => void
     pointCount: number
     setPointCount: (v: number) => void
+    refresh: () => void
 }
 
 const Ctx = createContext<DashboardCtx | null>(null)
@@ -19,10 +20,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     const [refreshInterval, setRefreshInterval] = useState(5000)
     const [pointCount, setPointCount] = useState(10)
 
-    const { sys, dock, sysHistory, serviceHistory } = useDashboardData(refreshInterval)
+    const { sys, dock, sysHistory, serviceHistory, refresh } = useDashboardData(refreshInterval)
 
     return (
-        <Ctx value={{ sys, dock, sysHistory, serviceHistory, refreshInterval, setRefreshInterval, pointCount, setPointCount }}>
+        <Ctx value={{ sys, dock, sysHistory, serviceHistory, refreshInterval, setRefreshInterval, pointCount, setPointCount, refresh }}>
             {children}
         </Ctx>
     )

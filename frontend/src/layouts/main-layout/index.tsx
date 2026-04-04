@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { PanelRight, Server, Trash2, FlaskConical, Info, LogOut, Box, Image as ImageIcon, ScrollText, ArrowLeft, BarChart2, LayoutDashboard } from 'lucide-react'
+import { PanelRight, Server, Trash2, FlaskConical, Info, LogOut, Box, Image as ImageIcon, ScrollText, ArrowLeft, BarChart2, LayoutDashboard, Network } from 'lucide-react'
 import { CircuitBoard, HardDrive, Activity } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui'
 import { useDashboard } from '@/context/dashboard-context'
@@ -22,10 +22,11 @@ type Section = 'main' | 'service'
 interface NavItem { to: string; label: string; Icon: React.ElementType; end?: boolean; dev?: boolean }
 
 const MAIN_NAV: NavItem[] = [
-    { to: '/',        label: 'Services', Icon: Server,       end: true  },
-    { to: '/metrics', label: 'Metrics',  Icon: BarChart2                },
-    { to: '/cleanup', label: 'Cleanup',  Icon: Trash2                   },
-    { to: '/_dev',    label: 'Dev',      Icon: FlaskConical, dev: true  },
+    { to: '/',         label: 'Services',  Icon: Server,       end: true  },
+    { to: '/metrics',  label: 'Metrics',   Icon: BarChart2                },
+    { to: '/topology', label: 'Topology',  Icon: Network                  },
+    { to: '/cleanup',  label: 'Cleanup',   Icon: Trash2                   },
+    { to: '/_dev',     label: 'Dev',       Icon: FlaskConical, dev: true  },
 ]
 
 const SERVICE_NAV = [
@@ -138,7 +139,7 @@ function SystemPanel() {
                     const dataKey = key === 'net' ? 'network' : key
                     const { percent, lines } = values[key]
                     return (
-                        <div key={key} style={{ paddingTop: i === 0 ? 0 : 20, marginTop: i === 0 ? 0 : 20, borderTop: i === 0 ? 'none' : '1px solid var(--stroke-1)' }}>
+                        <div key={key} style={{ paddingBottom: i === METRICS.length ? 0 : 20, marginBottom: i === METRICS.length ? 0 : 20, borderBottom: '1px solid var(--stroke-1)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 15, color: 'var(--text-1)', fontWeight: 600 }}>
                                     <Icon size={16} style={{ color: colorHex }} />{label}

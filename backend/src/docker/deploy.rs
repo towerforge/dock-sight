@@ -1,5 +1,6 @@
-use axum::{Json, response::IntoResponse, http::StatusCode};
+use axum::{Json, response::IntoResponse, http::StatusCode, extract::Query};
 use bollard::Docker;
+use bollard::query_parameters::UpdateServiceOptionsBuilder;
 use bollard::service::{
     ServiceSpec, TaskSpec, TaskSpecContainerSpec,
     ServiceSpecMode, ServiceSpecModeReplicated,
@@ -8,6 +9,14 @@ use bollard::service::{
 };
 use serde::Deserialize;
 use serde_json::json;
+
+use super::{ServiceQuery, error};
+
+#[derive(Deserialize)]
+pub struct ScaleServiceRequest {
+    pub name: String,
+    pub replicas: i64,
+}
 
 #[derive(Deserialize)]
 pub struct CreateServiceRequest {
@@ -71,5 +80,55 @@ pub async fn create_service(Json(body): Json<CreateServiceRequest>) -> impl Into
     match docker.create_service(spec, None).await {
         Ok(response) => (StatusCode::OK, Json(json!({ "id": response.id }))),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "error": e.to_string() }))),
+    }
+}
+
+pub async fn scale_service(Json(body): Json<ScaleServiceRequest>) -> impl IntoResponse {
+    let docker = match Docker::connect_with_local_defaults() {
+        Ok(d) => d,
+        Err(e) => return error(e.to_string()),
+    };
+
+    let service = match docker.inspect_service(&body.name, None).await {
+        Ok(s) => s,
+        Err(e) => return error(e.to_string()),
+    };
+
+    let version = service.version
+        .and_then(|v| v.index)
+        .unwrap_or(0);
+
+    let mut spec = service.spec.unwrap_or_default();
+    if let Some(mode) = spec.mode.as_mut() {
+        if let Some(replicated) = mode.replicated.as_mut() {
+            replicated.replicas = Some(body.replicas);
+        } else {
+            mode.replicated = Some(ServiceSpecModeReplicated { replicas: Some(body.replicas) });
+        }
+    } else {
+        spec.mode = Some(ServiceSpecMode {
+            replicated: Some(ServiceSpecModeReplicated { replicas: Some(body.replicas) }),
+            ..Default::default()
+        });
+    }
+
+    let options = UpdateServiceOptionsBuilder::default()
+        .version(version as i32)
+        .build();
+
+    match docker.update_service(&body.name, spec, options, None).await {
+        Ok(_) => (StatusCode::OK, Json(json!({ "ok": true }))),
+        Err(e) => error(e.to_string()),
+    }
+}
+
+pub async fn delete_service(Query(q): Query<ServiceQuery>) -> impl IntoResponse {
+    let docker = match Docker::connect_with_local_defaults() {
+        Ok(d) => d,
+        Err(e) => return error(e.to_string()),
+    };
+    match docker.delete_service(&q.name).await {
+        Ok(_) => (StatusCode::OK, Json(json!({ "ok": true }))),
+        Err(e) => error(e.to_string()),
     }
 }

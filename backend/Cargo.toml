@@ -1,6 +1,6 @@
 [package]
 name = "backend"
-version = "0.5.2"
+version = "0.6.0"
 edition = "2024"
 
 [toolchain]
@@ -20,5 +20,6 @@ utoipa = "5.4.0"
 sysinfo = "0.38.0"
 bollard = "0.20.0"
 futures-util = "0.3.31"
+chrono = "0.4"
 bcrypt = "0.15"
 uuid = { version = "1", features = ["v4"] }

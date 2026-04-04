@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
+import { flushSync } from 'react-dom'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { Page, Table } from '@/components/ui'
+import { Pause, Play } from 'lucide-react'
+import { Page, Table, Modal, Button, Spinner } from '@/components/ui'
 import type { Column } from '@/components/ui'
-import { apiServiceContainers } from '@/services/api'
+import { apiServiceContainers, apiDeleteService, apiScaleService } from '@/services/api'
 import { formatBytes } from '@/lib/formatters'
 import { useDashboard } from '@/context/dashboard-context'
 
@@ -28,26 +30,46 @@ export default function OverviewPage() {
     const [searchParams] = useSearchParams()
     const navigate = useNavigate()
     const name = searchParams.get('name') ?? ''
-    const { dock } = useDashboard()
+    const { dock, refreshInterval, refresh } = useDashboard()
 
     const go = (path: string) => navigate(`/service/${path}?name=${encodeURIComponent(name)}`)
 
     const [containers, setContainers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [deleting, setDeleting]       = useState(false)
+    const [deleteError, setDeleteError] = useState<string | null>(null)
+    const [removing, setRemoving]       = useState(false)
+    const [scaling, setScaling]         = useState(false)
+    const [scaleError, setScaleError]   = useState<string | null>(null)
 
     const service = useMemo(() => dock.find(s => s.name === name) ?? null, [dock, name])
 
     useEffect(() => {
-        apiServiceContainers(name)
-            .then(c => setContainers(c.containers ?? []))
-            .finally(() => setLoading(false))
-    }, [name])
+        let mounted = true
+        const fetch = () =>
+            apiServiceContainers(name)
+                .then(c => { if (mounted) setContainers(c.containers ?? []) })
+                .finally(() => { if (mounted) setLoading(false) })
 
-    if (loading) return (
-        <Page maxWidth="full" size={2}>
-            <p style={{ color: 'var(--text-3)', fontSize: 14, padding: '32px 0', textAlign: 'center' }}>Loading…</p>
-        </Page>
-    )
+        fetch()
+        const id = setInterval(fetch, refreshInterval)
+        return () => { mounted = false; clearInterval(id) }
+    }, [name, refreshInterval])
+
+    useEffect(() => {
+        if (!removing) return
+        const id = setInterval(() => refresh(), 1000)
+        return () => clearInterval(id)
+    }, [removing])
+
+    useEffect(() => {
+        if (removing && !dock.find(s => s.name === name)) navigate('/')
+    }, [dock, removing, name])
+
+    if (loading) return <Page><Spinner /></Page>
+
+    if (removing) return <Page><Spinner label={`Removing ${name}…`} /></Page>
 
     const running     = containers.filter(c => c.running).length
     const stopped     = containers.length - running
@@ -124,6 +146,34 @@ export default function OverviewPage() {
         },
     ].filter(Boolean) as KVRow[]
 
+    const isPaused = containers.length === 0
+
+    const handleScale = async () => {
+        flushSync(() => { setScaling(true); setScaleError(null) })
+        try {
+            await apiScaleService(name, isPaused ? 1 : 0)
+            refresh()
+        } catch (err: any) {
+            setScaleError(err?.message ?? 'Failed to update service')
+        } finally {
+            setScaling(false)
+        }
+    }
+
+    const handleDelete = async () => {
+        setDeleting(true)
+        setDeleteError(null)
+        try {
+            await apiDeleteService(name)
+            setConfirmOpen(false)
+            setRemoving(true)
+        } catch (err: any) {
+            setDeleteError(err?.message ?? 'Failed to delete service')
+        } finally {
+            setDeleting(false)
+        }
+    }
+
     return (
         <Page>
             <Table
@@ -133,6 +183,54 @@ export default function OverviewPage() {
                 onRowClick={r => r.onClick?.()}
                 rowStyle={r => r.onClick ? {} : { cursor: 'default' }}
             />
+
+            <div style={{ marginTop: 24, borderTop: '1px solid var(--stroke-1)', paddingTop: 24 }}>
+                <Table
+                    columns={kvCols}
+                    data={[
+                        {
+                            id: 'power',
+                            label: 'Power',
+                            value: (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+                                    <Button variant={2} size="sm" loading={scaling} onClick={handleScale}>
+                                        {!scaling && (isPaused ? <><Play size={12} /> Start</> : <><Pause size={12} /> Pause</>)}
+                                    </Button>
+                                    {scaleError && <span style={{ fontSize: 12, color: '#ef4444', fontFamily: 'monospace' }}>{scaleError}</span>}
+                                </div>
+                            ),
+                        },
+                        {
+                            id: 'delete',
+                            label: 'Delete service',
+                            value: (
+                                <Button variant={2} size="sm" onClick={() => setConfirmOpen(true)}>
+                                    Delete
+                                </Button>
+                            ),
+                        },
+                    ]}
+                    keyExtractor={r => r.id}
+                    rowStyle={() => ({ cursor: 'default' })}
+                />
+            </div>
+
+            <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Delete service">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <p style={{ margin: 0, fontSize: 14, color: 'var(--text-2)' }}>
+                        Are you sure you want to delete <strong>{name}</strong>? This will stop and remove all containers in this service.
+                    </p>
+                    {deleteError && (
+                        <p style={{ margin: 0, fontSize: 13, color: '#ef4444', fontFamily: 'monospace' }}>{deleteError}</p>
+                    )}
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <Button type="button" variant={2} onClick={() => setConfirmOpen(false)}>Cancel</Button>
+                        <Button type="button" variant={5} loading={deleting} onClick={handleDelete}>
+                            Delete
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </Page>
     )
 }

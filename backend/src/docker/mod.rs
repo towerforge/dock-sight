@@ -10,7 +10,7 @@ pub use containers::{service_containers, delete_container};
 pub use images::{service_images, delete_image};
 pub use logs::service_logs;
 pub use cleanup::{cleanup_preview, run_cleanup};
-pub use deploy::create_service;
+pub use deploy::{create_service, delete_service, scale_service};
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 

@@ -34,6 +34,8 @@ export const apiRunCleanup     = ()               => del<any>('/docker-service/c
 
 export const apiCreateService = (body: { name: string; image: string; replicas?: number; ports?: string[]; env?: string[] }) =>
     post<{ id?: string }>('/docker-service', body)
+export const apiDeleteService = (name: string) => del<void>(`/docker-service?name=${encodeURIComponent(name)}`)
+export const apiScaleService  = (name: string, replicas: number) => post<void>('/docker-service/scale', { name, replicas })
 
 export const apiAuthStatus = () => get<{ setup_required: boolean; authenticated: boolean }>('/api/auth/status')
 export const apiAuthSetup  = (password: string, confirm_password: string) => post<void>('/api/auth/setup', { password, confirm_password })

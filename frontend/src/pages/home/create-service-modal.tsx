@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Modal, Input, Button } from '@/components/ui'
 import { apiCreateService } from '@/services/api'
 
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function CreateServiceModal({ open, onClose, onCreated }: Props) {
+    const navigate = useNavigate()
     const [name, setName]       = useState('')
     const [image, setImage]     = useState('')
     const [error, setError]     = useState<string | null>(null)
@@ -24,10 +26,12 @@ export function CreateServiceModal({ open, onClose, onCreated }: Props) {
         setError(null)
         setLoading(true)
         try {
-            await apiCreateService({ name: name.trim(), image: image.trim() })
+            const serviceName = name.trim()
+            await apiCreateService({ name: serviceName, image: image.trim() })
             reset()
             onCreated()
             onClose()
+            navigate(`/service/overview?name=${encodeURIComponent(serviceName)}`)
         } catch (err: any) {
             setError(err?.response?.data?.error ?? err?.message ?? 'Failed to create service')
         } finally {

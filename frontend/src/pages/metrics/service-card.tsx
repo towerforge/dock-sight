@@ -37,7 +37,7 @@ export function ServiceCard({ service, historyData, pointCount = 10 }: Props) {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
                 <Link
-                    to={`/service/containers?name=${encodeURIComponent(service.name)}`}
+                    to={`/service/overview?name=${encodeURIComponent(service.name)}`}
                     style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 15, fontWeight: 600, color: 'var(--text-1)' }}
                 >
                     <Box size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
@@ -107,7 +107,12 @@ export function ServiceCard({ service, historyData, pointCount = 10 }: Props) {
     )
 }
 
-export function StatusBadge({ highLoad }: { highLoad: boolean }) {
+export function StatusBadge({ highLoad, paused }: { highLoad?: boolean; paused?: boolean }) {
+    if (paused) return (
+        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.2)' }}>
+            PAUSED
+        </span>
+    )
     return highLoad ? (
         <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
             HIGH LOAD

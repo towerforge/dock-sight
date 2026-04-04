@@ -1,7 +1,9 @@
 use axum::{Json, response::IntoResponse, http::StatusCode};
 use bollard::Docker;
-use bollard::query_parameters::{ListContainersOptions, StatsOptions};
+use bollard::query_parameters::ListContainersOptions;
+use bollard::query_parameters::StatsOptions;
 use bollard::models::{ContainerSummary, ContainerStatsResponse};
+use chrono::DateTime;
 use futures_util::future::join_all;
 use futures_util::stream::TryStreamExt;
 use serde_json::json;
@@ -10,7 +12,15 @@ use std::time::Duration;
 
 use super::{get_service_name, error};
 
-type ServiceAgg = (f64, u64, u64, u32); // cpu_sum, mem_used_sum, mem_limit_sum, count
+async fn build_network_map(docker: &Docker) -> HashMap<String, String> {
+    docker.list_networks(None::<bollard::query_parameters::ListNetworksOptions>).await
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|n| Some((n.id?, n.name?)))
+        .collect()
+}
+
+type Metrics = (f64, u64, u64, u32); // cpu, mem_used, mem_limit, count
 
 pub async fn services() -> impl IntoResponse {
     let docker = match Docker::connect_with_local_defaults() {
@@ -18,6 +28,15 @@ pub async fn services() -> impl IntoResponse {
         Err(e) => return error(e.to_string()),
     };
 
+    // All Swarm services — includes paused ones (0 replicas)
+    let swarm_services = match docker.list_services(None).await {
+        Ok(s) => s,
+        Err(e) => return error(e.to_string()),
+    };
+
+    let net_map = build_network_map(&docker).await;
+
+    // Running containers for CPU/RAM metrics
     let containers = match docker.list_containers(Some(ListContainersOptions {
         all: false,
         ..Default::default()
@@ -29,35 +48,79 @@ pub async fn services() -> impl IntoResponse {
     let tasks = containers.iter().map(|c| measure_container(&docker, c));
     let results = join_all(tasks).await;
 
-    let mut services: HashMap<String, ServiceAgg> = HashMap::new();
-
+    let mut metrics: HashMap<String, Metrics> = HashMap::new();
     for (service_name, cpu, mem_used, mem_limit) in results.into_iter().flatten() {
-        let entry = services.entry(service_name).or_insert((0.0, 0, 0, 0));
+        let entry = metrics.entry(service_name).or_insert((0.0, 0, 0, 0));
         entry.0 += cpu;
         entry.1 += mem_used;
         entry.2 += mem_limit;
         entry.3 += 1;
     }
 
-    let list: Vec<_> = services.into_iter().map(|(name, (cpu, mem_used, mem_limit, count))| {
-        let mem_percent = if mem_limit > 0 {
-            (mem_used as f64 / mem_limit as f64) * 100.0
-        } else { 0.0 };
+    // Build response: one entry per Swarm service
+    let list_tasks = swarm_services.iter().map(|svc| {
+        let docker = &docker;
+        let metrics = &metrics;
+        let net_map = &net_map;
+        async move {
+            let name = svc.spec.as_ref()
+                .and_then(|s| s.name.as_deref())
+                .unwrap_or("")
+                .to_string();
 
-        json!({
-            "name": name,
-            "containers": count,
-            "info": {
-                "cpu": { "percent": (cpu * 10.0).round() / 10.0 },
-                "ram": {
-                    "percent": (mem_percent * 10.0).round() / 10.0,
-                    "total": mem_limit,
-                    "used": mem_used
+            let image = svc.spec.as_ref()
+                .and_then(|s| s.task_template.as_ref())
+                .and_then(|t| t.container_spec.as_ref())
+                .and_then(|c| c.image.as_deref())
+                .unwrap_or("")
+                .to_string();
+
+            // Strip digest (e.g. "nginx:latest@sha256:...")
+            let image_ref = image.split('@').next().unwrap_or(&image);
+
+            let last_deployed = if !image_ref.is_empty() {
+                docker.inspect_image(image_ref).await.ok()
+                    .and_then(|img| img.created)
+                    .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
+                    .map(|dt| dt.timestamp())
+                    .unwrap_or(0)
+            } else { 0 };
+
+            let (cpu, mem_used, mem_limit, count) = metrics.get(&name).copied().unwrap_or((0.0, 0, 0, 0));
+            let mem_percent = if mem_limit > 0 {
+                (mem_used as f64 / mem_limit as f64) * 100.0
+            } else { 0.0 };
+
+            // Use endpoint.virtual_ips — works for both stack and standalone services
+            let networks: Vec<&str> = svc.endpoint.as_ref()
+                .and_then(|e| e.virtual_ips.as_ref())
+                .map(|vips| {
+                    vips.iter()
+                        .filter_map(|vip| vip.network_id.as_deref())
+                        .filter_map(|id| net_map.get(id).map(String::as_str))
+                        .filter(|n| *n != "docker_gwbridge")
+                        .collect()
+                })
+                .unwrap_or_default();
+
+            json!({
+                "name": name,
+                "containers": count,
+                "last_deployed": last_deployed,
+                "networks": networks,
+                "info": {
+                    "cpu": { "percent": (cpu * 10.0).round() / 10.0 },
+                    "ram": {
+                        "percent": (mem_percent * 10.0).round() / 10.0,
+                        "total": mem_limit,
+                        "used": mem_used
+                    }
                 }
-            }
-        })
-    }).collect();
+            })
+        }
+    });
 
+    let list: Vec<_> = join_all(list_tasks).await;
     (StatusCode::OK, Json(serde_json::Value::Array(list)))
 }
 
