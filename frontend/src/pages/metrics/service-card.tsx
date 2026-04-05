@@ -1,100 +1,70 @@
 import { Link } from 'react-router-dom'
-import { Box } from 'lucide-react'
-import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip, CartesianGrid, XAxis } from 'recharts'
-import { formatBytes, formatTooltipTime } from '@/lib/formatters'
+import { formatBytes } from '@/lib/formatters'
 import type { DockerService, ServiceHistoryPoint } from '@/types/dashboard'
-import { Card } from '@/components/ui/card'
+import { ChartCard } from '@/components/dashboard/chart-card'
+
+export type ChartMode = 'cpu' | 'ram' | 'network'
 
 interface Props {
     service: DockerService
     historyData: ServiceHistoryPoint[]
     pointCount?: number
+    chartMode?: ChartMode
 }
 
-const TOOLTIP_STYLE = {
-    backgroundColor: 'var(--layer-1)',
-    border: '1px solid var(--stroke-1)',
-    borderRadius: 8,
-    fontSize: 12,
-}
-const LABEL_STYLE = { color: 'var(--text-2)', marginBottom: 6, fontSize: 11, fontFamily: 'monospace' }
-
-export function ServiceCard({ service, historyData, pointCount = 10 }: Props) {
+export function ServiceCard({ service, historyData, pointCount = 10, chartMode = 'cpu' }: Props) {
     const isHighLoad = service.info.cpu.percent > 70
-    const limited = historyData.slice(-pointCount)
+
+    const chartData = historyData.slice(-pointCount).map(p => ({
+        time:      p.time,
+        cpu:       p.cpu,
+        ram:       p.ramPercent,
+        disk:      0,
+        networkRx: p.networkRx ?? 0,
+        networkTx: p.networkTx ?? 0,
+    }))
+
+    const color   = chartMode === 'cpu' ? '#3b82f6' : chartMode === 'ram' ? '#10b981' : '#8b5cf6'
+    const colorId = chartMode === 'cpu' ? 'sc-cpu'  : chartMode === 'ram' ? 'sc-ram'  : 'sc-net'
+
+    const label = (
+        <Link
+            to={`/service/overview?name=${encodeURIComponent(service.name)}`}
+            style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-1)' }}
+        >
+            {service.name}
+        </Link>
+    )
+
+    const labelRight = chartMode === 'cpu' ? (
+        <span style={{ fontFamily: 'monospace', color: isHighLoad ? '#ef4444' : '#3b82f6' }}>
+            {service.info.cpu.percent.toFixed(1)}%
+        </span>
+    ) : chartMode === 'ram' ? (
+        <span style={{ fontFamily: 'monospace' }}>
+            <span style={{ color: '#10b981' }}>{formatBytes(service.info.ram.used)}</span>
+            <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
+            <span style={{ color: '#10b981' }}>{service.info.ram.percent.toFixed(1)}%</span>
+        </span>
+    ) : (
+        <span style={{ fontFamily: 'monospace' }}>
+            <span style={{ color: '#8b5cf6' }}>↓ {formatBytes(service.info.net.rx)}/s</span>
+            <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
+            <span style={{ color: '#a78bfa' }}>↑ {formatBytes(service.info.net.tx)}/s</span>
+        </span>
+    )
 
     return (
-        <Card variant="outlined" style={{ padding: 16, display: 'flex', flexDirection: 'column', height: 256 }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                <Link
-                    to={`/service/overview?name=${encodeURIComponent(service.name)}`}
-                    style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 15, fontWeight: 600, color: 'var(--text-1)' }}
-                >
-                    <Box size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
-                    {service.name}
-                </Link>
-                <StatusBadge highLoad={isHighLoad} />
-            </div>
-
-            {/* Detail lines */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: 'var(--text-2)', fontFamily: 'monospace' }}>{service.containers} containers</span>
-                <span style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'monospace' }}>{formatBytes(service.info.ram.used)} RAM</span>
-            </div>
-
-            {/* Chart */}
-            <div style={{ flex: 1, minHeight: 0 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={limited}>
-                        <defs>
-                            <linearGradient id="svcCpu" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id="svcRam" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%"  stopColor="#10b981" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--stroke-1)" vertical={false} />
-                        <XAxis dataKey="time" domain={['dataMin', 'dataMax']} type="number" hide />
-                        <YAxis hide domain={[0, 'auto']} />
-                        <Tooltip
-                            contentStyle={TOOLTIP_STYLE}
-                            labelStyle={LABEL_STYLE}
-                            itemStyle={{ padding: 0, fontWeight: 500 }}
-                            labelFormatter={(v) => formatTooltipTime(v)}
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            formatter={(val: any, name: any) => {
-                                if (val == null) return ['', name === 'cpu' ? 'CPU' : 'RAM']
-                                return [`${Number(val).toFixed(1)}%`, name === 'cpu' ? 'CPU' : 'RAM']
-                            }}
-                        />
-                        <Area type="monotone" dataKey="ramPercent" stroke="#10b981" strokeWidth={2.5}
-                            fill="url(#svcRam)" isAnimationActive={false}
-                            dot={{ r: 2, fill: 'var(--layer-1)', stroke: '#10b981', strokeWidth: 1.5 }}
-                            activeDot={{ r: 5, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }} />
-                        <Area type="monotone" dataKey="cpu" stroke="#3b82f6" strokeWidth={2.5}
-                            fill="url(#svcCpu)" isAnimationActive={false}
-                            dot={{ r: 2, fill: 'var(--layer-1)', stroke: '#3b82f6', strokeWidth: 1.5 }}
-                            activeDot={{ r: 5, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }} />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </div>
-
-            {/* Legend */}
-            <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: 'monospace', color: '#3b82f6' }}>
-                    <span style={{ width: 8, height: 2, background: '#3b82f6', display: 'inline-block', borderRadius: 1 }} />
-                    CPU {service.info.cpu.percent.toFixed(1)}%
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: 'monospace', color: '#10b981' }}>
-                    <span style={{ width: 8, height: 2, background: '#10b981', display: 'inline-block', borderRadius: 1 }} />
-                    RAM {service.info.ram.percent.toFixed(1)}%
-                </span>
-            </div>
-        </Card>
+        <ChartCard
+            label={label}
+            labelRight={labelRight}
+            colorHex={color}
+            colorId={colorId}
+            dataKey={chartMode}
+            data={chartData}
+            pointCount={pointCount}
+            height={220}
+        />
     )
 }
 

@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Cpu, MemoryStick } from 'lucide-react'
+import { Cpu, MemoryStick, Network } from 'lucide-react'
 import { useDashboard } from '@/context/dashboard-context'
 import { formatBytes } from '@/lib/formatters'
-import { Page } from '@/components/ui'
+import { Page, Grid, Col } from '@/components/ui'
 import { MetricCard } from './metric-card'
 import type { ServiceHistoryPoint } from '@/types/dashboard'
 
@@ -18,7 +18,7 @@ export default function MetricsPage() {
     const service = useMemo(() => dock.find(s => s.name === name) ?? null, [dock, name])
     const history: ServiceHistoryPoint[] = serviceHistory[name] ?? []
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const chartData = history.map(p => ({ time: p.time, cpu: p.cpu, ram: p.ramPercent, disk: 0 })) as any
+    const chartData = history.map(p => ({ time: p.time, cpu: p.cpu, ram: p.ramPercent, disk: 0, networkRx: p.networkRx ?? 0, networkTx: p.networkTx ?? 0 })) as any
 
     return (
         <Page maxWidth="full" size={2}>
@@ -27,19 +27,41 @@ export default function MetricsPage() {
                 <ControlSelect label="Points"  value={pointCount}      options={POINTS}    format={v => `${v}`}           onChange={setPointCount} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            <Grid>
+                <Col span={6}>
                 <MetricCard
                     label="CPU" Icon={Cpu} colorHex="#3b82f6" colorId="svc-cpu"
-                    mainValue={`${(service?.info.cpu.percent ?? 0).toFixed(1)}%`}
+                    mainValue={<span style={{ color: '#3b82f6', fontFamily: 'monospace' }}>{(service?.info.cpu.percent ?? 0).toFixed(1)}%</span>}
                     data={chartData} dataKey="cpu" pointCount={pointCount}
                 />
+                </Col>
+                <Col span={6}>
                 <MetricCard
                     label="RAM" Icon={MemoryStick} colorHex="#10b981" colorId="svc-ram"
-                    mainValue={`${(service?.info.ram.percent ?? 0).toFixed(1)}%`}
-                    lines={service ? [formatBytes(service.info.ram.used)] : undefined}
+                    mainValue={
+                        <span style={{ fontFamily: 'monospace' }}>
+                            <span style={{ color: '#10b981' }}>{service ? formatBytes(service.info.ram.used) : '—'}</span>
+                            <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
+                            <span style={{ color: '#10b981' }}>{(service?.info.ram.percent ?? 0).toFixed(1)}%</span>
+                        </span>
+                    }
                     data={chartData} dataKey="ram" pointCount={pointCount}
                 />
-            </div>
+                </Col>
+                <Col span={12}>
+                    <MetricCard
+                        label="Network" Icon={Network} colorHex="#8b5cf6" colorId="svc-net"
+                        mainValue={
+                            <span style={{ fontFamily: 'monospace' }}>
+                                <span style={{ color: '#8b5cf6' }}>↓ {service ? formatBytes(service.info.net.rx) : '0 B'}/s</span>
+                                <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
+                                <span style={{ color: '#a78bfa' }}>↑ {service ? formatBytes(service.info.net.tx) : '0 B'}/s</span>
+                            </span>
+                        }
+                        data={chartData} dataKey="network" pointCount={pointCount}
+                    />
+                </Col>
+            </Grid>
         </Page>
     )
 }
