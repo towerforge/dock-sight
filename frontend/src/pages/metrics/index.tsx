@@ -6,20 +6,25 @@ import { ServiceCard } from '@/pages/metrics/service-card'
 import { Input, Page, Grid, Col } from '@/components/ui'
 import type { ChartMode } from '@/pages/metrics/service-card'
 
+type ViewMode = ChartMode | 'all'
+
 const INTERVALS = [2000, 5000, 10000, 30000]
 const POINTS    = [5, 10, 20, 50]
 
-const CHART_MODES: { value: ChartMode; label: string }[] = [
+const CHART_MODES: { value: ViewMode; label: string }[] = [
     { value: 'cpu',     label: 'CPU'     },
     { value: 'ram',     label: 'RAM'     },
     { value: 'network', label: 'Network' },
+    { value: 'all',     label: 'All'     },
 ]
+
+const ALL_MODES: ChartMode[] = ['cpu', 'ram', 'network']
 
 export default function Metrics() {
     const { status: authStatus, loading: authLoading } = useAuth()
     const { dock, serviceHistory, refreshInterval, setRefreshInterval, pointCount, setPointCount } = useDashboard()
     const [searchTerm, setSearchTerm] = useState('')
-    const [chartMode, setChartMode] = useState<ChartMode>('cpu')
+    const [viewMode, setViewMode] = useState<ViewMode>('all')
 
     const filteredDocs = useMemo(() =>
         dock.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -45,24 +50,41 @@ export default function Metrics() {
                     style={{ maxWidth: 280 }}
                 />
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <ChartModeSelector value={chartMode} onChange={setChartMode} />
+                    <ChartModeSelector value={viewMode} onChange={setViewMode} />
                     <ControlSelect label="Refresh" value={refreshInterval} options={INTERVALS} format={v => `${v / 1000}s`} onChange={setRefreshInterval} />
                     <ControlSelect label="Points"  value={pointCount}      options={POINTS}    format={v => `${v}`}           onChange={setPointCount} />
                 </div>
             </div>
 
-            <Grid gap={16}>
-                {filteredDocs.map(s => (
-                    <Col key={s.name} span={12} md={3}>
-                        <ServiceCard service={s} historyData={serviceHistory[s.name] ?? []} pointCount={pointCount} chartMode={chartMode} />
-                    </Col>
-                ))}
-            </Grid>
+            {viewMode === 'all' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {filteredDocs.map(s => (
+                        <div key={s.name}>
+                            <div style={{ marginBottom: 6, paddingLeft: 2 }}>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>{s.name}</span>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                                {ALL_MODES.map(mode => (
+                                    <ServiceCard key={mode} service={s} historyData={serviceHistory[s.name] ?? []} pointCount={pointCount} chartMode={mode} showType />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <Grid gap={16}>
+                    {filteredDocs.map(s => (
+                        <Col key={s.name} span={12} md={3}>
+                            <ServiceCard service={s} historyData={serviceHistory[s.name] ?? []} pointCount={pointCount} chartMode={viewMode} />
+                        </Col>
+                    ))}
+                </Grid>
+            )}
         </Page>
     )
 }
 
-function ChartModeSelector({ value, onChange }: { value: ChartMode; onChange: (v: ChartMode) => void }) {
+function ChartModeSelector({ value, onChange }: { value: ViewMode; onChange: (v: ViewMode) => void }) {
     return (
         <div style={{ display: 'flex', gap: 2, background: 'var(--layer-2)', border: '1px solid var(--stroke-1)', borderRadius: 'var(--radius-1)', padding: 2 }}>
             {CHART_MODES.map(m => (

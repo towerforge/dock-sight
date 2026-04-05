@@ -10,9 +10,10 @@ interface Props {
     historyData: ServiceHistoryPoint[]
     pointCount?: number
     chartMode?: ChartMode
+    showType?: boolean
 }
 
-export function ServiceCard({ service, historyData, pointCount = 10, chartMode = 'cpu' }: Props) {
+export function ServiceCard({ service, historyData, pointCount = 10, chartMode = 'cpu', showType = false }: Props) {
     const isHighLoad = service.info.cpu.percent > 70
 
     const chartData = historyData.slice(-pointCount).map(p => ({
@@ -27,14 +28,16 @@ export function ServiceCard({ service, historyData, pointCount = 10, chartMode =
     const color   = chartMode === 'cpu' ? '#3b82f6' : chartMode === 'ram' ? '#10b981' : '#8b5cf6'
     const colorId = chartMode === 'cpu' ? 'sc-cpu'  : chartMode === 'ram' ? 'sc-ram'  : 'sc-net'
 
-    const label = (
-        <Link
+    const label = showType
+        ? <span style={{ fontSize: 15, fontWeight: 600, color }}>
+            {chartMode === 'cpu' ? 'CPU' : chartMode === 'ram' ? 'RAM' : 'Network'}
+          </span>
+        : <Link
             to={`/service/overview?name=${encodeURIComponent(service.name)}`}
             style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-1)' }}
-        >
+          >
             {service.name}
-        </Link>
-    )
+          </Link>
 
     const labelRight = chartMode === 'cpu' ? (
         <span style={{ fontFamily: 'monospace', color: isHighLoad ? '#ef4444' : '#3b82f6' }}>
