@@ -14,6 +14,7 @@ interface TableProps<T> {
     keyExtractor: (row: T) => string
     emptyMessage?: string
     onRowClick?: (row: T) => void
+    onRowHover?: (row: T | null) => void
     rowStyle?: (row: T) => React.CSSProperties
 }
 
@@ -23,6 +24,7 @@ export function Table<T>({
     keyExtractor,
     emptyMessage = "No results found.",
     onRowClick,
+    onRowHover,
     rowStyle,
 }: TableProps<T>) {
     if (data.length === 0) {
@@ -60,6 +62,8 @@ export function Table<T>({
                                     className={styles.tr}
                                     style={{ cursor: onRowClick ? "pointer" : undefined, ...rowStyle?.(row) }}
                                     onClick={onRowClick ? () => onRowClick(row) : undefined}
+                                    onMouseEnter={onRowHover ? () => onRowHover(row) : undefined}
+                                    onMouseLeave={onRowHover ? () => onRowHover(null) : undefined}
                                 >
                                     {columns.map(col => {
                                         const cls = [

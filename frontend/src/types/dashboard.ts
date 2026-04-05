@@ -13,6 +13,7 @@ export interface DockerService {
     info: {
         cpu: { percent: number }
         ram: { used: number; percent: number }
+        net: { rx: number; tx: number }
     }
 }
 
