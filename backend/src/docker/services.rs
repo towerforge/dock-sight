@@ -20,7 +20,7 @@ async fn build_network_map(docker: &Docker) -> HashMap<String, String> {
         .collect()
 }
 
-type Metrics = (f64, u64, u64, u32); // cpu, mem_used, mem_limit, count
+type Metrics = (f64, u64, u64, u32, u64, u64); // cpu, mem_used, mem_limit, count, rx_bytes, tx_bytes
 
 pub async fn services() -> impl IntoResponse {
     let docker = match Docker::connect_with_local_defaults() {
@@ -49,12 +49,14 @@ pub async fn services() -> impl IntoResponse {
     let results = join_all(tasks).await;
 
     let mut metrics: HashMap<String, Metrics> = HashMap::new();
-    for (service_name, cpu, mem_used, mem_limit) in results.into_iter().flatten() {
-        let entry = metrics.entry(service_name).or_insert((0.0, 0, 0, 0));
+    for (service_name, cpu, mem_used, mem_limit, rx, tx) in results.into_iter().flatten() {
+        let entry = metrics.entry(service_name).or_insert((0.0, 0, 0, 0, 0, 0));
         entry.0 += cpu;
         entry.1 += mem_used;
         entry.2 += mem_limit;
         entry.3 += 1;
+        entry.4 += rx;
+        entry.5 += tx;
     }
 
     // Build response: one entry per Swarm service
@@ -86,7 +88,7 @@ pub async fn services() -> impl IntoResponse {
                     .unwrap_or(0)
             } else { 0 };
 
-            let (cpu, mem_used, mem_limit, count) = metrics.get(&name).copied().unwrap_or((0.0, 0, 0, 0));
+            let (cpu, mem_used, mem_limit, count, rx, tx) = metrics.get(&name).copied().unwrap_or((0.0, 0, 0, 0, 0, 0));
             let mem_percent = if mem_limit > 0 {
                 (mem_used as f64 / mem_limit as f64) * 100.0
             } else { 0.0 };
@@ -114,7 +116,8 @@ pub async fn services() -> impl IntoResponse {
                         "percent": (mem_percent * 10.0).round() / 10.0,
                         "total": mem_limit,
                         "used": mem_used
-                    }
+                    },
+                    "net": { "rx": rx, "tx": tx }
                 }
             })
         }
@@ -127,7 +130,7 @@ pub async fn services() -> impl IntoResponse {
 async fn measure_container(
     docker: &Docker,
     c: &ContainerSummary,
-) -> Option<(String, f64, u64, u64)> {
+) -> Option<(String, f64, u64, u64, u64, u64)> {
     let id = c.id.as_deref()?;
     let service_name = get_service_name(c);
 
@@ -137,8 +140,9 @@ async fn measure_container(
 
     let cpu = calc_cpu_between(&first, &second);
     let (mem_used, mem_limit) = calc_memory(&second);
+    let (rx, tx) = calc_network_rate(&first, &second);
 
-    Some((service_name, cpu, mem_used, mem_limit))
+    Some((service_name, cpu, mem_used, mem_limit, rx, tx))
 }
 
 async fn get_stats(docker: &Docker, id: &str) -> Option<ContainerStatsResponse> {
@@ -165,6 +169,23 @@ fn calc_cpu_between(a: &ContainerStatsResponse, b: &ContainerStatsResponse) -> f
     } else {
         0.0
     }
+}
+
+fn calc_network_rate(a: &ContainerStatsResponse, b: &ContainerStatsResponse) -> (u64, u64) {
+    let sum_bytes = |stats: &ContainerStatsResponse| -> (u64, u64) {
+        let (mut rx, mut tx) = (0u64, 0u64);
+        if let Some(nets) = &stats.networks {
+            for iface in nets.values() {
+                rx += iface.rx_bytes.unwrap_or(0) as u64;
+                tx += iface.tx_bytes.unwrap_or(0) as u64;
+            }
+        }
+        (rx, tx)
+    };
+    let (rx_a, tx_a) = sum_bytes(a);
+    let (rx_b, tx_b) = sum_bytes(b);
+    // Delta over 500ms → multiply by 2 to get bytes/s
+    (rx_b.saturating_sub(rx_a) * 2, tx_b.saturating_sub(tx_a) * 2)
 }
 
 fn calc_memory(stats: &ContainerStatsResponse) -> (u64, u64) {

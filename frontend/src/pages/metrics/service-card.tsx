@@ -3,6 +3,7 @@ import { Box } from 'lucide-react'
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip, CartesianGrid, XAxis } from 'recharts'
 import { formatBytes, formatTooltipTime } from '@/lib/formatters'
 import type { DockerService, ServiceHistoryPoint } from '@/types/dashboard'
+import { Card } from '@/components/ui/card'
 
 interface Props {
     service: DockerService
@@ -23,17 +24,7 @@ export function ServiceCard({ service, historyData, pointCount = 10 }: Props) {
     const limited = historyData.slice(-pointCount)
 
     return (
-        <div style={{
-            background: 'var(--layer-1)',
-            border: '1px solid var(--stroke-1)',
-            borderRadius: 'var(--radius-2)',
-            padding: 16,
-            boxShadow: 'var(--shadow-1)',
-            display: 'flex',
-            flexDirection: 'column',
-            height: 256,
-            overflow: 'hidden',
-        }}>
+        <Card variant="outlined" style={{ padding: 16, display: 'flex', flexDirection: 'column', height: 256 }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
                 <Link
@@ -103,7 +94,7 @@ export function ServiceCard({ service, historyData, pointCount = 10 }: Props) {
                     RAM {service.info.ram.percent.toFixed(1)}%
                 </span>
             </div>
-        </div>
+        </Card>
     )
 }
 
