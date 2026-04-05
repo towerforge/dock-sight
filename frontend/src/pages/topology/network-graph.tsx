@@ -3,11 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import type { DockerService } from '@/types/dashboard'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-export const COLORS = [
-    '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6',
-    '#ef4444', '#06b6d4', '#f97316', '#84cc16',
-    '#ec4899', '#14b8a6',
-]
+export { NETWORK_COLORS as COLORS } from '@/lib/colors'
+import { NETWORK_COLORS as COLORS } from '@/lib/colors'
 
 const COL_W   = 36
 const ROW_H   = 38
@@ -54,8 +51,8 @@ function GitBranchIcon({ x, y, color }: { x: number; y: number; color: string })
 }
 
 // ── Badges ────────────────────────────────────────────────────────────────────
-function ServiceBadge({ x, y, name, paused, cols }: {
-    x: number; y: number; name: string; paused: boolean; cols: number[]
+function ServiceBadge({ x, y, name, paused, cols, colors }: {
+    x: number; y: number; name: string; paused: boolean; cols: number[]; colors: string[]
 }) {
     const w = name.length * 7.5 + BADGE_P * 2 + ICON_S + 8
     const gradId = `svc-grad-${name.replace(/[^a-z0-9]/gi, '_')}`
@@ -63,10 +60,10 @@ function ServiceBadge({ x, y, name, paused, cols }: {
     const strokeVal = cols.length === 0
         ? 'var(--stroke-1)'
         : cols.length === 1
-            ? COLORS[cols[0] % COLORS.length]
+            ? colors[0]
             : `url(#${gradId})`
 
-    const iconColor = cols.length > 0 ? COLORS[cols[0] % COLORS.length] : 'var(--text-3)'
+    const iconColor = cols.length > 0 ? colors[0] : 'var(--text-3)'
 
     return (
         <g>
@@ -75,7 +72,7 @@ function ServiceBadge({ x, y, name, paused, cols }: {
                     <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
                         {cols.map((ci, i) => (
                             <stop key={ci} offset={`${(i / (cols.length - 1)) * 100}%`}
-                                  stopColor={COLORS[ci % COLORS.length]} />
+                                  stopColor={colors[i]} />
                         ))}
                     </linearGradient>
                 </defs>
@@ -93,9 +90,11 @@ function ServiceBadge({ x, y, name, paused, cols }: {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function NetworkGraph({ dock, hoveredNetwork }: { dock: DockerService[]; hoveredNetwork?: string | null }) {
+export default function NetworkGraph({ dock, networks: networksProp, allNetworks: allNetworksProp, hoveredNetwork }: { dock: DockerService[]; networks?: string[]; allNetworks?: string[]; hoveredNetwork?: string | null }) {
     const navigate  = useNavigate()
-    const { networks, rows } = useMemo(() => buildRows(dock), [dock])
+    const { networks: networksFromDock, rows } = useMemo(() => buildRows(dock), [dock])
+    const networks    = networksProp    ?? networksFromDock
+    const allNetworks = allNetworksProp ?? networksFromDock
 
     // Only service rows, sorted alphabetically (already sorted in buildRows)
     const svcs = rows.filter(r => r.kind === 'service') as Extract<typeof rows[number], { kind: 'service' }>[]
@@ -123,12 +122,13 @@ export default function NetworkGraph({ dock, hoveredNetwork }: { dock: DockerSer
 
             {/* Vertical lines */}
             {networks.map((net, ci) => {
+                const colorIdx = allNetworks.indexOf(net)
                 const lastY = netLastSvcIdx[ci] >= 0 ? svcY(netLastSvcIdx[ci]) : netY
                 return (
                     <line key={`vline-${net}`}
                         x1={cx(ci)} y1={netY}
                         x2={cx(ci)} y2={lastY}
-                        stroke={COLORS[ci % COLORS.length]}
+                        stroke={COLORS[colorIdx % COLORS.length]}
                         strokeWidth={LINE_W}
                         opacity={0.55 * netOp(net)}
                         style={{ transition: 'opacity 0.2s' }}
@@ -137,14 +137,17 @@ export default function NetworkGraph({ dock, hoveredNetwork }: { dock: DockerSer
             })}
 
             {/* Network header row — all dots aligned */}
-            {networks.map((net, ci) => (
-                <circle key={`net-${net}`}
-                    cx={cx(ci)} cy={netY} r={NODE_R}
-                    fill={COLORS[ci % COLORS.length]}
-                    stroke="var(--layer-1)" strokeWidth={2}
-                    opacity={netOp(net)}
-                    style={{ transition: 'opacity 0.2s' }} />
-            ))}
+            {networks.map((net, ci) => {
+                const colorIdx = allNetworks.indexOf(net)
+                return (
+                    <circle key={`net-${net}`}
+                        cx={cx(ci)} cy={netY} r={NODE_R}
+                        fill={COLORS[colorIdx % COLORS.length]}
+                        stroke="var(--layer-1)" strokeWidth={2}
+                        opacity={netOp(net)}
+                        style={{ transition: 'opacity 0.2s' }} />
+                )
+            })}
 
             {/* Service rows */}
             {svcs.map(({ svc }, i) => {
@@ -169,12 +172,15 @@ export default function NetworkGraph({ dock, hoveredNetwork }: { dock: DockerSer
                             />
                         )}
 
-                        {cols.map(ci => (
-                            <circle key={ci}
-                                cx={cx(ci)} cy={y} r={NODE_R}
-                                fill={COLORS[ci % COLORS.length]}
-                                stroke="var(--layer-1)" strokeWidth={2} />
-                        ))}
+                        {cols.map(ci => {
+                            const colorIdx = allNetworks.indexOf(networks[ci])
+                            return (
+                                <circle key={ci}
+                                    cx={cx(ci)} cy={y} r={NODE_R}
+                                    fill={COLORS[colorIdx % COLORS.length]}
+                                    stroke="var(--layer-1)" strokeWidth={2} />
+                            )
+                        })}
 
                         {cols.length === 0 && (
                             <circle cx={labelX - 16} cy={y} r={NODE_R}
@@ -182,7 +188,8 @@ export default function NetworkGraph({ dock, hoveredNetwork }: { dock: DockerSer
                         )}
 
                         <ServiceBadge x={labelX} y={y} name={svc.name}
-                            paused={paused} cols={cols} />
+                            paused={paused} cols={cols}
+                            colors={cols.map(ci => COLORS[allNetworks.indexOf(networks[ci]) % COLORS.length])} />
                     </g>
                 )
             })}
