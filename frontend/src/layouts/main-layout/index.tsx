@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { PanelRight, Server, Trash2, FlaskConical, Info, LogOut, Box, Image as ImageIcon, ScrollText, ArrowLeft, BarChart2, LayoutDashboard } from 'lucide-react'
+import { PanelRight, Server, Trash2, FlaskConical, Info, LogOut, Box, Image as ImageIcon, FileArchive, ArrowLeft, BarChart2, LayoutDashboard } from 'lucide-react'
 import { CircuitBoard, HardDrive, Activity } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui'
 import { useDashboard } from '@/context/dashboard-context'
@@ -33,7 +33,7 @@ const SERVICE_NAV = [
     { path: 'overview',   label: 'Overview',   Icon: LayoutDashboard },
     { path: 'containers', label: 'Containers', Icon: Box             },
     { path: 'images',     label: 'Images',     Icon: ImageIcon       },
-    { path: 'logs',       label: 'Logs',       Icon: ScrollText      },
+    { path: 'logs',       label: 'Logs',       Icon: FileArchive      },
     { path: 'metrics',    label: 'Metrics',    Icon: BarChart2       },
 ] as const
 

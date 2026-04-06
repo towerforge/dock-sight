@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Cpu, MemoryStick, Network } from 'lucide-react'
+import { Cpu, MemoryStick, Activity } from 'lucide-react'
 import { useDashboard } from '@/context/dashboard-context'
 import { formatBytes } from '@/lib/formatters'
 import { Page, Grid, Col } from '@/components/ui'
@@ -50,7 +50,7 @@ export default function MetricsPage() {
                 </Col>
                 <Col span={12}>
                     <MetricCard
-                        label="Network" Icon={Network} colorHex="#8b5cf6" colorId="svc-net"
+                        label="Network" Icon={Activity} colorHex="#8b5cf6" colorId="svc-net"
                         mainValue={
                             <span style={{ fontFamily: 'monospace' }}>
                                 <span style={{ color: '#8b5cf6' }}>↓ {service ? formatBytes(service.info.net.rx) : '0 B'}/s</span>

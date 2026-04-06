@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
-import { Button, Input, Page } from '@/components/ui'
+import { Button, SearchBar, Page } from '@/components/ui'
 import { Grid, Col } from '@/components/ui/grid'
 import { useDashboard } from '@/context/dashboard-context'
 import { apiListNetworks } from '@/services/api'
@@ -46,11 +46,10 @@ export default function NetworkPage() {
             />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <Input
+                <SearchBar
                     placeholder="Search networks…"
                     value={search}
-                    onChange={e => setSearch((e.target as HTMLInputElement).value)}
-                    style={{ maxWidth: 280 }}
+                    onChange={setSearch}
                 />
                 <div style={{ marginLeft: 'auto' }}>
                     <Button variant={1} size="md" onClick={() => setModalOpen(true)}>

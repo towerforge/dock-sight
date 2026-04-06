@@ -1,0 +1,39 @@
+.root {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px;
+    border-radius: calc(var(--radius-1) - 1px);
+    cursor: pointer;
+    user-select: none;
+}
+
+.root:hover { background: var(--fill-2); }
+
+.label {
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-3);
+}
+
+.value {
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-1);
+}
+
+.arrow {
+    color: var(--text-3);
+    flex-shrink: 0;
+}
+
+.select {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+}

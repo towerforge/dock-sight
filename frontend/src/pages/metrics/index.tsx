@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { useDashboard } from '@/context/dashboard-context'
 import { ServiceCard } from '@/pages/metrics/service-card'
-import { Input, Page, Grid, Col } from '@/components/ui'
+import { SearchBar, SegmentedControl, InlineSelect, Page, Grid, Col } from '@/components/ui'
 import type { ChartMode } from '@/pages/metrics/service-card'
 
 type ViewMode = ChartMode | 'all'
@@ -42,17 +42,26 @@ export default function Metrics() {
 
     return (
         <Page maxWidth="full" size={2}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                <Input
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <SearchBar
                     placeholder="Search services…"
                     value={searchTerm}
-                    onChange={e => setSearchTerm((e.target as HTMLInputElement).value)}
-                    style={{ maxWidth: 280 }}
+                    onChange={setSearchTerm}
                 />
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <ChartModeSelector value={viewMode} onChange={setViewMode} />
-                    <ControlSelect label="Refresh" value={refreshInterval} options={INTERVALS} format={v => `${v / 1000}s`} onChange={setRefreshInterval} />
-                    <ControlSelect label="Points"  value={pointCount}      options={POINTS}    format={v => `${v}`}           onChange={setPointCount} />
+                    <SegmentedControl options={CHART_MODES} value={viewMode} onChange={setViewMode} />
+                    <InlineSelect
+                        label="Refresh"
+                        value={String(refreshInterval)}
+                        options={INTERVALS.map(v => ({ value: String(v), label: `${v / 1000}s` }))}
+                        onChange={v => setRefreshInterval(Number(v))}
+                    />
+                    <InlineSelect
+                        label="Points"
+                        value={String(pointCount)}
+                        options={POINTS.map(v => ({ value: String(v), label: String(v) }))}
+                        onChange={v => setPointCount(Number(v))}
+                    />
                 </div>
             </div>
 
@@ -81,43 +90,5 @@ export default function Metrics() {
                 </Grid>
             )}
         </Page>
-    )
-}
-
-function ChartModeSelector({ value, onChange }: { value: ViewMode; onChange: (v: ViewMode) => void }) {
-    return (
-        <div style={{ display: 'flex', gap: 2, background: 'var(--layer-2)', border: '1px solid var(--stroke-1)', borderRadius: 'var(--radius-1)', padding: 2 }}>
-            {CHART_MODES.map(m => (
-                <button
-                    key={m.value}
-                    onClick={() => onChange(m.value)}
-                    style={{
-                        fontSize: 12,
-                        fontWeight: 500,
-                        padding: '3px 10px',
-                        borderRadius: 'calc(var(--radius-1) - 1px)',
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: value === m.value ? 'var(--layer-1)' : 'transparent',
-                        color: value === m.value ? 'var(--text-1)' : 'var(--text-3)',
-                        boxShadow: value === m.value ? 'var(--shadow-1)' : 'none',
-                        transition: 'all 0.1s',
-                    }}
-                >
-                    {m.label}
-                </button>
-            ))}
-        </div>
-    )
-}
-
-function ControlSelect({ label, value, options, format, onChange }: { label: string; value: number; options: number[]; format: (v: number) => string; onChange: (v: number) => void }) {
-    return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-            <span style={{ color: 'var(--text-3)' }}>{label}</span>
-            <select value={value} onChange={e => onChange(Number(e.target.value))} style={{ background: 'var(--layer-1)', border: '1px solid var(--stroke-1)', borderRadius: 'var(--radius-1)', padding: '4px 8px', fontSize: 13, color: 'var(--text-1)', cursor: 'pointer' }}>
-                {options.map(o => <option key={o} value={o}>{format(o)}</option>)}
-            </select>
-        </div>
     )
 }
