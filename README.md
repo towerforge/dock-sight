@@ -26,8 +26,8 @@
 Dock Sight runs as a single binary and serves a real-time dashboard in your browser. No agents, no external dependencies.
 
 **Host metrics** — CPU, RAM, disk, and network usage with historical charts.
-**Docker services** — Container status, resource consumption, per-service CPU/RAM charts, images, and live logs. Scale, pause, and delete services directly from the dashboard.
-**Network topology** — Visual graph and table of Docker networks with service distribution and health status.
+**Docker services** — Container status, resource consumption, per-service CPU/RAM/network charts, images, and live logs. Scale, pause, and delete services directly from the dashboard.
+**Network topology** — Visual graph and table of Docker networks with service distribution, health status, and RX/TX rates. Create new networks directly from the dashboard.
 **Password protection** — On first launch the browser prompts you to set a password. Every subsequent visit requires it (session valid for 24 h by default).
 
 ## Requirements
