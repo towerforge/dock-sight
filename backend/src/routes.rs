@@ -14,7 +14,7 @@ use mime_guess;
 
 use crate::auth::{AuthState, middleware::require_auth, routes as auth_routes};
 use crate::system::routes::sysinfo;
-use crate::docker::{services, service_containers, delete_container, service_images, delete_image, service_logs, cleanup_preview, run_cleanup, create_service, delete_service, scale_service};
+use crate::docker::{services, service_containers, delete_container, service_images, delete_image, service_logs, cleanup_preview, run_cleanup, create_service, delete_service, scale_service, list_networks, create_network};
 use crate::openapi::ApiDoc;
 use utoipa::OpenApi;
 
@@ -61,6 +61,7 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
         .route("/docker-service/images", get(service_images).delete(delete_image))
         .route("/docker-service/logs", get(service_logs))
         .route("/docker-service/cleanup", get(cleanup_preview).delete(run_cleanup))
+        .route("/docker-network", get(list_networks).post(create_network))
         .route("/version", get(version))
         .route("/openapi.json", get(|| async { axum::Json(ApiDoc::openapi()) }));
 

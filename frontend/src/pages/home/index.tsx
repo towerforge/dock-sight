@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useDashboard } from '@/context/dashboard-context'
 import { ServiceBar } from '@/pages/home/service-bar'
 import { CreateServiceModal } from '@/pages/home/create-service-modal'
-import { Input, Button, Page } from '@/components/ui'
+import { SearchBar, Button, Page } from '@/components/ui'
 
 export default function Home() {
     const { status: authStatus, loading: authLoading } = useAuth()
@@ -36,11 +36,10 @@ export default function Home() {
                 onCreated={() => {}}
             />
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <Input
+                <SearchBar
                     placeholder="Search services…"
                     value={searchTerm}
-                    onChange={e => setSearchTerm((e.target as HTMLInputElement).value)}
-                    style={{ maxWidth: 280 }}
+                    onChange={setSearchTerm}
                 />
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Button variant={1} size="md" onClick={() => setModalOpen(true)}>

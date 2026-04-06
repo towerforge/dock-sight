@@ -41,9 +41,20 @@
     border-bottom: 2px solid transparent;
     transition: color 0.15s, border-color 0.15s;
     white-space: nowrap;
+    position: relative;
 }
 
-.navLink:hover { color: var(--text-1); }
+.navLink:hover {
+    color: var(--text-1);
+}
+
+.navLink:hover::before {
+    content: '';
+    position: absolute;
+    inset: 7px 2px;
+    background: var(--state-2);
+    border-radius: var(--radius-1);
+}
 
 .navLinkActive {
     color: var(--text-1);

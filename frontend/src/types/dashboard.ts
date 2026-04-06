@@ -30,4 +30,6 @@ export interface ServiceHistoryPoint {
     time: number
     cpu: number
     ramPercent: number
+    networkRx?: number
+    networkTx?: number
 }

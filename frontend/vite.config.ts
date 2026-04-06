@@ -14,7 +14,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: {
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/sysinfo/, /^\/docker-service/],
+        navigateFallbackDenylist: [/^\/api/, /^\/sysinfo/, /^\/docker-service/, /^\/docker-network/],
       },
       manifest: {
         name: 'Dock Sight',
@@ -42,9 +42,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/sysinfo':       `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
+      '/sysinfo':        `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
       '/docker-service': `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
-      '/api':           `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
+      '/docker-network': `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
+      '/api':            `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
     },
   },
 })

@@ -46,6 +46,8 @@ export function useDashboardData(refreshInterval: number) {
                                 time: now,
                                 cpu: svc.info.cpu.percent,
                                 ramPercent: svc.info.ram.percent,
+                                networkRx: svc.info.net?.rx ?? 0,
+                                networkTx: svc.info.net?.tx ?? 0,
                             }]
                             if (history.length > MAX_HISTORY) history.shift()
                             next[svc.name] = history

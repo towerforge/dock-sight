@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Globe } from 'lucide-react'
 import type { DockerService } from '@/types/dashboard'
 import { Table, TableCell, type Column } from '@/components/ui/table'
-import { COLORS } from './network-graph'
+import { NETWORK_COLORS as COLORS } from '@/lib/colors'
 
 interface NetworkRow {
     name:    string
@@ -14,8 +14,9 @@ interface NetworkRow {
     tx:      number   // bytes
 }
 
-function buildNetworkRows(dock: DockerService[], networks: string[]): NetworkRow[] {
-    return networks.map((name, ci) => {
+function buildNetworkRows(dock: DockerService[], networks: string[], allNetworks: string[]): NetworkRow[] {
+    return networks.map(name => {
+        const ci      = allNetworks.indexOf(name)
         const svcs    = dock.filter(s => (s.networks ?? []).includes(name))
         const running = svcs.filter(s => s.containers > 0).length
         const rx      = svcs.reduce((sum, s) => sum + (s.info.net?.rx ?? 0), 0)
@@ -109,12 +110,13 @@ const COLUMNS: Column<NetworkRow>[] = [
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function NetworkTable({ dock, networks, onHover }: {
+export default function NetworkTable({ dock, networks, allNetworks, onHover }: {
     dock: DockerService[]
     networks: string[]
+    allNetworks: string[]
     onHover?: (network: string | null) => void
 }) {
-    const rows = useMemo(() => buildNetworkRows(dock, networks), [dock, networks])
+    const rows = useMemo(() => buildNetworkRows(dock, networks, allNetworks), [dock, networks, allNetworks])
 
     return (
         <Table

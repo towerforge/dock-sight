@@ -37,6 +37,10 @@ export const apiCreateService = (body: { name: string; image: string; replicas?:
 export const apiDeleteService = (name: string) => del<void>(`/docker-service?name=${encodeURIComponent(name)}`)
 export const apiScaleService  = (name: string, replicas: number) => post<void>('/docker-service/scale', { name, replicas })
 
+export const apiListNetworks  = () => get<{ id: string; name: string; driver: string; scope: string }[]>('/docker-network')
+export const apiCreateNetwork = (body: { name: string; driver?: string }) =>
+    post<{ id?: string }>('/docker-network', body)
+
 export const apiAuthStatus = () => get<{ setup_required: boolean; authenticated: boolean }>('/api/auth/status')
 export const apiAuthSetup  = (password: string, confirm_password: string) => post<void>('/api/auth/setup', { password, confirm_password })
 export const apiAuthLogin  = (password: string) => post<void>('/api/auth/login', { password })
