@@ -7,17 +7,26 @@ import { useDashboard } from '@/context/dashboard-context'
 import { ServiceBar } from '@/pages/home/service-bar'
 import { CreateServiceModal } from '@/pages/home/create-service-modal'
 import { SearchBar, Button, Page } from '@/components/ui'
+import { InlineSelect } from '@/components/ui/inline-select'
 
 export default function Home() {
     const { status: authStatus, loading: authLoading } = useAuth()
     const { dock } = useDashboard()
-    const [searchTerm, setSearchTerm] = useState('')
-    const [modalOpen, setModalOpen]   = useState(false)
+    const [searchTerm,     setSearchTerm]     = useState('')
+    const [networkFilter,  setNetworkFilter]  = useState('')
+    const [modalOpen,      setModalOpen]      = useState(false)
+
+    const networkOptions = useMemo(() => {
+        const nets = Array.from(new Set(dock.flatMap(s => s.networks ?? []))).sort()
+        return [{ value: '', label: 'All' }, ...nets.map(n => ({ value: n, label: n }))]
+    }, [dock])
 
     const filteredDocs = useMemo(() =>
-        dock.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        dock
+            .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .filter(s => !networkFilter || (s.networks ?? []).includes(networkFilter))
             .sort((a, b) => a.name.localeCompare(b.name)),
-        [dock, searchTerm]
+        [dock, searchTerm, networkFilter]
     )
 
     if (authLoading) return (
@@ -40,6 +49,12 @@ export default function Home() {
                     placeholder="Search services…"
                     value={searchTerm}
                     onChange={setSearchTerm}
+                />
+                <InlineSelect
+                    label="Network"
+                    value={networkFilter}
+                    options={networkOptions}
+                    onChange={setNetworkFilter}
                 />
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Button variant={1} size="md" onClick={() => setModalOpen(true)}>

@@ -90,7 +90,7 @@ function ServiceBadge({ x, y, name, paused, cols, colors }: {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function NetworkGraph({ dock, networks: networksProp, allNetworks: allNetworksProp, hoveredNetwork }: { dock: DockerService[]; networks?: string[]; allNetworks?: string[]; hoveredNetwork?: string | null }) {
+export default function NetworkGraph({ dock, networks: networksProp, allNetworks: allNetworksProp, hoveredNetwork, onNetworkClick }: { dock: DockerService[]; networks?: string[]; allNetworks?: string[]; hoveredNetwork?: string | null; onNetworkClick?: (network: string) => void }) {
     const navigate  = useNavigate()
     const { networks: networksFromDock, rows } = useMemo(() => buildRows(dock), [dock])
     const networks    = networksProp    ?? networksFromDock
@@ -145,7 +145,8 @@ export default function NetworkGraph({ dock, networks: networksProp, allNetworks
                         fill={COLORS[colorIdx % COLORS.length]}
                         stroke="var(--layer-1)" strokeWidth={2}
                         opacity={netOp(net)}
-                        style={{ transition: 'opacity 0.2s' }} />
+                        style={{ transition: 'opacity 0.2s', cursor: onNetworkClick ? 'pointer' : undefined }}
+                        onClick={onNetworkClick ? () => onNetworkClick(net) : undefined} />
                 )
             })}
 

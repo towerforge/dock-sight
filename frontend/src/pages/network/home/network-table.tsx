@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { Globe } from 'lucide-react'
 import type { DockerService } from '@/types/dashboard'
 import { Table, TableCell, type Column } from '@/components/ui/table'
 import { NETWORK_COLORS as COLORS } from '@/lib/colors'
@@ -57,13 +56,6 @@ function HealthBadge({ health }: { health: NetworkRow['health'] }) {
     )
 }
 
-function NetRate({ value }: { value: number }) {
-    return (
-        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-1)' }}>
-            {formatBytes(value)}/s
-        </span>
-    )
-}
 
 // ── Columns ───────────────────────────────────────────────────────────────────
 const COLUMNS: Column<NetworkRow>[] = [
@@ -72,9 +64,9 @@ const COLUMNS: Column<NetworkRow>[] = [
         header: 'Network',
         render: row => (
             <TableCell icon={
-                <Globe size={14} style={{ color: row.color, flexShrink: 0 }} />
+                <span style={{ width: 12, height: 12, borderRadius: '50%', background: row.color, flexShrink: 0, display: 'inline-block' }} />
             }>
-                <span style={{ fontWeight: 600, color: row.color }}>{row.name}</span>
+                <span>{row.name}</span>
             </TableCell>
         ),
     },
@@ -97,24 +89,25 @@ const COLUMNS: Column<NetworkRow>[] = [
     },
     {
         key: 'rx',
-        header: '↓ RX',
+        header: 'RX / TX',
         shrink: true,
-        render: row => <NetRate value={row.rx} />,
-    },
-    {
-        key: 'tx',
-        header: '↑ TX',
-        shrink: true,
-        render: row => <NetRate value={row.tx} />,
+        render: row => (
+            <span style={{ fontFamily: 'monospace', fontSize: 12, whiteSpace: 'nowrap' }}>
+                <span style={{ color: '#8b5cf6' }}>↓ {formatBytes(row.rx)}/s</span>
+                <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
+                <span style={{ color: '#a78bfa' }}>↑ {formatBytes(row.tx)}/s</span>
+            </span>
+        ),
     },
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function NetworkTable({ dock, networks, allNetworks, onHover }: {
+export default function NetworkTable({ dock, networks, allNetworks, onHover, onSelect }: {
     dock: DockerService[]
     networks: string[]
     allNetworks: string[]
     onHover?: (network: string | null) => void
+    onSelect?: (network: string) => void
 }) {
     const rows = useMemo(() => buildNetworkRows(dock, networks, allNetworks), [dock, networks, allNetworks])
 
@@ -125,6 +118,7 @@ export default function NetworkTable({ dock, networks, allNetworks, onHover }: {
             keyExtractor={row => row.name}
             emptyMessage="No networks found."
             onRowHover={onHover ? (row) => onHover(row?.name ?? null) : undefined}
+            onRowClick={onSelect ? (row) => onSelect(row.name) : undefined}
         />
     )
 }

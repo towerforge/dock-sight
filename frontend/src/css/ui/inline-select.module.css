@@ -7,6 +7,8 @@
     border-radius: calc(var(--radius-1) - 1px);
     cursor: pointer;
     user-select: none;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 .root:hover { background: var(--fill-2); }
@@ -23,17 +25,13 @@
     font-size: 13px;
     font-weight: 500;
     color: var(--text-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
 }
 
 .arrow {
     color: var(--text-3);
     flex-shrink: 0;
-}
-
-.select {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
 }

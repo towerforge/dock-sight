@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Modal, Input, Button } from '@/components/ui'
-import { apiCreateService } from '@/services/api'
+import { Modal, Input, Button, Select } from '@/components/ui'
+import { apiCreateService, apiListNetworks } from '@/services/api'
 
 interface Props {
     open: boolean
@@ -11,12 +11,21 @@ interface Props {
 
 export function CreateServiceModal({ open, onClose, onCreated }: Props) {
     const navigate = useNavigate()
-    const [name, setName]       = useState('')
-    const [image, setImage]     = useState('')
-    const [error, setError]     = useState<string | null>(null)
+    const [name,    setName]    = useState('')
+    const [image,   setImage]   = useState('')
+    const [network, setNetwork] = useState('')
+    const [error,   setError]   = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
+    const [networks, setNetworks] = useState<{ value: string; label: string }[]>([])
 
-    const reset = () => { setName(''); setImage(''); setError(null) }
+    useEffect(() => {
+        if (!open) return
+        apiListNetworks()
+            .then(list => setNetworks(list.map(n => ({ value: n.name, label: n.name }))))
+            .catch(() => {})
+    }, [open])
+
+    const reset = () => { setName(''); setImage(''); setNetwork(''); setError(null) }
 
     const handleClose = () => { reset(); onClose() }
 
@@ -27,7 +36,11 @@ export function CreateServiceModal({ open, onClose, onCreated }: Props) {
         setLoading(true)
         try {
             const serviceName = name.trim()
-            await apiCreateService({ name: serviceName, image: image.trim() })
+            await apiCreateService({
+                name: serviceName,
+                image: image.trim(),
+                ...(network ? { networks: [network] } : {}),
+            })
             reset()
             onCreated()
             onClose()
@@ -57,6 +70,16 @@ export function CreateServiceModal({ open, onClose, onCreated }: Props) {
                     hint="Docker Hub image name and tag, e.g. nginx:latest, postgres:16, redis:alpine"
                     value={image}
                     onChange={e => setImage((e.target as HTMLInputElement).value)}
+                />
+
+                <Select
+                    label="Network"
+                    placeholder="None (default)"
+                    searchable
+                    options={networks}
+                    value={network}
+                    onChange={e => setNetwork(e.target.value)}
+                    hint="Attach this service to an existing network"
                 />
 
                 {error && (

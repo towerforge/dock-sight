@@ -17,14 +17,14 @@ const METRICS = [
     { key: 'net' as const,  label: 'Network', Icon: Activity,     colorHex: '#8b5cf6', colorId: 'p-net' },
 ] as const
 
-type Section = 'main' | 'service'
+type Section = 'main' | 'service' | 'network'
 
 interface NavItem { to: string; label: string; Icon: React.ElementType; end?: boolean; dev?: boolean }
 
 const MAIN_NAV: NavItem[] = [
     { to: '/',         label: 'Services',  Icon: Server,       end: true  },
     { to: '/metrics',  label: 'Metrics',   Icon: BarChart2                },
-    { to: '/topology', label: 'Network',   Icon: Activity                  },
+    { to: '/network',  label: 'Network',   Icon: Activity,     end: true   },
     { to: '/cleanup',  label: 'Cleanup',   Icon: Trash2                   },
     { to: '/_dev',     label: 'Dev',       Icon: FlaskConical, dev: true  },
 ]
@@ -85,6 +85,57 @@ function ServiceNav() {
             {SERVICE_NAV.map(({ path, label, Icon }) => {
                 const to = `/service/${path}?name=${encodeURIComponent(name)}`
                 const isActive = location.pathname === `/service/${path}`
+                return (
+                    <NavLink key={path} to={to} className={`${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
+                        <Icon size={15} />{label}
+                    </NavLink>
+                )
+            })}
+        </>
+    )
+}
+
+const NETWORK_NAV = [
+    { path: 'overview', label: 'Overview', Icon: LayoutDashboard },
+    { path: 'services', label: 'Services', Icon: Server          },
+] as const
+
+function NetworkBrand({ onBack }: { onBack: () => void }) {
+    const [searchParams] = useSearchParams()
+    const name = searchParams.get('name') ?? ''
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+                onClick={onBack}
+                title="Back to networks"
+                aria-label="Back to networks"
+                style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-2)', padding: '4px', borderRadius: 'var(--radius-1)',
+                    transition: 'color 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}
+            >
+                <ArrowLeft size={15} />
+            </button>
+            <span className={styles.brand}>{name || 'Network'}</span>
+        </div>
+    )
+}
+
+function NetworkNav() {
+    const [searchParams] = useSearchParams()
+    const location = useLocation()
+    const name = searchParams.get('name') ?? ''
+
+    return (
+        <>
+            {NETWORK_NAV.map(({ path, label, Icon }) => {
+                const to = `/network/${path}?name=${encodeURIComponent(name)}`
+                const isActive = location.pathname === `/network/${path}`
                 return (
                     <NavLink key={path} to={to} className={`${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
                         <Icon size={15} />{label}
@@ -165,11 +216,13 @@ function SystemPanel() {
 const SECTION_NAV: Record<Section, React.ComponentType> = {
     main:    MainNav,
     service: ServiceNav,
+    network: NetworkNav,
 }
 
 const SECTION_BRAND: Record<Section, React.ComponentType<{ onBack: () => void }>> = {
     main:    () => <span className={styles.brand}>Dock Sight</span>,
     service: ({ onBack }) => <ServiceBrand onBack={onBack} />,
+    network: ({ onBack }) => <NetworkBrand onBack={onBack} />,
 }
 
 export default function MainLayout() {
@@ -178,21 +231,24 @@ export default function MainLayout() {
     const { status, logout } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
-    const section: Section = location.pathname.startsWith('/service') ? 'service' : 'main'
+    const section: Section =
+        location.pathname.startsWith('/service') ? 'service' :
+        location.pathname.startsWith('/network') && location.pathname !== '/network' ? 'network' : 'main'
 
     const handleLogout = async () => {
         await logout()
         navigate('/login', { replace: true })
     }
 
-    const Brand = SECTION_BRAND[section]
-    const Nav   = SECTION_NAV[section]
+    const Brand  = SECTION_BRAND[section]
+    const Nav    = SECTION_NAV[section]
+    const onBack = section === 'network' ? () => navigate('/network') : () => navigate('/')
 
     return (
         <>
             {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
             <div className={styles.topbar}>
-                <Brand onBack={() => navigate('/')} />
+                <Brand onBack={onBack} />
                 <div className={styles.topbarEnd}>
                     <div className={styles.toggleRoot}>
                         <button
