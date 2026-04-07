@@ -25,11 +25,19 @@ export default function Metrics() {
     const { dock, serviceHistory, refreshInterval, setRefreshInterval, pointCount, setPointCount } = useDashboard()
     const [searchTerm, setSearchTerm] = useState('')
     const [viewMode, setViewMode] = useState<ViewMode>('all')
+    const [networkFilter, setNetworkFilter] = useState('')
+
+    const networkOptions = useMemo(() => {
+        const nets = Array.from(new Set(dock.flatMap(s => s.networks ?? []))).sort()
+        return [{ value: '', label: 'All' }, ...nets.map(n => ({ value: n, label: n }))]
+    }, [dock])
 
     const filteredDocs = useMemo(() =>
-        dock.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        dock
+            .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .filter(s => !networkFilter || (s.networks ?? []).includes(networkFilter))
             .sort((a, b) => a.name.localeCompare(b.name)),
-        [dock, searchTerm]
+        [dock, searchTerm, networkFilter]
     )
 
     if (authLoading) return (
@@ -50,6 +58,12 @@ export default function Metrics() {
                 />
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <SegmentedControl options={CHART_MODES} value={viewMode} onChange={setViewMode} />
+                    <InlineSelect
+                        label="Network"
+                        value={networkFilter}
+                        options={networkOptions}
+                        onChange={setNetworkFilter}
+                    />
                     <InlineSelect
                         label="Refresh"
                         value={String(refreshInterval)}

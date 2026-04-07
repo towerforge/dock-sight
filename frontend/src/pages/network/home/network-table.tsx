@@ -91,13 +91,22 @@ const COLUMNS: Column<NetworkRow>[] = [
         key: 'rx',
         header: 'RX / TX',
         shrink: true,
-        render: row => (
-            <span style={{ fontFamily: 'monospace', fontSize: 12, whiteSpace: 'nowrap' }}>
-                <span style={{ color: '#8b5cf6' }}>↓ {formatBytes(row.rx)}/s</span>
-                <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
-                <span style={{ color: '#a78bfa' }}>↑ {formatBytes(row.tx)}/s</span>
-            </span>
-        ),
+        render: row => {
+            if (row.rx === 0 && row.tx === 0) {
+                return <span style={{ fontFamily: 'monospace', color: 'var(--text-3)', fontSize: 12 }}>—</span>
+            }
+            return (
+                <span style={{ fontFamily: 'monospace', fontSize: 12, whiteSpace: 'nowrap' }}>
+                    {row.rx === 0
+                        ? <span style={{ color: 'var(--text-3)' }}>↓ —</span>
+                        : <span style={{ color: '#8b5cf6' }}>↓ {formatBytes(row.rx)}/s</span>}
+                    <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
+                    {row.tx === 0
+                        ? <span style={{ color: 'var(--text-3)' }}>↑ —</span>
+                        : <span style={{ color: '#a78bfa' }}>↑ {formatBytes(row.tx)}/s</span>}
+                </span>
+            )
+        },
     },
 ]
 
