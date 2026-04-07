@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Page, Table } from '@/components/ui'
 import type { Column } from '@/components/ui'
 import { useDashboard } from '@/context/dashboard-context'
-import { formatBytes, formatRelativeTime } from '@/lib/formatters'
+import { formatBytes } from '@/lib/formatters'
 
 type SvcRow = {
     id: string
