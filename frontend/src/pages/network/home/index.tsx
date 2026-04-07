@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Button, SearchBar, Page } from '@/components/ui'
 import { Grid, Col } from '@/components/ui/grid'
 import { useDashboard } from '@/context/dashboard-context'
@@ -9,6 +10,7 @@ import NetworkTable from './network-table'
 import { CreateNetworkModal } from './create-network-modal'
 
 export default function NetworkPage() {
+    const navigate = useNavigate()
     const { dock, refresh } = useDashboard()
     const { networks: networksFromServices } = useMemo(() => buildRows(dock), [dock])
     const [hoveredNetwork, setHoveredNetwork] = useState<string | null>(null)
@@ -36,6 +38,9 @@ export default function NetworkPage() {
         refresh()
         setTimeout(() => setFetchTick(t => t + 1), 500)
     }
+
+    const goToNetwork = (name: string) =>
+        navigate(`/network/overview?name=${encodeURIComponent(name)}`)
 
     return (
         <Page maxWidth="full" size={2}>
@@ -65,10 +70,17 @@ export default function NetworkPage() {
                         networks={filteredNetworks}
                         allNetworks={allNetworks}
                         onHover={setHoveredNetwork}
+                        onSelect={goToNetwork}
                     />
                 </Col>
                 <Col span={12} md={7}>
-                    <NetworkGraph dock={dock} networks={filteredNetworks} allNetworks={allNetworks} hoveredNetwork={hoveredNetwork} />
+                    <NetworkGraph
+                        dock={dock}
+                        networks={filteredNetworks}
+                        allNetworks={allNetworks}
+                        hoveredNetwork={hoveredNetwork}
+                        onNetworkClick={goToNetwork}
+                    />
                 </Col>
             </Grid>
         </Page>

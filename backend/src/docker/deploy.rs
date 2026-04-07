@@ -6,6 +6,7 @@ use bollard::service::{
     ServiceSpecMode, ServiceSpecModeReplicated,
     EndpointSpec, EndpointPortConfig,
     EndpointPortConfigProtocolEnum, EndpointPortConfigPublishModeEnum,
+    NetworkAttachmentConfig,
 };
 use serde::Deserialize;
 use serde_json::json;
@@ -23,8 +24,9 @@ pub struct CreateServiceRequest {
     pub name: String,
     pub image: String,
     pub replicas: Option<u32>,
-    pub ports: Option<Vec<String>>,  // "host:container"
-    pub env: Option<Vec<String>>,    // "KEY=VALUE"
+    pub ports: Option<Vec<String>>,    // "host:container"
+    pub env: Option<Vec<String>>,      // "KEY=VALUE"
+    pub networks: Option<Vec<String>>, // network names
 }
 
 pub async fn create_service(Json(body): Json<CreateServiceRequest>) -> impl IntoResponse {
@@ -50,6 +52,13 @@ pub async fn create_service(Json(body): Json<CreateServiceRequest>) -> impl Into
 
     let env = body.env.filter(|e| !e.is_empty());
 
+    let networks: Option<Vec<NetworkAttachmentConfig>> = body.networks
+        .filter(|n| !n.is_empty())
+        .map(|names| names.into_iter().map(|n| NetworkAttachmentConfig {
+            target: Some(n),
+            ..Default::default()
+        }).collect());
+
     let spec = ServiceSpec {
         name: Some(body.name),
         task_template: Some(TaskSpec {
@@ -58,6 +67,7 @@ pub async fn create_service(Json(body): Json<CreateServiceRequest>) -> impl Into
                 env,
                 ..Default::default()
             }),
+            networks,
             ..Default::default()
         }),
         mode: Some(ServiceSpecMode {
