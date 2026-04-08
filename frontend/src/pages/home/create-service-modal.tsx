@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Modal, Input, Button, Select } from '@/components/ui'
-import { apiCreateService, apiListNetworks } from '@/services/api'
+import { apiCreateService, apiListNetworks, apiListRegistries } from '@/services/api'
+import type { Registry } from '@/services/api'
 
 interface Props {
     open: boolean
@@ -11,23 +12,34 @@ interface Props {
 
 export function CreateServiceModal({ open, onClose, onCreated }: Props) {
     const navigate = useNavigate()
-    const [name,    setName]    = useState('')
-    const [image,   setImage]   = useState('')
-    const [network, setNetwork] = useState('')
-    const [error,   setError]   = useState<string | null>(null)
-    const [loading, setLoading] = useState(false)
-    const [networks, setNetworks] = useState<{ value: string; label: string }[]>([])
+    const [name,       setName]       = useState('')
+    const [image,      setImage]      = useState('')
+    const [network,    setNetwork]    = useState('')
+    const [registryId, setRegistryId] = useState('')
+    const [error,      setError]      = useState<string | null>(null)
+    const [loading,    setLoading]    = useState(false)
+    const [networks,   setNetworks]   = useState<{ value: string; label: string }[]>([])
+    const [registries, setRegistries] = useState<Registry[]>([])
 
     useEffect(() => {
         if (!open) return
         apiListNetworks()
             .then(list => setNetworks(list.map(n => ({ value: n.name, label: n.name }))))
             .catch(() => {})
+        apiListRegistries()
+            .then(setRegistries)
+            .catch(() => {})
     }, [open])
 
-    const reset = () => { setName(''); setImage(''); setNetwork(''); setError(null) }
+    const reset = () => { setName(''); setImage(''); setNetwork(''); setRegistryId(''); setError(null) }
 
     const handleClose = () => { reset(); onClose() }
+
+    const selectedRegistry = registries.find(r => r.id === registryId)
+
+    const imageHint = selectedRegistry
+        ? `Use the full image path for this registry: ${selectedRegistry.username}/image:tag`
+        : 'Docker Hub image name and tag, e.g. nginx:latest, postgres:16, redis:alpine'
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -37,9 +49,10 @@ export function CreateServiceModal({ open, onClose, onCreated }: Props) {
         try {
             const serviceName = name.trim()
             await apiCreateService({
-                name: serviceName,
+                name:  serviceName,
                 image: image.trim(),
-                ...(network ? { networks: [network] } : {}),
+                ...(network    ? { networks:    [network]    } : {}),
+                ...(registryId ? { registry_id: registryId  } : {}),
             })
             reset()
             onCreated()
@@ -52,6 +65,11 @@ export function CreateServiceModal({ open, onClose, onCreated }: Props) {
         }
     }
 
+    const registryOptions = [
+        { value: '', label: 'Public (Docker Hub)' },
+        ...registries.map(r => ({ value: r.id, label: `${r.name} · ${r.username}` })),
+    ]
+
     return (
         <Modal open={open} onClose={handleClose} title="New service">
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -63,11 +81,19 @@ export function CreateServiceModal({ open, onClose, onCreated }: Props) {
                     onChange={e => setName((e.target as HTMLInputElement).value)}
                 />
 
+                <Select
+                    label="Registry"
+                    options={registryOptions}
+                    value={registryId}
+                    onChange={e => setRegistryId(e.target.value)}
+                    hint="Select a registry to use private image credentials"
+                />
+
                 <Input
                     label="Image"
                     required
-                    placeholder="nginx:latest"
-                    hint="Docker Hub image name and tag, e.g. nginx:latest, postgres:16, redis:alpine"
+                    placeholder={selectedRegistry ? `${selectedRegistry.username}/image:tag` : 'nginx:latest'}
+                    hint={imageHint}
                     value={image}
                     onChange={e => setImage((e.target as HTMLInputElement).value)}
                 />

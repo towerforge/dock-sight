@@ -8,9 +8,20 @@ use serde::{Deserialize, Serialize};
 pub mod middleware;
 pub mod routes;
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Registry {
+    pub id:       String,
+    pub name:     String,
+    pub provider: String,
+    pub username: String,
+    pub token:    String,
+}
+
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct AuthConfig {
     pub password_hash: Option<String>,
+    #[serde(default)]
+    pub registries: Vec<Registry>,
 }
 
 #[derive(Clone)]
