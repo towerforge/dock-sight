@@ -40,22 +40,37 @@ export function ServiceCard({ service, historyData, pointCount = 10, chartMode =
           </Link>
 
     const labelRight = chartMode === 'cpu' ? (
-        <span style={{ fontFamily: 'monospace', color: isHighLoad ? '#ef4444' : '#3b82f6' }}>
-            {service.info.cpu.percent.toFixed(1)}%
-        </span>
+        service.info.cpu.percent === 0
+            ? <span style={{ fontFamily: 'monospace', color: 'var(--text-3)' }}>—</span>
+            : <span style={{ fontFamily: 'monospace', color: isHighLoad ? '#ef4444' : '#3b82f6' }}>
+                {service.info.cpu.percent.toFixed(1)}%
+              </span>
     ) : chartMode === 'ram' ? (
-        <span style={{ fontFamily: 'monospace' }}>
-            <span style={{ color: '#10b981' }}>{formatBytes(service.info.ram.used)}</span>
-            <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
-            <span style={{ color: '#10b981' }}>{service.info.ram.percent.toFixed(1)}%</span>
-        </span>
-    ) : (
-        <span style={{ fontFamily: 'monospace' }}>
-            <span style={{ color: '#8b5cf6' }}>↓ {formatBytes(service.info.net.rx)}/s</span>
-            <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
-            <span style={{ color: '#a78bfa' }}>↑ {formatBytes(service.info.net.tx)}/s</span>
-        </span>
-    )
+        service.info.ram.percent === 0
+            ? <span style={{ fontFamily: 'monospace', color: 'var(--text-3)' }}>—</span>
+            : <span style={{ fontFamily: 'monospace' }}>
+                <span style={{ color: '#10b981' }}>{formatBytes(service.info.ram.used)}</span>
+                <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
+                <span style={{ color: '#10b981' }}>{service.info.ram.percent.toFixed(1)}%</span>
+              </span>
+    ) : (() => {
+        const rx = service.info.net.rx
+        const tx = service.info.net.tx
+        if (rx === 0 && tx === 0) {
+            return <span style={{ fontFamily: 'monospace', color: 'var(--text-3)' }}>—</span>
+        }
+        return (
+            <span style={{ fontFamily: 'monospace' }}>
+                {rx === 0
+                    ? <span style={{ color: 'var(--text-3)' }}>↓ —</span>
+                    : <span style={{ color: '#8b5cf6' }}>↓ {formatBytes(rx)}/s</span>}
+                <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
+                {tx === 0
+                    ? <span style={{ color: 'var(--text-3)' }}>↑ —</span>
+                    : <span style={{ color: '#a78bfa' }}>↑ {formatBytes(tx)}/s</span>}
+            </span>
+        )
+    })()
 
     return (
         <ChartCard

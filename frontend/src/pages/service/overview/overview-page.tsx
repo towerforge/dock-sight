@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { flushSync } from 'react-dom'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { Pause, Play } from 'lucide-react'
+import { Pause, Play, RefreshCw } from 'lucide-react'
 import { Page, Table, Modal, Button, Spinner } from '@/components/ui'
 import type { Column } from '@/components/ui'
-import { apiServiceContainers, apiDeleteService, apiScaleService } from '@/services/api'
+import { apiServiceContainers, apiDeleteService, apiScaleService, apiPullService, apiListRegistries } from '@/services/api'
+import type { Registry } from '@/services/api'
 import { formatBytes } from '@/lib/formatters'
 import { useDashboard } from '@/context/dashboard-context'
 
@@ -34,16 +35,21 @@ export default function OverviewPage() {
 
     const go = (path: string) => navigate(`/service/${path}?name=${encodeURIComponent(name)}`)
 
+    const [registries, setRegistries] = useState<Registry[]>([])
     const [containers, setContainers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [deleting, setDeleting]       = useState(false)
     const [deleteError, setDeleteError] = useState<string | null>(null)
     const [removing, setRemoving]       = useState(false)
+    const [pulling, setPulling]         = useState(false)
+    const [pullError, setPullError]     = useState<string | null>(null)
     const [scaling, setScaling]         = useState(false)
     const [scaleError, setScaleError]   = useState<string | null>(null)
 
     const service = useMemo(() => dock.find(s => s.name === name) ?? null, [dock, name])
+
+    useEffect(() => { apiListRegistries().then(setRegistries).catch(() => {}) }, [])
 
     useEffect(() => {
         let mounted = true
@@ -70,6 +76,8 @@ export default function OverviewPage() {
     if (loading) return <Page><Spinner /></Page>
 
     if (removing) return <Page><Spinner label={`Removing ${name}…`} /></Page>
+
+    if (pulling) return <Page><Spinner label={`Pulling latest image for ${name}…`} /></Page>
 
     const running     = containers.filter(c => c.running).length
     const stopped     = containers.length - running
@@ -117,7 +125,24 @@ export default function OverviewPage() {
         allImages.length > 0 && {
             id: 'image', label: 'Image',
             onClick: () => go('images'),
-            value: <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>{allImages.map(img => <Tag key={img} value={(img as string).split('@')[0]} />)}</div>,
+            value: (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {allImages.map(img => {
+                        const ref = (img as string).split('@')[0]
+                        const registry = registries.find(r => ref.startsWith(r.username + '/'))
+                        return (
+                            <span key={img} style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <Tag value={ref} />
+                                {registry && (
+                                    <span style={{ fontSize: 11, color: 'var(--text-3)', padding: '1px 6px', borderRadius: 3, background: 'var(--fill-1)', border: '1px solid var(--stroke-1)' }}>
+                                        {registry.name}
+                                    </span>
+                                )}
+                            </span>
+                        )
+                    })}
+                </div>
+            ),
         },
         allPolicies.length > 0 && {
             id: 'restart', label: 'Restart',
@@ -160,6 +185,19 @@ export default function OverviewPage() {
         }
     }
 
+    const handlePull = async () => {
+        setPulling(true)
+        setPullError(null)
+        try {
+            await apiPullService(name)
+            refresh()
+        } catch (err: any) {
+            setPullError(err?.message ?? 'Failed to pull image')
+        } finally {
+            setPulling(false)
+        }
+    }
+
     const handleDelete = async () => {
         setDeleting(true)
         setDeleteError(null)
@@ -197,6 +235,18 @@ export default function OverviewPage() {
                                         {!scaling && (isPaused ? <><Play size={12} /> Start</> : <><Pause size={12} /> Pause</>)}
                                     </Button>
                                     {scaleError && <span style={{ fontSize: 12, color: '#ef4444', fontFamily: 'monospace' }}>{scaleError}</span>}
+                                </div>
+                            ),
+                        },
+                        {
+                            id: 'pull',
+                            label: 'Pull latest',
+                            value: (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+                                    <Button variant={2} size="sm" onClick={handlePull}>
+                                        <RefreshCw size={12} /> Pull
+                                    </Button>
+                                    {pullError && <span style={{ fontSize: 12, color: '#ef4444', fontFamily: 'monospace' }}>{pullError}</span>}
                                 </div>
                             ),
                         },

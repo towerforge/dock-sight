@@ -11,7 +11,10 @@ import ImagesPage from '@/pages/service/images/images-page'
 import LogsPage from '@/pages/service/log/logs-page'
 import MetricsPage from '@/pages/service/metrics/metrics-page'
 import Cleanup from '@/pages/cleanup'
+import SettingsLayout from '@/pages/settings'
+import RegistriesPage from '@/pages/settings/registries'
 import Metrics from '@/pages/metrics'
+import VolumesPage from '@/pages/volumes'
 import NetworkHome from '@/pages/network/home'
 import NetworkDetailLayout from '@/pages/network/detail'
 import NetworkOverviewPage from '@/pages/network/detail/overview/overview-page'
@@ -35,7 +38,11 @@ function App() {
             <Route path="metrics"    element={<MetricsPage />} />
           </Route>
           <Route path="/cleanup"  element={<Cleanup />} />
+          <Route path="/settings" element={<SettingsLayout />}>
+            <Route path="registries" element={<RegistriesPage />} />
+          </Route>
           <Route path="/metrics"  element={<Metrics />} />
+          <Route path="/volumes"  element={<VolumesPage />} />
           <Route path="/network">
             <Route index element={<NetworkHome />} />
             <Route element={<NetworkDetailLayout />}>

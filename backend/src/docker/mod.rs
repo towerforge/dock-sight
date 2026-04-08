@@ -5,14 +5,16 @@ pub mod logs;
 pub mod cleanup;
 pub mod deploy;
 pub mod network;
+pub mod volumes;
 
 pub use services::services;
 pub use containers::{service_containers, delete_container};
 pub use images::{service_images, delete_image};
 pub use logs::service_logs;
 pub use cleanup::{cleanup_preview, run_cleanup};
-pub use deploy::{create_service, delete_service, scale_service};
+pub use deploy::{create_service, delete_service, scale_service, pull_service};
 pub use network::{list_networks, create_network, delete_network};
+pub use volumes::list_docker_volumes;
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
