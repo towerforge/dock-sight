@@ -92,6 +92,7 @@ Then open [http://localhost:9090](http://localhost:9090).
 |---|---|---|
 | `DATA_DIR` | `.` | Path where `config.json` is stored |
 | `SESSION_DURATION_HOURS` | `24` | Session lifetime in hours |
+| `SECURE_COOKIES` | `false` | Set to `true` to add the `Secure` flag to session cookies. Enable this when Dock Sight is behind an HTTPS reverse proxy. |
 
 ## Docker Swarm
 

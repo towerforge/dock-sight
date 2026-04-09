@@ -17,7 +17,7 @@ const METRICS = [
     { key: 'net' as const,  label: 'Network', Icon: Activity,     colorHex: '#8b5cf6', colorId: 'p-net' },
 ] as const
 
-type Section = 'main' | 'service' | 'network'
+type Section = 'main' | 'service' | 'network' | 'volume'
 
 interface NavItem { to: string; label: string; Icon: React.ElementType; end?: boolean; dev?: boolean }
 
@@ -102,6 +102,10 @@ const NETWORK_NAV = [
     { path: 'services', label: 'Services', Icon: Server          },
 ] as const
 
+const VOLUME_NAV = [
+    { path: 'overview', label: 'Overview', Icon: LayoutDashboard },
+] as const
+
 function NetworkBrand({ onBack }: { onBack: () => void }) {
     const [searchParams] = useSearchParams()
     const name = searchParams.get('name') ?? ''
@@ -148,6 +152,52 @@ function NetworkNav() {
     )
 }
 
+
+function VolumeBrand({ onBack }: { onBack: () => void }) {
+    const [searchParams] = useSearchParams()
+    const name = searchParams.get('name') ?? ''
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+                onClick={onBack}
+                title="Back to volumes"
+                aria-label="Back to volumes"
+                style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-2)', padding: '4px', borderRadius: 'var(--radius-1)',
+                    transition: 'color 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}
+            >
+                <ArrowLeft size={15} />
+            </button>
+            <span className={styles.brand}>{name || 'Volume'}</span>
+        </div>
+    )
+}
+
+function VolumeNav() {
+    const [searchParams] = useSearchParams()
+    const location = useLocation()
+    const name = searchParams.get('name') ?? ''
+
+    return (
+        <>
+            {VOLUME_NAV.map(({ path, label, Icon }) => {
+                const to = `/volumes/${path}?name=${encodeURIComponent(name)}`
+                const isActive = location.pathname === `/volumes/${path}`
+                return (
+                    <NavLink key={path} to={to} className={`${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
+                        <Icon size={15} />{label}
+                    </NavLink>
+                )
+            })}
+        </>
+    )
+}
 
 function SystemPanel() {
     const { sys, sysHistory, pointCount } = useDashboard()
@@ -219,12 +269,14 @@ const SECTION_NAV: Record<Section, React.ComponentType> = {
     main:    MainNav,
     service: ServiceNav,
     network: NetworkNav,
+    volume:  VolumeNav,
 }
 
 const SECTION_BRAND: Record<Section, React.ComponentType<{ onBack: () => void }>> = {
     main:    () => <span className={styles.brand}>Dock Sight</span>,
     service: ({ onBack }) => <ServiceBrand onBack={onBack} />,
     network: ({ onBack }) => <NetworkBrand onBack={onBack} />,
+    volume:  ({ onBack }) => <VolumeBrand  onBack={onBack} />,
 }
 
 export default function MainLayout() {
@@ -235,7 +287,8 @@ export default function MainLayout() {
     const location = useLocation()
     const section: Section =
         location.pathname.startsWith('/service') ? 'service' :
-        location.pathname.startsWith('/network') && location.pathname !== '/network' ? 'network' : 'main'
+        location.pathname.startsWith('/network') && location.pathname !== '/network' ? 'network' :
+        location.pathname.startsWith('/volumes') && location.pathname !== '/volumes' ? 'volume' : 'main'
 
     const handleLogout = async () => {
         await logout()
@@ -244,7 +297,10 @@ export default function MainLayout() {
 
     const Brand  = SECTION_BRAND[section]
     const Nav    = SECTION_NAV[section]
-    const onBack = section === 'network' ? () => navigate('/network') : () => navigate('/')
+    const onBack =
+        section === 'network' ? () => navigate('/network') :
+        section === 'volume'  ? () => navigate('/volumes') :
+        () => navigate('/')
 
     return (
         <>

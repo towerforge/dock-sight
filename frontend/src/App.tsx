@@ -14,7 +14,9 @@ import Cleanup from '@/pages/cleanup'
 import SettingsLayout from '@/pages/settings'
 import RegistriesPage from '@/pages/settings/registries'
 import Metrics from '@/pages/metrics'
-import VolumesPage from '@/pages/volumes'
+import VolumesHome from '@/pages/volumes/home'
+import VolumeDetailLayout from '@/pages/volumes/detail'
+import VolumeOverviewPage from '@/pages/volumes/detail/overview/overview-page'
 import NetworkHome from '@/pages/network/home'
 import NetworkDetailLayout from '@/pages/network/detail'
 import NetworkOverviewPage from '@/pages/network/detail/overview/overview-page'
@@ -42,7 +44,12 @@ function App() {
             <Route path="registries" element={<RegistriesPage />} />
           </Route>
           <Route path="/metrics"  element={<Metrics />} />
-          <Route path="/volumes"  element={<VolumesPage />} />
+          <Route path="/volumes">
+            <Route index element={<VolumesHome />} />
+            <Route element={<VolumeDetailLayout />}>
+              <Route path="overview" element={<VolumeOverviewPage />} />
+            </Route>
+          </Route>
           <Route path="/network">
             <Route index element={<NetworkHome />} />
             <Route element={<NetworkDetailLayout />}>

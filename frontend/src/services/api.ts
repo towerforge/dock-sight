@@ -45,7 +45,9 @@ export const apiDeleteNetwork = (name: string) => del<void>(`/docker-network?nam
 
 export type DockerVolume = { name: string; driver: string; mountpoint: string; created_at: number; service: string; size: number; ref_count: number }
 export type VolumesResponse = { volumes: DockerVolume[]; disk: { total: number; used: number; free: number }; volumes_total_size: number }
-export const apiListDockerVolumes = () => get<VolumesResponse>('/docker-volumes')
+export const apiListDockerVolumes  = () => get<VolumesResponse>('/docker-volumes')
+export const apiCreateVolume       = (body: { name: string; driver?: string }) => post<{ name?: string }>('/docker-volumes', body)
+export const apiDeleteVolume       = (name: string) => del<void>(`/docker-volumes?name=${encodeURIComponent(name)}`)
 
 export type Registry = { id: string; name: string; provider: string; username: string; token_hint: string }
 export const apiListRegistries   = ()                                                          => get<Registry[]>('/registries')

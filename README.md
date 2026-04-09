@@ -26,9 +26,11 @@
 Dock Sight runs as a single binary and serves a real-time dashboard in your browser. No agents, no external dependencies.
 
 **Host metrics** — CPU, RAM, disk, and network usage with historical charts.
-**Docker services** — Container status, resource consumption, per-service CPU/RAM/network charts, images, and live logs. Scale, pause, and delete services directly from the dashboard.
+**Docker services** — Container status, resource consumption, per-service CPU/RAM/network charts, images, and live logs. Scale, pause, delete, and pull latest image directly from the dashboard.
 **Network topology** — Visual graph and table of Docker networks with service distribution, health status, and RX/TX rates. Create new networks directly from the dashboard.
-**Password protection** — On first launch the browser prompts you to set a password. Every subsequent visit requires it (session valid for 24 h by default).
+**Volumes** — List all Docker volumes with size, mount point, disk usage, and service grouping.
+**Registries** — Manage private Docker registries (create, list, delete) and use them when deploying new services.
+**Password protection** — On first launch the browser prompts you to set a password. Every subsequent visit requires it (session valid for 24 h by default). Login attempts are rate-limited per IP (10 attempts per 15 minutes). Enable `SECURE_COOKIES` when serving behind an HTTPS reverse proxy.
 
 ## Requirements
 
@@ -83,6 +85,7 @@ On first launch you will be prompted to set a password before the dashboard is a
 |---|---|---|
 | `DATA_DIR` | `.` | Directory where `config.json` is stored (password hash) |
 | `SESSION_DURATION_HOURS` | `24` | How many hours a login session stays valid |
+| `SECURE_COOKIES` | `false` | Set to `true` to add the `Secure` flag to session cookies (use when serving behind an HTTPS reverse proxy) |
 
 ## Docker
 

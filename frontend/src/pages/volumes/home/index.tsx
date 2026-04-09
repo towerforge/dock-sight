@@ -1,17 +1,19 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Plus } from 'lucide-react'
 import { AlertCircle } from 'lucide-react'
-import { Page, Table } from '@/components/ui'
+import { Page, Table, Button, SearchBar } from '@/components/ui'
 import type { Column } from '@/components/ui'
 import { apiListDockerVolumes } from '@/services/api'
 import type { DockerVolume, VolumesResponse } from '@/services/api'
 import { formatBytes, formatRelativeTime } from '@/lib/formatters'
 import { NETWORK_COLORS as PALETTE } from '@/lib/colors'
+import { CreateVolumeModal } from './create-volume-modal'
 
-// ── Colour palette (deterministic by index) ──────────────────────────────────
+// ── Colour palette (deterministic by index) ───────────────────────────────────
 function serviceColor(index: number) { return PALETTE[index % PALETTE.length] }
 
-// ── Disk bar ─────────────────────────────────────────────────────────────────
+// ── Disk bar ──────────────────────────────────────────────────────────────────
 interface BarSegment { label: string; bytes: number; color: string }
 
 function DiskBar({ total, used, free, segments }: { total: number; used: number; free: number; segments: BarSegment[] }) {
@@ -19,7 +21,6 @@ function DiskBar({ total, used, free, segments }: { total: number; used: number;
 
     if (!total) return null
 
-    // If we have volume sizes, split "used" into: [docker-by-service...] + [other]
     const dockerTotal = segments.reduce((s, b) => s + b.bytes, 0)
     const otherUsed = Math.max(0, used - dockerTotal)
 
@@ -29,7 +30,6 @@ function DiskBar({ total, used, free, segments }: { total: number; used: number;
         { label: 'Free', bytes: free, color: 'var(--fill-2)' },
     ]
 
-    // If no volume sizes known, fallback to simple used/free bar
     const simple = dockerTotal === 0
     const simpleSegs: BarSegment[] = [
         { label: 'Used', bytes: used, color: 'var(--accent)' },
@@ -40,7 +40,6 @@ function DiskBar({ total, used, free, segments }: { total: number; used: number;
 
     return (
         <div>
-            {/* Bar */}
             <div style={{ position: 'relative', height: 32, borderRadius: 50, overflow: 'hidden', background: 'var(--fill-2)', border: '1px solid var(--stroke-1)', display: 'flex' }}>
                 {segs.map((seg, i) => {
                     const pct = (seg.bytes / total) * 100
@@ -66,9 +65,7 @@ function DiskBar({ total, used, free, segments }: { total: number; used: number;
                     </div>
                 )}
             </div>
-
-            {/* Legend */}
-            <div style={{ display: 'flex', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
+            {/* <div style={{ display: 'flex', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
                 {segs.filter(s => s.label !== 'Free').map((seg, i) => (
                     <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text-2)' }}>
                         <span style={{ width: 12, height: 12, borderRadius: '50%', background: seg.color, flexShrink: 0 }} />
@@ -81,7 +78,7 @@ function DiskBar({ total, used, free, segments }: { total: number; used: number;
                     Free
                     <span style={{ color: 'var(--text-3)', fontFamily: 'monospace' }}>{formatBytes(free)}</span>
                 </span>
-            </div>
+            </div> */}
         </div>
     )
 }
@@ -92,6 +89,14 @@ export default function VolumesPage() {
     const [data, setData] = useState<VolumesResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(false)
+    const [modalOpen, setModalOpen] = useState(false)
+    const [search, setSearch] = useState('')
+
+    useEffect(() => {
+        apiListDockerVolumes()
+            .then(d => { setData(d); setLoading(false) })
+            .catch(() => { setError(true); setLoading(false) })
+    }, [])
 
     const load = () => {
         setLoading(true); setError(false)
@@ -100,9 +105,6 @@ export default function VolumesPage() {
             .catch(() => { setError(true); setLoading(false) })
     }
 
-    useEffect(() => { load() }, [])
-
-    // Assign a deterministic color per service
     const { serviceMap, colorMap } = useMemo(() => {
         const svcMap = new Map<string, DockerVolume[]>()
         if (!data) return { serviceMap: svcMap, colorMap: new Map<string, string>() }
@@ -116,7 +118,6 @@ export default function VolumesPage() {
         return { serviceMap: svcMap, colorMap }
     }, [data])
 
-    // Bar segments: one per service (only if sizes are known)
     const barSegments: BarSegment[] = useMemo(() => {
         if (!data) return []
         return Array.from(serviceMap.entries())
@@ -172,7 +173,7 @@ export default function VolumesPage() {
                 render: v => <span style={{ fontSize: 12, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{formatRelativeTime(v.created_at)}</span>,
             },
         ]
-    }, [colorMap, navigate, data])
+    }, [colorMap, data])
 
     if (loading) return (
         <Page>
@@ -192,29 +193,42 @@ export default function VolumesPage() {
 
     const { disk, volumes } = data!
 
+    const filteredVolumes = volumes.filter(v =>
+        v.name.toLowerCase().includes(search.toLowerCase()) ||
+        v.service.toLowerCase().includes(search.toLowerCase())
+    )
+
     return (
         <Page>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <CreateVolumeModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onCreated={() => { setModalOpen(false); load() }}
+            />
 
-                {/* Disk bar section */}
-                {/* <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <div>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)' }}>System disk</span>
-                        <span style={{ marginLeft: 10, fontSize: 12, color: 'var(--text-3)', fontFamily: 'monospace' }}>{formatBytes(disk.total)}</span>
-                    </div>
-                    <Button variant={4} size="sm" onClick={load}><RefreshCw size={13} /></Button>
-                </div> */}
-                <DiskBar total={disk.total} used={disk.used} free={disk.free} segments={barSegments} />
+            <DiskBar total={disk.total} used={disk.used} free={disk.free} segments={barSegments} />
 
-                {/* Volumes table */}
-                <Table
-                    columns={columns}
-                    data={volumes}
-                    keyExtractor={v => v.name}
-                    emptyMessage="No Docker volumes found."
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, marginTop: 16 }}>
+                <SearchBar
+                    placeholder="Search volumes..."
+                    value={search}
+                    onChange={setSearch}
                 />
-
+                <div style={{ marginLeft: 'auto' }}>
+                    <Button variant={1} size="md" onClick={() => setModalOpen(true)}>
+                        <Plus size={14} /> New volume
+                    </Button>
+                </div>
             </div>
+
+            <Table
+                columns={columns}
+                data={filteredVolumes}
+                keyExtractor={v => v.name}
+                emptyMessage="No Docker volumes found."
+                onRowClick={v => navigate(`/volumes/overview?name=${encodeURIComponent(v.name)}`)}
+            />
+
         </Page>
     )
 }
