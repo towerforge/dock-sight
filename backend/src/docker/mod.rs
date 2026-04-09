@@ -14,7 +14,7 @@ pub use logs::service_logs;
 pub use cleanup::{cleanup_preview, run_cleanup};
 pub use deploy::{create_service, delete_service, scale_service, pull_service};
 pub use network::{list_networks, create_network, delete_network};
-pub use volumes::list_docker_volumes;
+pub use volumes::{list_docker_volumes, create_volume, delete_volume};
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 

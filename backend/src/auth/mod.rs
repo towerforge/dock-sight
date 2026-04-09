@@ -5,6 +5,9 @@ use std::time::{Duration, SystemTime};
 use tokio::sync::Mutex;
 use serde::{Deserialize, Serialize};
 
+const RATE_LIMIT_MAX_ATTEMPTS: u32 = 10;
+const RATE_LIMIT_WINDOW: Duration = Duration::from_secs(15 * 60);
+
 pub mod middleware;
 pub mod routes;
 
@@ -30,6 +33,8 @@ pub struct AuthState {
     pub sessions: Arc<Mutex<HashMap<String, SystemTime>>>,
     pub session_duration: Duration,
     pub data_dir: PathBuf,
+    pub secure_cookies: bool,
+    pub login_attempts: Arc<Mutex<HashMap<String, (u32, SystemTime)>>>,
 }
 
 impl AuthState {
@@ -45,11 +50,17 @@ impl AuthState {
 
         let config = Self::load_config_from(&data_dir);
 
+        let secure_cookies = std::env::var("SECURE_COOKIES")
+            .map(|v| v == "true" || v == "1")
+            .unwrap_or(false);
+
         Self {
             config: Arc::new(Mutex::new(config)),
             sessions: Arc::new(Mutex::new(HashMap::new())),
             session_duration: Duration::from_secs(session_hours * 3600),
             data_dir,
+            secure_cookies,
+            login_attempts: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -97,5 +108,39 @@ impl AuthState {
 
     pub async fn remove_session(&self, token: &str) {
         self.sessions.lock().await.remove(token);
+    }
+
+    pub async fn check_rate_limit(&self, ip: &str) -> bool {
+        let attempts = self.login_attempts.lock().await;
+        if let Some((count, window_start)) = attempts.get(ip) {
+            let elapsed = SystemTime::now().duration_since(*window_start).unwrap_or(RATE_LIMIT_WINDOW);
+            if elapsed < RATE_LIMIT_WINDOW {
+                return *count < RATE_LIMIT_MAX_ATTEMPTS;
+            }
+        }
+        true
+    }
+
+    pub async fn record_failed_attempt(&self, ip: &str) {
+        let mut attempts = self.login_attempts.lock().await;
+        let entry = attempts.entry(ip.to_string()).or_insert((0, SystemTime::now()));
+        let elapsed = SystemTime::now().duration_since(entry.1).unwrap_or(RATE_LIMIT_WINDOW);
+        if elapsed >= RATE_LIMIT_WINDOW {
+            *entry = (1, SystemTime::now());
+        } else {
+            entry.0 += 1;
+        }
+    }
+
+    pub async fn clear_attempts(&self, ip: &str) {
+        self.login_attempts.lock().await.remove(ip);
+    }
+
+    pub fn session_cookie(&self, token: &str, max_age: u64) -> String {
+        let secure = if self.secure_cookies { "; Secure" } else { "" };
+        format!(
+            "dock_sight_session={}; HttpOnly; SameSite=Lax; Max-Age={}; Path=/{}",
+            token, max_age, secure
+        )
     }
 }

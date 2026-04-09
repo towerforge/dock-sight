@@ -1,5 +1,6 @@
+use std::net::SocketAddr;
 use axum::{
-    extract::State,
+    extract::{ConnectInfo, State},
     http::{HeaderMap, StatusCode},
     response::IntoResponse,
     Json,
@@ -8,6 +9,21 @@ use serde::Deserialize;
 use serde_json::json;
 
 use super::AuthState;
+
+fn extract_client_ip(headers: &HeaderMap, addr: SocketAddr) -> String {
+    headers
+        .get("x-forwarded-for")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.split(',').next())
+        .map(|s| s.trim().to_string())
+        .or_else(|| {
+            headers
+                .get("x-real-ip")
+                .and_then(|v| v.to_str().ok())
+                .map(String::from)
+        })
+        .unwrap_or_else(|| addr.ip().to_string())
+}
 
 pub fn extract_session_cookie(headers: &HeaderMap) -> Option<String> {
     headers
@@ -88,15 +104,7 @@ pub async fn setup(
             let token = auth.create_session().await;
             let max_age = auth.session_duration.as_secs();
             let mut headers = HeaderMap::new();
-            headers.insert(
-                "Set-Cookie",
-                format!(
-                    "dock_sight_session={}; HttpOnly; SameSite=Lax; Max-Age={}; Path=/",
-                    token, max_age
-                )
-                .parse()
-                .unwrap(),
-            );
+            headers.insert("Set-Cookie", auth.session_cookie(&token, max_age).parse().unwrap());
             (StatusCode::OK, headers, Json(json!({ "ok": true })))
         }
         Err(_) => (
@@ -114,8 +122,20 @@ pub struct LoginRequest {
 
 pub async fn login(
     State(auth): State<AuthState>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
     Json(body): Json<LoginRequest>,
 ) -> impl IntoResponse {
+    let ip = extract_client_ip(&headers, addr);
+
+    if !auth.check_rate_limit(&ip).await {
+        return (
+            StatusCode::TOO_MANY_REQUESTS,
+            HeaderMap::new(),
+            Json(json!({ "error": "Too many login attempts. Try again in 15 minutes." })),
+        );
+    }
+
     let hash = {
         let config = auth.config.lock().await;
         match &config.password_hash {
@@ -132,25 +152,21 @@ pub async fn login(
 
     match bcrypt::verify(&body.password, &hash) {
         Ok(true) => {
+            auth.clear_attempts(&ip).await;
             let token = auth.create_session().await;
             let max_age = auth.session_duration.as_secs();
             let mut headers = HeaderMap::new();
-            headers.insert(
-                "Set-Cookie",
-                format!(
-                    "dock_sight_session={}; HttpOnly; SameSite=Lax; Max-Age={}; Path=/",
-                    token, max_age
-                )
-                .parse()
-                .unwrap(),
-            );
+            headers.insert("Set-Cookie", auth.session_cookie(&token, max_age).parse().unwrap());
             (StatusCode::OK, headers, Json(json!({ "ok": true })))
         }
-        Ok(false) => (
-            StatusCode::UNAUTHORIZED,
-            HeaderMap::new(),
-            Json(json!({ "error": "Incorrect password" })),
-        ),
+        Ok(false) => {
+            auth.record_failed_attempt(&ip).await;
+            (
+                StatusCode::UNAUTHORIZED,
+                HeaderMap::new(),
+                Json(json!({ "error": "Incorrect password" })),
+            )
+        }
         Err(_) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             HeaderMap::new(),

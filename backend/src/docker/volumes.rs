@@ -1,6 +1,8 @@
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum::{extract::{State, Query}, http::StatusCode, response::IntoResponse, Json};
 use bollard::Docker;
 use bollard::query_parameters::ListVolumesOptions;
+use bollard::models::VolumeCreateOptions;
+use serde::Deserialize;
 use serde_json::json;
 use sysinfo::Disks;
 use std::path::Path;
@@ -8,6 +10,17 @@ use chrono::DateTime;
 
 use crate::auth::AuthState;
 use super::error;
+
+#[derive(Deserialize)]
+pub struct VolumeQuery {
+    pub name: String,
+}
+
+#[derive(Deserialize)]
+pub struct CreateVolumeRequest {
+    pub name: String,
+    pub driver: Option<String>,
+}
 
 pub async fn list_docker_volumes(State(_auth): State<AuthState>) -> impl IntoResponse {
     let docker = match Docker::connect_with_local_defaults() {
@@ -89,4 +102,34 @@ pub async fn list_docker_volumes(State(_auth): State<AuthState>) -> impl IntoRes
         },
         "volumes_total_size": volumes_known_size,
     })))
+}
+
+pub async fn create_volume(Json(body): Json<CreateVolumeRequest>) -> impl IntoResponse {
+    let docker = match Docker::connect_with_local_defaults() {
+        Ok(d) => d,
+        Err(e) => return error(e.to_string()),
+    };
+
+    let config = VolumeCreateOptions {
+        name: Some(body.name),
+        driver: Some(body.driver.unwrap_or_else(|| "local".into())),
+        ..Default::default()
+    };
+
+    match docker.create_volume(config).await {
+        Ok(v) => (StatusCode::OK, Json(json!({ "name": v.name }))),
+        Err(e) => error(e.to_string()),
+    }
+}
+
+pub async fn delete_volume(Query(q): Query<VolumeQuery>) -> impl IntoResponse {
+    let docker = match Docker::connect_with_local_defaults() {
+        Ok(d) => d,
+        Err(e) => return error(e.to_string()),
+    };
+
+    match docker.remove_volume(&q.name, None).await {
+        Ok(_) => (StatusCode::OK, Json(json!({ "ok": true }))),
+        Err(e) => error(e.to_string()),
+    }
 }
