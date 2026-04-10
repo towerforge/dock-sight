@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { apiAuthStatus, apiAuthSetup, apiAuthLogin, apiAuthLogout } from '@/services/api'
+import { apiAuthStatus, apiAuthSetup, apiAuthLogin, apiAuthLogout, apiAuthMe } from '@/services/api'
 
 export interface AuthStatus {
     setup_required: boolean
@@ -7,13 +7,17 @@ export interface AuthStatus {
 }
 
 export function useAuth() {
-    const [status, setStatus] = useState<AuthStatus | null>(null)
-    const [loading, setLoading] = useState(true)
+    const [status, setStatus]     = useState<AuthStatus | null>(null)
+    const [username, setUsername] = useState<string>('')
+    const [loading, setLoading]   = useState(true)
 
     const refresh = async () => {
         try {
             const data = await apiAuthStatus()
             setStatus(data)
+            if (data.authenticated) {
+                apiAuthMe().then(me => setUsername(me.username)).catch(() => {})
+            }
         } catch {
             setStatus({ setup_required: true, authenticated: false })
         } finally {
@@ -28,15 +32,17 @@ export function useAuth() {
         setStatus({ setup_required: false, authenticated: true })
     }
 
-    const login = async (username: string, password: string) => {
-        await apiAuthLogin(username, password)
+    const login = async (u: string, password: string) => {
+        await apiAuthLogin(u, password)
         setStatus({ setup_required: false, authenticated: true })
+        apiAuthMe().then(me => setUsername(me.username)).catch(() => {})
     }
 
     const logout = async () => {
         await apiAuthLogout()
         setStatus({ setup_required: false, authenticated: false })
+        setUsername('')
     }
 
-    return { status, loading, setup, login, logout, refresh }
+    return { status, username, loading, setup, login, logout, refresh }
 }

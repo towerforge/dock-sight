@@ -4,8 +4,8 @@ import { Plus } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
 import { useDashboard } from '@/context/dashboard-context'
-import { ServiceBar } from '@/pages/home/service-bar'
-import { CreateServiceModal } from '@/pages/home/create-service-modal'
+import { ServiceBar } from '@/pages/service/home/service-bar'
+import { CreateServiceModal } from '@/pages/service/home/create-service-modal'
 import { SearchBar, Button, Page } from '@/components/ui'
 import { InlineSelect } from '@/components/ui/inline-select'
 

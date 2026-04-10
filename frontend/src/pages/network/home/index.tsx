@@ -43,7 +43,7 @@ export default function NetworkPage() {
         navigate(`/network/overview?name=${encodeURIComponent(name)}`)
 
     return (
-        <Page maxWidth="full" size={2}>
+        <Page>
             <CreateNetworkModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
@@ -64,7 +64,7 @@ export default function NetworkPage() {
             </div>
 
             <Grid gap={32} align="start">
-                <Col span={12} md={5}>
+                <Col span={12} md={12}>
                     <NetworkTable
                         dock={dock}
                         networks={filteredNetworks}
@@ -73,7 +73,8 @@ export default function NetworkPage() {
                         onSelect={goToNetwork}
                     />
                 </Col>
-                <Col span={12} md={7}>
+                <Col span={12} md={12}>
+                    <div style={{ borderTop: '1px solid var(--stroke-1)' }}></div>
                     <NetworkGraph
                         dock={dock}
                         networks={filteredNetworks}
