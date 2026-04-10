@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Table } from '@/components/ui'
 import type { Column } from '@/components/ui'
 import type { DockerService } from '@/types/dashboard'
-import { StatusBadge } from '../metrics/service-card'
+import { StatusBadge } from '@/pages/metrics/service-card'
 import { formatBytes, formatRelativeTime } from '@/lib/formatters'
 
 interface Props {

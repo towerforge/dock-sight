@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/ui'
-import { LogsTab } from '@/pages/service/log/logs-tab'
+import { LogsTab } from '@/pages/service/detail/log/logs-tab'
 
 export default function LogsPage() {
     const [searchParams] = useSearchParams()

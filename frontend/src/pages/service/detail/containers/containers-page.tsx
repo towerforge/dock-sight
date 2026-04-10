@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/ui'
-import { ContainersTab } from '@/pages/service/containers/containers-tab'
+import { ContainersTab } from '@/pages/service/detail/containers/containers-tab'
 
 export default function ContainersPage() {
     const [searchParams] = useSearchParams()

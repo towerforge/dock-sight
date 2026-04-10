@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { Page } from '@/components/ui'
-import { ImagesTab } from '@/pages/service/images/images-tab'
+import { ImagesTab } from '@/pages/service/detail/images/images-tab'
 
 export default function ImagesPage() {
     const [searchParams] = useSearchParams()
