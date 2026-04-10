@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { NavLink, Outlet, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { PanelRight, Server, Trash2, FlaskConical, Info, LogOut, Box, Image as ImageIcon, FileArchive, ArrowLeft, BarChart2, LayoutDashboard, Settings } from 'lucide-react'
-import { CircuitBoard, HardDrive, Activity } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { NavLink, Outlet, useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom'
+import { PanelRight, Server, Trash2, FlaskConical, Box, Image as ImageIcon, FileArchive, ArrowLeft, BarChart2, LayoutDashboard, Settings, LogOut, Info, HardDrive, Activity } from 'lucide-react'
+import { CircuitBoard } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui'
 import { useDashboard } from '@/context/dashboard-context'
 import { useAuth } from '@/hooks/use-auth'
@@ -27,7 +27,6 @@ const MAIN_NAV: NavItem[] = [
     { to: '/network',   label: 'Network',   Icon: Activity,     end: true  },
     { to: '/volumes',   label: 'Volumes',   Icon: HardDrive                 },
     { to: '/cleanup',   label: 'Cleanup',   Icon: Trash2                   },
-    { to: '/settings',  label: 'Settings',  Icon: Settings                 },
     { to: '/_dev',      label: 'Dev',       Icon: FlaskConical, dev: true  },
 ]
 
@@ -53,14 +52,14 @@ function ServiceBrand({ onBack }: { onBack: () => void }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: 'none', border: 'none', cursor: 'pointer',
                     color: 'var(--text-2)', padding: '4px', borderRadius: 'var(--radius-1)',
-                    transition: 'color 0.15s',
+                    transition: 'color 0.15s', fontSize: 18,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}
             >
-                <ArrowLeft size={15} />
+                <ArrowLeft size={18} /> <span style={{ paddingLeft: 5 }}>service</span>
             </button>
-            <span className={styles.brand}>{name || 'Service'}</span>
+            <span style={{ paddingRight: 5, fontWeight: 100, color: 'var(--text-2)' }}>/</span> <span className={styles.brand}>{name || 'Service'}</span>
         </div>
     )
 }
@@ -120,14 +119,14 @@ function NetworkBrand({ onBack }: { onBack: () => void }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: 'none', border: 'none', cursor: 'pointer',
                     color: 'var(--text-2)', padding: '4px', borderRadius: 'var(--radius-1)',
-                    transition: 'color 0.15s',
+                    transition: 'color 0.15s', fontSize: 18,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}
             >
-                <ArrowLeft size={15} />
+                <ArrowLeft size={18} /> <span style={{ paddingLeft: 5 }}>network</span>
             </button>
-            <span className={styles.brand}>{name || 'Network'}</span>
+            <span style={{ paddingRight: 5, fontWeight: 100, color: 'var(--text-2)' }}>/</span> <span className={styles.brand}>{name || 'Network'}</span>
         </div>
     )
 }
@@ -167,14 +166,14 @@ function VolumeBrand({ onBack }: { onBack: () => void }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: 'none', border: 'none', cursor: 'pointer',
                     color: 'var(--text-2)', padding: '4px', borderRadius: 'var(--radius-1)',
-                    transition: 'color 0.15s',
+                    transition: 'color 0.15s', fontSize: 18,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}
             >
-                <ArrowLeft size={15} />
+                <ArrowLeft size={18} /> <span style={{ paddingLeft: 5 }}>volume</span>
             </button>
-            <span className={styles.brand}>{name || 'Volume'}</span>
+            <span style={{ paddingRight: 5, fontWeight: 100, color: 'var(--text-2)' }}>/</span> <span className={styles.brand}>{name || 'Volume'}</span>
         </div>
     )
 }
@@ -196,6 +195,53 @@ function VolumeNav() {
                 )
             })}
         </>
+    )
+}
+
+function UserMenu({ username, onLogout, onAbout }: { username: string; onLogout: () => void; onAbout: () => void }) {
+    const [open, setOpen] = useState(false)
+    const rootRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (!open) return
+        const handler = (e: MouseEvent) => {
+            if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+                setOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handler)
+        return () => document.removeEventListener('mousedown', handler)
+    }, [open])
+
+    const initial = username ? username[0].toUpperCase() : '?'
+
+    return (
+        <div className={styles.userMenuRoot} ref={rootRef}>
+            <button className={styles.userAvatar} onClick={() => setOpen(o => !o)} aria-label="User menu">
+                {initial}
+            </button>
+            {open && (
+                <div className={styles.userDropdown}>
+                    <div className={styles.userDropdownHeader}>
+                        <span className={styles.userDropdownName}>{username}</span>
+                    </div>
+                    <Link
+                        to="/settings"
+                        className={styles.userDropdownItem}
+                        onClick={() => setOpen(false)}
+                    >
+                        <Settings size={14} /> Settings
+                    </Link>
+                    <button className={styles.userDropdownItem} onClick={() => { setOpen(false); onAbout() }}>
+                        <Info size={14} /> About
+                    </button>
+                    <div className={styles.userDropdownDivider} />
+                    <button className={styles.userDropdownItem} onClick={() => { setOpen(false); onLogout() }}>
+                        <LogOut size={14} /> Sign out
+                    </button>
+                </div>
+            )}
+        </div>
     )
 }
 
@@ -282,7 +328,7 @@ const SECTION_BRAND: Record<Section, React.ComponentType<{ onBack: () => void }>
 export default function MainLayout() {
     const [panelOpen, setPanelOpen] = useState(true)
     const [aboutOpen, setAboutOpen] = useState(false)
-    const { status, logout } = useAuth()
+    const { status, username, logout } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
     const section: Section =
@@ -319,16 +365,13 @@ export default function MainLayout() {
                         </button>
                     </div>
                     <ThemeToggle />
-                    <div className={styles.toggleRoot}>
-                        <button className={styles.toggleBtn} onClick={() => setAboutOpen(true)} title="About" aria-label="About">
-                            <Info size={14} />
-                        </button>
-                        {status?.authenticated && (
-                            <button className={styles.toggleBtn} onClick={handleLogout} title="Sign out" aria-label="Sign out">
-                                <LogOut size={14} />
-                            </button>
-                        )}
-                    </div>
+                    {status?.authenticated && (
+                        <UserMenu
+                            username={username}
+                            onLogout={handleLogout}
+                            onAbout={() => setAboutOpen(true)}
+                        />
+                    )}
                 </div>
             </div>
             <nav className={styles.nav}>

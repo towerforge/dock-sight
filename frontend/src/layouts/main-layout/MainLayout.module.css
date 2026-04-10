@@ -10,7 +10,7 @@
     font-size: 15px;
     font-weight: 700;
     color: var(--text-1);
-    letter-spacing: -0.3px;
+    letter-spacing: 1px;
 }
 
 .topbarEnd {
@@ -42,10 +42,11 @@
     transition: color 0.15s, border-color 0.15s;
     white-space: nowrap;
     position: relative;
+    z-index: 1; 
 }
 
 .navLink:hover {
-    color: var(--text-1);
+    color: var(--text-1) !important;
 }
 
 .navLink:hover::before {
@@ -54,6 +55,7 @@
     inset: 7px 2px;
     background: var(--state-2);
     border-radius: var(--radius-1);
+    z-index: -1; 
 }
 
 .navLinkActive {
@@ -109,4 +111,89 @@
     background: var(--layer-1);
     box-shadow: var(--shadow-1);
     color: var(--text-1);
+}
+
+/* ── UserMenu ────────────────────────────────────────────────────────────── */
+
+.userMenuRoot {
+    position: relative;
+}
+
+.userAvatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+}
+
+.userAvatar:hover { opacity: 0.85; }
+
+.userDropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 200px;
+    background: var(--layer-2);
+    border: 1px solid var(--stroke-1);
+    border-radius: var(--radius-2);
+    box-shadow: var(--shadow-1);
+    z-index: 100;
+    overflow: hidden;
+    padding: 0px 5px 5px 5px;
+}
+
+.userDropdownHeader {
+    padding: 10px 5px 12px 5px;
+    border-bottom: 1px solid var(--stroke-1);
+    width: calc(100% - 20px);
+    margin-left: 10px;
+}
+
+.userDropdownName {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-1);
+}
+
+.userDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: calc(100% - 10px);
+    padding: 8px 8px;
+    font-size: 14px;
+    color: var(--text-2);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+    transition: background 0.2s ease;
+    margin: 4px;
+    margin-left: 5px;
+
+}
+
+.userDropdownItem:hover {
+    background: var(--state-2);
+    color: var(--text-1);
+}
+
+.userDropdownDivider {
+    height: 1px;
+    background: var(--stroke-1);
+    margin: 5px 0;
+    width: calc(100% - 20px);
+    margin-left: 10px;
 }

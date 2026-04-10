@@ -140,7 +140,7 @@ export function CleanupTab() {
                     <StatChip label="Images" value={images.length} color={images.length > 0 ? '#f59e0b' : 'var(--text-3)'} />
                     {totalSpace > 0 && <StatChip label="To free" value={`~${formatBytes(totalSpace)}`} />}
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                        <Button variant={4} onClick={fetchPreview}><RefreshCw size={14} /></Button>
+                        <Button variant={2} onClick={fetchPreview}><RefreshCw size={14} /> Refresh</Button>
                         <Button variant={5} onClick={() => setConfirm(true)} disabled={isEmpty || running}>
                             <Trash2 size={13} />{running ? 'Cleaning…' : 'Clean All'}
                         </Button>

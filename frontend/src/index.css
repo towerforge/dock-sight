@@ -18,8 +18,8 @@ a:hover { color: var(--text-1); }
   --fill-1: #f6f8fa;
   --fill-2: #eff2f5;
 
-  --layer-1: #ffffff;
-  --layer-2: #f6f8fa;
+  --layer-1: #f5f7f9;
+  --layer-2: #ffffff;
 
   --stroke-1: #d1d9e0;
   --stroke-2: #6965db;
@@ -27,7 +27,7 @@ a:hover { color: var(--text-1); }
   --state-1: #eff2f5;
   --state-2: #e6eaef;
 
-  --color-danger: #d1242f;
+  --color-danger: #d65a5a;
 
   --radius-1: 6px;
   --radius-2: 10px;
@@ -72,7 +72,7 @@ a:hover { color: var(--text-1); }
     --state-1: rgba(177, 186, 196, 0.08);
     --state-2: rgba(177, 186, 196, 0.16);
 
-    --color-danger: #f85149;
+    --color-danger: #d65a5a;
 
     --shadow-1: 0 1px 1px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-2: 0 0 0 1px #30363d, 0 6px 12px -3px rgba(0, 0, 0, 0.4), 0 6px 18px 0 rgba(0, 0, 0, 0.5);
@@ -106,7 +106,7 @@ a:hover { color: var(--text-1); }
   --state-1: rgba(177, 186, 196, 0.08);
   --state-2: rgba(177, 186, 196, 0.16);
 
-  --color-danger: #f85149;
+  --color-danger: #d65a5a;
 
   --shadow-1: 0 1px 1px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-2: 0 0 0 1px #30363d, 0 6px 12px -3px rgba(0, 0, 0, 0.4), 0 6px 18px 0 rgba(0, 0, 0, 0.5);
