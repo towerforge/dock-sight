@@ -1,6 +1,6 @@
 [package]
 name = "backend"
-version = "0.10.1"
+version = "0.11.0"
 edition = "2024"
 
 [toolchain]
@@ -23,3 +23,4 @@ futures-util = "0.3.31"
 chrono = "0.4"
 bcrypt = "0.15"
 uuid = { version = "1", features = ["v4"] }
+rusqlite = { version = "0.32", features = ["bundled"] }

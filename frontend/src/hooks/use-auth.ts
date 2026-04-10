@@ -23,13 +23,13 @@ export function useAuth() {
 
     useEffect(() => { refresh() }, [])
 
-    const setup = async (password: string, confirmPassword: string) => {
-        await apiAuthSetup(password, confirmPassword)
+    const setup = async (username: string, password: string, confirmPassword: string) => {
+        await apiAuthSetup(username, password, confirmPassword)
         setStatus({ setup_required: false, authenticated: true })
     }
 
-    const login = async (password: string) => {
-        await apiAuthLogin(password)
+    const login = async (username: string, password: string) => {
+        await apiAuthLogin(username, password)
         setStatus({ setup_required: false, authenticated: true })
     }
 

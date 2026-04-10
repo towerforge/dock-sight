@@ -3,4 +3,8 @@
 .pnpm-store
 dist
 .claude
-config.json
+
+# SQLite
+dock-sight.db
+dock-sight.db-shm
+dock-sight.db-wal

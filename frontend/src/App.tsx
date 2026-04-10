@@ -13,6 +13,9 @@ import MetricsPage from '@/pages/service/metrics/metrics-page'
 import Cleanup from '@/pages/cleanup'
 import SettingsLayout from '@/pages/settings'
 import RegistriesPage from '@/pages/settings/registries'
+import AccountPage from '@/pages/settings/account'
+import UsersPage from '@/pages/settings/users'
+import SecurityPage from '@/pages/settings/security'
 import Metrics from '@/pages/metrics'
 import VolumesHome from '@/pages/volumes/home'
 import VolumeDetailLayout from '@/pages/volumes/detail'
@@ -42,6 +45,9 @@ function App() {
           <Route path="/cleanup"  element={<Cleanup />} />
           <Route path="/settings" element={<SettingsLayout />}>
             <Route path="registries" element={<RegistriesPage />} />
+            <Route path="users"      element={<UsersPage />} />
+            <Route path="account"    element={<AccountPage />} />
+            <Route path="security"   element={<SecurityPage />} />
           </Route>
           <Route path="/metrics"  element={<Metrics />} />
           <Route path="/volumes">

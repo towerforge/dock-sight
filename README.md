@@ -5,7 +5,7 @@
 <h1 align="center">Dock Sight</h1>
 
 <p align="center">
-  Lightweight infrastructure dashboard for Docker services, host metrics, and network topology.
+  Monitor your Docker infrastructure — services, host metrics, networks and volumes — from a single, self-hosted dashboard.
 </p>
 
 <p align="center">
@@ -23,14 +23,17 @@
 
 ## Overview
 
-Dock Sight runs as a single binary and serves a real-time dashboard in your browser. No agents, no external dependencies.
+Dock Sight runs as a single binary and serves a real-time dashboard in your browser. No agents, no external dependencies, no cloud.
 
-**Host metrics** — CPU, RAM, disk, and network usage with historical charts.
-**Docker services** — Container status, resource consumption, per-service CPU/RAM/network charts, images, and live logs. Scale, pause, delete, and pull latest image directly from the dashboard.
-**Network topology** — Visual graph and table of Docker networks with service distribution, health status, and RX/TX rates. Create new networks directly from the dashboard.
-**Volumes** — List all Docker volumes with size, mount point, disk usage, and service grouping.
-**Registries** — Manage private Docker registries (create, list, delete) and use them when deploying new services.
-**Password protection** — On first launch the browser prompts you to set a password. Every subsequent visit requires it (session valid for 24 h by default). Login attempts are rate-limited per IP (10 attempts per 15 minutes). Enable `SECURE_COOKIES` when serving behind an HTTPS reverse proxy.
+| Area | What you get |
+|---|---|
+| **Host metrics** | CPU, RAM, disk and network usage with historical charts |
+| **Docker services** | Container status, resource consumption, per-service CPU/RAM/network charts, images and live logs. Scale, pause, delete and pull latest image directly from the dashboard |
+| **Networks** | Visual table of Docker networks with service distribution, health status and RX/TX rates. Create and delete networks from the dashboard |
+| **Volumes** | List all Docker volumes with size, mount point, disk usage and service grouping. Create and delete volumes from the dashboard |
+| **Registries** | Manage private DockerHub registries (create, list, delete) and use them when deploying new services |
+| **Users** | Multi-user access — create, delete and reset passwords for any user. All users have the same privileges |
+| **Security** | Brute-force protection per IP (blocked after 10 failed attempts in 15 min). Rate-limit state and login event log are persisted in SQLite and visible in Settings → Security |
 
 ## Requirements
 
@@ -71,21 +74,21 @@ dock-sight [OPTIONS]
 
 Options:
   -p, --port <PORT>   Port to listen on [default: 8080]
-      --dev           Enable development mode
+      --dev           Enable development mode (disables auth middleware, enables CORS)
   -h, --help          Print help
   -V, --version       Print version
 ```
 
-Open [http://localhost:8080](http://localhost:8080) in your browser.
-On first launch you will be prompted to set a password before the dashboard is accessible.
+Open [http://localhost:8080](http://localhost:8080) in your browser. On first launch you will be prompted to create the first user before the dashboard is accessible.
 
 ### Environment variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `DATA_DIR` | `.` | Directory where `config.json` is stored (password hash) |
+| `DATA_DIR` | `.` | Directory where `dock-sight.db` is stored |
 | `SESSION_DURATION_HOURS` | `24` | How many hours a login session stays valid |
-| `SECURE_COOKIES` | `false` | Set to `true` to add the `Secure` flag to session cookies (use when serving behind an HTTPS reverse proxy) |
+| `SECURE_COOKIES` | `false` | Set to `true` to add the `Secure` flag to session cookies (recommended behind an HTTPS reverse proxy) |
+| `BACKEND_PORT` | `8080` | Port override (alternative to `--port`) |
 
 ## Docker
 
@@ -100,7 +103,7 @@ docker run -d \
   towerforge/dock-sight:latest
 ```
 
-The `-v dock-sight-data:/data` volume keeps your password hash across container recreations (e.g. after `docker pull` + `up -d`). Without it the password persists across restarts but is lost if the container is removed and recreated.
+The `-v dock-sight-data:/data` volume persists the SQLite database (users, registries, login history) across container recreations.
 
 <details>
 <summary>docker-compose</summary>
@@ -129,21 +132,31 @@ volumes:
 <summary>systemd (Linux)</summary>
 
 ```ini
-[Service]
-ExecStart=/usr/local/bin/dock-sight --port 8080
-Restart=always
-```
+[Unit]
+Description=Dock Sight
+After=network.target docker.service
 
-The password hash is saved as `config.json` in the working directory. Set `DATA_DIR` if you want it elsewhere:
-
-```ini
 [Service]
 ExecStart=/usr/local/bin/dock-sight --port 8080
 Environment=DATA_DIR=/etc/dock-sight
 Restart=always
+
+[Install]
+WantedBy=multi-user.target
 ```
 
 </details>
+
+## Data persistence
+
+All state is stored in a single SQLite database (`dock-sight.db`) in `DATA_DIR`:
+
+| Table | Contents |
+|---|---|
+| `users` | Usernames and hashed passwords |
+| `registries` | DockerHub registry credentials |
+| `login_attempts` | Active rate-limit counters per IP |
+| `login_events` | Login attempt history (last 50 shown in Settings → Security) |
 
 ## Service grouping
 
