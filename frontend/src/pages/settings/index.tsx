@@ -1,10 +1,13 @@
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Page } from '@/components/ui'
-import { PackageCheck } from 'lucide-react'
+import { PackageCheck, ShieldAlert, UserCog, Users } from 'lucide-react'
 
 const SETTINGS_NAV = [
     { to: '/settings/registries', label: 'Registries', Icon: PackageCheck },
+    { to: '/settings/users',      label: 'Users',      Icon: Users },
+    { to: '/settings/security',   label: 'Security',   Icon: ShieldAlert },
+    { to: '/settings/account',    label: 'Account',    Icon: UserCog },
 ]
 
 export default function SettingsLayout() {

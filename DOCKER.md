@@ -2,11 +2,12 @@
 
 ![Dock Sight demo](https://raw.githubusercontent.com/towerforge/dock-sight/main/demo.gif)
 
-Lightweight infrastructure dashboard for Docker hosts — monitor CPU, RAM, disk, network and Docker services from your browser. Protected by password on first launch.
+Monitor your Docker infrastructure — services, host metrics, networks and volumes — from a single, self-hosted dashboard.
 
 - Real-time host metrics (CPU, RAM, disk, network)
-- Docker services and container status
-- Password-protected portal (set on first open)
+- Docker services, containers, images and live logs
+- Network topology and volume management
+- Multi-user access with brute-force protection
 - Single binary, no runtime dependencies
 - Supports `amd64` and `arm64`
 
@@ -23,7 +24,7 @@ docker run -d \
   towerforge/dock-sight:latest
 ```
 
-Open [http://localhost:8080](http://localhost:8080). On first visit you will be asked to set a password.
+Open [http://localhost:8080](http://localhost:8080). On first visit you will be prompted to create the first user.
 
 ## Docker Compose
 
@@ -45,11 +46,11 @@ volumes:
   dock-sight-data:
 ```
 
-## Password & sessions
+## Users & sessions
 
-On first launch the browser shows a setup screen asking you to choose a password (minimum 8 characters, confirmed twice). After that, every visit requires the password.
+On first launch a setup screen lets you create the initial user (username + password, minimum 8 characters). Additional users can be added from **Settings → Users**. All users have the same access level.
 
-Sessions remain valid for **24 hours** by default. You can change this with the `SESSION_DURATION_HOURS` environment variable:
+Sessions remain valid for **24 hours** by default. Adjust with `SESSION_DURATION_HOURS`:
 
 ```yaml
 environment:
@@ -57,11 +58,11 @@ environment:
   - SESSION_DURATION_HOURS=12
 ```
 
-The password hash is stored in `$DATA_DIR/config.json`. Mount a named volume at that path so it survives container updates.
+All data — users, registries, and login history — is stored in a single SQLite database (`$DATA_DIR/dock-sight.db`). Mount a named volume at `DATA_DIR` so it survives container updates.
 
 ### Persistence behaviour
 
-| Situation | Password kept? |
+| Situation | Data kept? |
 |---|---|
 | `docker restart dock-sight` | ✅ Yes |
 | `docker stop` + `docker start` | ✅ Yes |
@@ -70,8 +71,6 @@ The password hash is stored in `$DATA_DIR/config.json`. Mount a named volume at 
 | `docker rm` + `docker run` without volume | ❌ No — setup required again |
 
 ## Custom port
-
-Map any host port to the internal `8080`:
 
 ```bash
 docker run -d \
@@ -90,17 +89,20 @@ Then open [http://localhost:9090](http://localhost:9090).
 
 | Variable | Default | Description |
 |---|---|---|
-| `DATA_DIR` | `.` | Path where `config.json` is stored |
+| `DATA_DIR` | `.` | Directory where `dock-sight.db` is stored |
 | `SESSION_DURATION_HOURS` | `24` | Session lifetime in hours |
-| `SECURE_COOKIES` | `false` | Set to `true` to add the `Secure` flag to session cookies. Enable this when Dock Sight is behind an HTTPS reverse proxy. |
+| `SECURE_COOKIES` | `false` | Set to `true` to add the `Secure` flag to session cookies. Enable when running behind an HTTPS reverse proxy |
 
-## Docker Swarm
+## Security
 
-Containers are automatically grouped by the label `com.docker.swarm.service.name`. Containers without this label are listed under `standalone`.
+- Login attempts are rate-limited per IP: blocked after **10 failed attempts** in a 15-minute window
+- Rate-limit state and the full login event log persist in SQLite and are visible in **Settings → Security**
+- Blocked IPs can be unblocked manually from the dashboard
+- Mounting `/var/run/docker.sock` gives full access to the Docker daemon — keep Dock Sight on a private network and avoid exposing it to the public internet
 
-## Security note
+## Service grouping
 
-Mounting `/var/run/docker.sock` gives the container full access to the Docker daemon. Always protect the port with the built-in password, keep it on a private network, and avoid exposing it to the public internet.
+Containers are automatically grouped by the `com.docker.swarm.service.name` label. Containers without this label appear under `standalone`.
 
 ## Source
 

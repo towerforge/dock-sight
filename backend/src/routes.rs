@@ -1,5 +1,5 @@
 use axum::{
-    routing::{get, post},
+    routing::{get, post, put},
     Router,
     http::{HeaderMap, StatusCode},
     extract::Path,
@@ -14,8 +14,14 @@ use mime_guess;
 
 use crate::auth::{AuthState, middleware::require_auth, routes as auth_routes};
 use crate::system::routes::sysinfo;
-use crate::docker::{services, service_containers, delete_container, service_images, delete_image, service_logs, cleanup_preview, run_cleanup, create_service, delete_service, scale_service, pull_service, list_networks, create_network, delete_network, list_docker_volumes, create_volume, delete_volume};
+use crate::docker::{
+    services, service_containers, delete_container, service_images, delete_image,
+    service_logs, cleanup_preview, run_cleanup, create_service, delete_service,
+    scale_service, pull_service, list_networks, create_network, delete_network,
+    list_docker_volumes, create_volume, delete_volume,
+};
 use crate::registries::{list_registries, create_registry, delete_registry};
+use crate::users::{list_users, create_user, delete_user, update_user};
 use crate::openapi::ApiDoc;
 use utoipa::OpenApi;
 
@@ -27,7 +33,7 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
     let cors = if dev_mode {
         CorsLayer::new()
             .allow_origin(Any)
-            .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::OPTIONS])
+            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
             .allow_headers(Any)
     } else {
         let origins = [
@@ -40,34 +46,42 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
 
         CorsLayer::new()
             .allow_origin(origins)
-            .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::OPTIONS])
+            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
             .allow_headers(Any)
     };
 
     // Public auth routes — no session required
     let auth_router = Router::new()
         .route("/api/auth/status", get(auth_routes::status))
-        .route("/api/auth/setup", post(auth_routes::setup))
-        .route("/api/auth/login", post(auth_routes::login))
+        .route("/api/auth/setup",  post(auth_routes::setup))
+        .route("/api/auth/login",  post(auth_routes::login))
         .route("/api/auth/logout", post(auth_routes::logout))
         .with_state(auth_state.clone());
 
-    // API routes — protected in production, open in dev mode
+    // API routes — session-protected in production
     let api_routes = Router::new()
         .route("/default", get(is_json_request).options(|| async { StatusCode::OK }))
-        .route("/sysinfo", get(sysinfo))
-        .route("/docker-service", get(services).post(create_service).delete(delete_service))
-        .route("/docker-service/scale", post(scale_service))
-        .route("/docker-service/pull", post(pull_service))
-        .route("/docker-service/containers", get(service_containers).delete(delete_container))
-        .route("/docker-service/images", get(service_images).delete(delete_image))
-        .route("/docker-service/logs", get(service_logs))
-        .route("/docker-service/cleanup", get(cleanup_preview).delete(run_cleanup))
-        .route("/docker-network", get(list_networks).post(create_network).delete(delete_network))
-        .route("/docker-volumes", get(list_docker_volumes).post(create_volume).delete(delete_volume))
-        .route("/registries", get(list_registries).post(create_registry).delete(delete_registry))
-        .route("/version", get(version))
-        .route("/openapi.json", get(|| async { axum::Json(ApiDoc::openapi()) }))
+        .route("/sysinfo",                     get(sysinfo))
+        .route("/docker-service",              get(services).post(create_service).delete(delete_service))
+        .route("/docker-service/scale",        post(scale_service))
+        .route("/docker-service/pull",         post(pull_service))
+        .route("/docker-service/containers",   get(service_containers).delete(delete_container))
+        .route("/docker-service/images",       get(service_images).delete(delete_image))
+        .route("/docker-service/logs",         get(service_logs))
+        .route("/docker-service/cleanup",      get(cleanup_preview).delete(run_cleanup))
+        .route("/docker-network",              get(list_networks).post(create_network).delete(delete_network))
+        .route("/docker-volumes",              get(list_docker_volumes).post(create_volume).delete(delete_volume))
+        .route("/registries",                  get(list_registries).post(create_registry).delete(delete_registry))
+        // Auth: current-user info + own credential changes
+        .route("/api/auth/me",                 get(auth_routes::me))
+        .route("/api/auth/credentials",        put(auth_routes::update_credentials))
+        // Security: rate-limit status (admin only)
+        .route("/api/auth/security",           get(auth_routes::security_status).delete(auth_routes::security_clear))
+        // User management (admin-only checks inside handlers)
+        .route("/users",                       get(list_users).post(create_user).delete(delete_user))
+        .route("/users/update",                put(update_user))
+        .route("/version",                     get(version))
+        .route("/openapi.json",                get(|| async { axum::Json(ApiDoc::openapi()) }))
         .with_state(auth_state.clone());
 
     let api_router = if dev_mode {
@@ -95,16 +109,13 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
 
 async fn is_json_request(headers: HeaderMap) -> impl IntoResponse {
     if let Some(content_type) = headers.get("Content-Type") {
-        if let Ok(content_type_str) = content_type.to_str() {
-            if content_type_str.contains("application/json") {
+        if let Ok(ct) = content_type.to_str() {
+            if ct.contains("application/json") {
                 return (StatusCode::OK, Json(json!({"ok": true})));
             }
         }
     }
-    (
-        StatusCode::BAD_REQUEST,
-        Json(json!({"ok": false, "error": "request is not JSON"})),
-    )
+    (StatusCode::BAD_REQUEST, Json(json!({"ok": false, "error": "request is not JSON"})))
 }
 
 async fn version() -> impl IntoResponse {
@@ -125,7 +136,7 @@ pub async fn static_handler(Path(path): Path<String>) -> impl IntoResponse {
 
     match super::Assets::get(&lookup_path) {
         Some(content) => {
-            let mime = mime_guess::from_path(&lookup_path).first_or_octet_stream();
+            let mime  = mime_guess::from_path(&lookup_path).first_or_octet_stream();
             let bytes = content.data.into_owned();
             Response::builder()
                 .status(StatusCode::OK)

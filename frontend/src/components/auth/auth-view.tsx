@@ -55,22 +55,33 @@ function PasswordField({ value, onChange, onKeyDown, placeholder }: { value: str
     )
 }
 
+const inputStyle: React.CSSProperties = {
+    width: '100%', boxSizing: 'border-box', background: 'var(--layer-1)',
+    border: '1px solid var(--stroke-1)', borderRadius: 'var(--radius-2)',
+    padding: '12px 16px', fontSize: 14, color: 'var(--text-1)', outline: 'none',
+}
+
 interface Props { setupRequired: boolean; onAuthenticated: () => void }
 
 export function AuthView({ setupRequired, onAuthenticated }: Props) {
     const { setup, login } = useAuth()
+    const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
-    const [confirm, setConfirm] = useState('')
-    const [error, setError] = useState('')
-    const [loading, setLoading] = useState(false)
+    const [confirm, setConfirm]   = useState('')
+    const [error, setError]       = useState('')
+    const [loading, setLoading]   = useState(false)
 
-    const canSubmit = setupRequired ? isPasswordStrong(password) && password === confirm : password.length > 0
+    const canSubmit = setupRequired
+        ? username.trim().length > 0 && isPasswordStrong(password) && password === confirm
+        : username.trim().length > 0 && password.length > 0
 
     const handleSubmit = async () => {
         if (!canSubmit || loading) return
         setError(''); setLoading(true)
         try {
-            setupRequired ? await setup(password, confirm) : await login(password)
+            setupRequired
+                ? await setup(username.trim(), password, confirm)
+                : await login(username.trim(), password)
             onAuthenticated()
         } catch (err: any) {
             setError(err?.response?.data?.error ?? err?.message ?? 'Error')
@@ -87,15 +98,26 @@ export function AuthView({ setupRequired, onAuthenticated }: Props) {
                 <div style={{ textAlign: 'center' }}>
                     <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: 'var(--text-1)', letterSpacing: '-0.3px' }}>Dock Sight</h1>
                     <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--text-2)' }}>
-                        {setupRequired ? 'Choose a password to get started' : 'Enter your password to continue'}
+                        {setupRequired ? 'Create your account to get started' : 'Sign in to continue'}
                     </p>
                 </div>
             </div>
 
             <div style={{ width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <input
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    onKeyDown={onEnter}
+                    placeholder="Username"
+                    autoComplete="username"
+                    style={inputStyle}
+                />
+
                 {!setupRequired && (
                     <PasswordField value={password} onChange={setPassword} onKeyDown={onEnter} placeholder="Password" />
                 )}
+
                 {setupRequired && (
                     <>
                         <PasswordField value={password} onChange={setPassword} onKeyDown={onEnter} placeholder="Password" />
@@ -108,8 +130,8 @@ export function AuthView({ setupRequired, onAuthenticated }: Props) {
 
                 <Button variant={1} onClick={handleSubmit} loading={loading} disabled={!canSubmit} style={{ width: '100%', marginTop: 4 }}>
                     {loading
-                        ? (setupRequired ? 'Creating…' : 'Signing in…')
-                        : (setupRequired ? 'Create password' : 'Sign in')}
+                        ? (setupRequired ? 'Creating account…' : 'Signing in…')
+                        : (setupRequired ? 'Create account' : 'Sign in')}
                 </Button>
             </div>
         </div>

@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
+use std::sync::atomic::Ordering;
 use axum::{
-    extract::{ConnectInfo, State},
+    extract::{ConnectInfo, Query, State},
     http::{HeaderMap, StatusCode},
     response::IntoResponse,
     Json,
@@ -8,7 +9,7 @@ use axum::{
 use serde::Deserialize;
 use serde_json::json;
 
-use super::AuthState;
+use super::{AuthState, RATE_LIMIT_MAX_ATTEMPTS};
 
 fn extract_client_ip(headers: &HeaderMap, addr: SocketAddr) -> String {
     headers
@@ -39,11 +40,13 @@ pub fn extract_session_cookie(headers: &HeaderMap) -> Option<String> {
         })
 }
 
+// ── Status ───────────────────────────────────────────────────────────────────
+
 pub async fn status(
     State(auth): State<AuthState>,
     headers: HeaderMap,
 ) -> impl IntoResponse {
-    let setup_required = auth.config.lock().await.password_hash.is_none();
+    let setup_required = !auth.setup_done.load(Ordering::Relaxed);
 
     let authenticated = if setup_required {
         false
@@ -55,13 +58,50 @@ pub async fn status(
 
     Json(json!({
         "setup_required": setup_required,
-        "authenticated": authenticated,
+        "authenticated":  authenticated,
     }))
 }
 
+// ── Me (current user info) ────────────────────────────────────────────────────
+
+pub async fn me(
+    State(auth): State<AuthState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    let token = match extract_session_cookie(&headers) {
+        Some(t) => t,
+        None => return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Unauthorized" }))),
+    };
+    let user_id = match auth.get_session_user_id(&token).await {
+        Some(id) => id,
+        None => return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Unauthorized" }))),
+    };
+
+    let db = auth.db.clone();
+    match tokio::task::spawn_blocking(move || {
+        let conn = db.lock().unwrap();
+        conn.query_row(
+            "SELECT id, username FROM users WHERE id = ?1",
+            [&user_id],
+            |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)),
+        )
+    })
+    .await
+    {
+        Ok(Ok((id, username))) => (
+            StatusCode::OK,
+            Json(json!({ "id": id, "username": username })),
+        ),
+        _ => (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "error": "Failed to load user" }))),
+    }
+}
+
+// ── Setup (first run) ─────────────────────────────────────────────────────────
+
 #[derive(Deserialize)]
 pub struct SetupRequest {
-    password: String,
+    username:         String,
+    password:         String,
     confirm_password: String,
 }
 
@@ -69,17 +109,22 @@ pub async fn setup(
     State(auth): State<AuthState>,
     Json(body): Json<SetupRequest>,
 ) -> impl IntoResponse {
-    {
-        let config = auth.config.lock().await;
-        if config.password_hash.is_some() {
-            return (
-                StatusCode::BAD_REQUEST,
-                HeaderMap::new(),
-                Json(json!({ "error": "Password already configured" })),
-            );
-        }
+    if auth.setup_done.load(Ordering::Relaxed) {
+        return (
+            StatusCode::BAD_REQUEST,
+            HeaderMap::new(),
+            Json(json!({ "error": "Already configured" })),
+        );
     }
 
+    let username = body.username.trim().to_string();
+    if username.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            HeaderMap::new(),
+            Json(json!({ "error": "Username is required" })),
+        );
+    }
     if body.password != body.confirm_password {
         return (
             StatusCode::BAD_REQUEST,
@@ -87,7 +132,6 @@ pub async fn setup(
             Json(json!({ "error": "Passwords do not match" })),
         );
     }
-
     if body.password.len() < 8 {
         return (
             StatusCode::BAD_REQUEST,
@@ -96,27 +140,49 @@ pub async fn setup(
         );
     }
 
-    match bcrypt::hash(&body.password, bcrypt::DEFAULT_COST) {
-        Ok(hash) => {
-            auth.config.lock().await.password_hash = Some(hash);
-            auth.save_config().await;
-
-            let token = auth.create_session().await;
-            let max_age = auth.session_duration.as_secs();
-            let mut headers = HeaderMap::new();
-            headers.insert("Set-Cookie", auth.session_cookie(&token, max_age).parse().unwrap());
-            (StatusCode::OK, headers, Json(json!({ "ok": true })))
-        }
-        Err(_) => (
+    let hash = match bcrypt::hash(&body.password, bcrypt::DEFAULT_COST) {
+        Ok(h) => h,
+        Err(_) => return (
             StatusCode::INTERNAL_SERVER_ERROR,
             HeaderMap::new(),
             Json(json!({ "error": "Failed to hash password" })),
         ),
+    };
+
+    let id  = uuid::Uuid::new_v4().to_string();
+    let db  = auth.db.clone();
+    let id2 = id.clone();
+    let ok  = tokio::task::spawn_blocking(move || {
+        let conn = db.lock().unwrap();
+        conn.execute(
+            "INSERT INTO users (id, username, password_hash) VALUES (?1, ?2, ?3)",
+            [&id2, &username, &hash],
+        ).is_ok()
+    })
+    .await
+    .unwrap_or(false);
+
+    if !ok {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            HeaderMap::new(),
+            Json(json!({ "error": "Failed to create user" })),
+        );
     }
+
+    auth.setup_done.store(true, Ordering::Relaxed);
+    let token   = auth.create_session_for(id).await;
+    let max_age = auth.session_duration.as_secs();
+    let mut headers = HeaderMap::new();
+    headers.insert("Set-Cookie", auth.session_cookie(&token, max_age).parse().unwrap());
+    (StatusCode::OK, headers, Json(json!({ "ok": true })))
 }
+
+// ── Login ─────────────────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
 pub struct LoginRequest {
+    username: String,
     password: String,
 }
 
@@ -129,6 +195,7 @@ pub async fn login(
     let ip = extract_client_ip(&headers, addr);
 
     if !auth.check_rate_limit(&ip).await {
+        auth.record_login_event(ip.clone(), Some(body.username.trim().to_lowercase()), true).await;
         return (
             StatusCode::TOO_MANY_REQUESTS,
             HeaderMap::new(),
@@ -136,24 +203,38 @@ pub async fn login(
         );
     }
 
-    let hash = {
-        let config = auth.config.lock().await;
-        match &config.password_hash {
-            Some(h) => h.clone(),
-            None => {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    HeaderMap::new(),
-                    Json(json!({ "error": "No password configured" })),
-                );
-            }
+    let username = body.username.trim().to_lowercase();
+    let db       = auth.db.clone();
+    let uname2   = username.clone();
+    let row: Option<(String, String)> = tokio::task::spawn_blocking(move || {
+        let conn = db.lock().unwrap();
+        conn.query_row(
+            "SELECT id, password_hash FROM users WHERE lower(username) = ?1",
+            [&uname2],
+            |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)),
+        )
+        .ok()
+    })
+    .await
+    .unwrap_or(None);
+
+    let (user_id, hash) = match row {
+        Some(r) => r,
+        None => {
+            auth.record_failed_attempt(&ip).await;
+            auth.record_login_event(ip.clone(), Some(username.clone()), false).await;
+            return (
+                StatusCode::UNAUTHORIZED,
+                HeaderMap::new(),
+                Json(json!({ "error": "Invalid username or password" })),
+            );
         }
     };
 
     match bcrypt::verify(&body.password, &hash) {
         Ok(true) => {
             auth.clear_attempts(&ip).await;
-            let token = auth.create_session().await;
+            let token   = auth.create_session_for(user_id).await;
             let max_age = auth.session_duration.as_secs();
             let mut headers = HeaderMap::new();
             headers.insert("Set-Cookie", auth.session_cookie(&token, max_age).parse().unwrap());
@@ -161,10 +242,11 @@ pub async fn login(
         }
         Ok(false) => {
             auth.record_failed_attempt(&ip).await;
+            auth.record_login_event(ip.clone(), Some(username.clone()), false).await;
             (
                 StatusCode::UNAUTHORIZED,
                 HeaderMap::new(),
-                Json(json!({ "error": "Incorrect password" })),
+                Json(json!({ "error": "Invalid username or password" })),
             )
         }
         Err(_) => (
@@ -174,6 +256,8 @@ pub async fn login(
         ),
     }
 }
+
+// ── Logout ────────────────────────────────────────────────────────────────────
 
 pub async fn logout(
     State(auth): State<AuthState>,
@@ -192,4 +276,196 @@ pub async fn logout(
     );
 
     (StatusCode::OK, response_headers, Json(json!({ "ok": true })))
+}
+
+// ── Security: rate-limit status ───────────────────────────────────────────────
+
+pub async fn security_status(
+    State(auth): State<AuthState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    let token = match extract_session_cookie(&headers) {
+        Some(t) => t,
+        None => return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Unauthorized" }))),
+    };
+    if auth.get_session_user_id(&token).await.is_none() {
+        return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Unauthorized" })));
+    }
+
+    let db  = auth.db.clone();
+    let now = AuthState::now_secs();
+
+    let (entries, events) = tokio::task::spawn_blocking(move || {
+        let conn = db.lock().unwrap();
+
+        // Active rate-limit records (window not yet expired)
+        let mut stmt = conn.prepare(
+            "SELECT ip, attempts, reset_at FROM login_attempts WHERE reset_at > ?1 ORDER BY attempts DESC"
+        ).unwrap();
+        let entries: Vec<serde_json::Value> = stmt
+            .query_map([now], |r| {
+                let ip: String = r.get(0)?;
+                let attempts: i64 = r.get(1)?;
+                let reset_at: i64 = r.get(2)?;
+                Ok((ip, attempts, reset_at))
+            })
+            .unwrap()
+            .filter_map(|r| r.ok())
+            .map(|(ip, attempts, reset_at)| {
+                let blocked          = attempts as u32 >= RATE_LIMIT_MAX_ATTEMPTS;
+                let remaining_secs   = (reset_at - now).max(0) as u64;
+                json!({
+                    "ip":             ip,
+                    "attempts":       attempts,
+                    "blocked":        blocked,
+                    "reset_at":       reset_at,
+                    "remaining_secs": remaining_secs,
+                })
+            })
+            .collect();
+
+        // Last 50 login events
+        let mut stmt = conn.prepare(
+            "SELECT id, ip, username, blocked, created_at FROM login_events ORDER BY created_at DESC LIMIT 50"
+        ).unwrap();
+        let events: Vec<serde_json::Value> = stmt
+            .query_map([], |r| {
+                Ok(json!({
+                    "id":         r.get::<_, i64>(0)?,
+                    "ip":         r.get::<_, String>(1)?,
+                    "username":   r.get::<_, Option<String>>(2)?,
+                    "blocked":    r.get::<_, i32>(3)? != 0,
+                    "created_at": r.get::<_, i64>(4)?,
+                }))
+            })
+            .unwrap()
+            .filter_map(|r| r.ok())
+            .collect();
+
+        (entries, events)
+    })
+    .await
+    .unwrap_or_default();
+
+    (StatusCode::OK, Json(json!({ "entries": entries, "events": events })))
+}
+
+// ── Security: clear rate-limit for an IP ─────────────────────────────────────
+
+#[derive(Deserialize)]
+pub struct ClearQuery {
+    pub ip: String,
+}
+
+pub async fn security_clear(
+    State(auth): State<AuthState>,
+    headers: HeaderMap,
+    Query(q): Query<ClearQuery>,
+) -> impl IntoResponse {
+    let token = match extract_session_cookie(&headers) {
+        Some(t) => t,
+        None => return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Unauthorized" }))),
+    };
+    if auth.get_session_user_id(&token).await.is_none() {
+        return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Unauthorized" })));
+    }
+
+    auth.clear_attempts(&q.ip).await;
+    (StatusCode::OK, Json(json!({ "ok": true })))
+}
+
+// ── Update own credentials ────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+pub struct UpdateCredentialsRequest {
+    current_password:     String,
+    new_username:         Option<String>,
+    new_password:         Option<String>,
+    confirm_new_password: Option<String>,
+}
+
+pub async fn update_credentials(
+    State(auth): State<AuthState>,
+    headers: HeaderMap,
+    Json(body): Json<UpdateCredentialsRequest>,
+) -> impl IntoResponse {
+    let token = match extract_session_cookie(&headers) {
+        Some(t) => t,
+        None => return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Unauthorized" }))),
+    };
+    let user_id = match auth.get_session_user_id(&token).await {
+        Some(id) => id,
+        None => return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Unauthorized" }))),
+    };
+
+    // Load current hash
+    let db   = auth.db.clone();
+    let uid2 = user_id.clone();
+    let row: Option<(String, String)> = tokio::task::spawn_blocking(move || {
+        let conn = db.lock().unwrap();
+        conn.query_row(
+            "SELECT username, password_hash FROM users WHERE id = ?1",
+            [&uid2],
+            |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)),
+        )
+        .ok()
+    })
+    .await
+    .unwrap_or(None);
+
+    let (current_username, hash) = match row {
+        Some(r) => r,
+        None => return (StatusCode::NOT_FOUND, Json(json!({ "error": "User not found" }))),
+    };
+
+    // Verify current password
+    match bcrypt::verify(&body.current_password, &hash) {
+        Ok(true)  => {}
+        Ok(false) => return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Current password is incorrect" }))),
+        Err(_)    => return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "error": "Authentication error" }))),
+    }
+
+    let new_username = body.new_username
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .unwrap_or(&current_username)
+        .to_string();
+
+    let new_hash = if let Some(new_pw) = &body.new_password {
+        if new_pw.is_empty() {
+            hash.clone()
+        } else {
+            let confirm = body.confirm_new_password.as_deref().unwrap_or("");
+            if new_pw != confirm {
+                return (StatusCode::BAD_REQUEST, Json(json!({ "error": "New passwords do not match" })));
+            }
+            if new_pw.len() < 8 {
+                return (StatusCode::BAD_REQUEST, Json(json!({ "error": "Password must be at least 8 characters" })));
+            }
+            match bcrypt::hash(new_pw, bcrypt::DEFAULT_COST) {
+                Ok(h) => h,
+                Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "error": "Failed to hash password" }))),
+            }
+        }
+    } else {
+        hash.clone()
+    };
+
+    let db = auth.db.clone();
+    let ok = tokio::task::spawn_blocking(move || {
+        let conn = db.lock().unwrap();
+        conn.execute(
+            "UPDATE users SET username = ?1, password_hash = ?2 WHERE id = ?3",
+            [&new_username, &new_hash, &user_id],
+        ).is_ok()
+    })
+    .await
+    .unwrap_or(false);
+
+    if ok {
+        (StatusCode::OK, Json(json!({ "ok": true })))
+    } else {
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "error": "Failed to update credentials" })))
+    }
 }
