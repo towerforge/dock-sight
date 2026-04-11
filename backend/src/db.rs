@@ -39,7 +39,12 @@ pub fn open(data_dir: &Path) -> Result<Connection> {
              created_at INTEGER NOT NULL DEFAULT (unixepoch())
          );
          CREATE INDEX IF NOT EXISTS idx_login_events_ip         ON login_events (ip);
-         CREATE INDEX IF NOT EXISTS idx_login_events_created_at ON login_events (created_at DESC);",
+         CREATE INDEX IF NOT EXISTS idx_login_events_created_at ON login_events (created_at DESC);
+
+         CREATE TABLE IF NOT EXISTS settings (
+             key   TEXT PRIMARY KEY,
+             value TEXT NOT NULL
+         );",
     )?;
     Ok(conn)
 }

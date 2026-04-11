@@ -147,6 +147,62 @@ WantedBy=multi-user.target
 
 </details>
 
+## Behind a reverse proxy
+
+Dock Sight can be exposed directly on a public port, but it is strongly recommended to place a reverse proxy (nginx, Caddy, Traefik…) in front of it to handle TLS. When you do, two things must be configured for everything to work correctly:
+
+**1. Forward the real client IP**
+
+The brute-force protection and login event log rely on the client's IP address. When a proxy sits in front, the backend only sees `127.0.0.1` unless the proxy forwards the original IP via `X-Forwarded-For`. Without this, every failed login attempt is counted against the same address and the log becomes useless.
+
+<details>
+<summary>nginx</summary>
+
+```nginx
+location / {
+    proxy_pass         http://127.0.0.1:8080;
+    proxy_set_header   Host              $host;
+    proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Real-IP         $remote_addr;
+}
+```
+
+</details>
+
+<details>
+<summary>Caddy</summary>
+
+```caddy
+reverse_proxy 127.0.0.1:8080 {
+    header_up X-Forwarded-For {remote_host}
+    header_up X-Real-IP       {remote_host}
+}
+```
+
+</details>
+
+<details>
+<summary>Traefik (Docker label)</summary>
+
+Traefik passes `X-Forwarded-For` automatically when `forwardedHeaders` is enabled. Add this to your static config:
+
+```yaml
+entryPoints:
+  web:
+    forwardedHeaders:
+      insecure: true   # or restrict to trusted CIDRs with `trustedIPs`
+```
+
+</details>
+
+**2. Enable secure cookies**
+
+Set the `SECURE_COOKIES=true` environment variable so that session cookies are flagged as `Secure` and are only sent over HTTPS:
+
+```bash
+-e SECURE_COOKIES=true
+```
+
 ## Data persistence
 
 All state is stored in a single SQLite database (`dock-sight.db`) in `DATA_DIR`:

@@ -41,16 +41,9 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
   server: {
-    proxy: {
-      '/sysinfo':        `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
-      '/docker-service': `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
-      '/docker-network': `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
-      '/docker-volumes': `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
-      '/registries':     `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
-      '/users':          `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
-      '/security':       `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
-      '/account':        `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
-      '/api':            `http://localhost:${process.env.BACKEND_PORT ?? 8080}`,
-    },
+    proxy: Object.fromEntries(
+      ['/sysinfo', '/docker-service', '/docker-network', '/docker-volumes', '/registries', '/users', '/security', '/account', '/api']
+        .map(path => [path, { target: `http://localhost:${process.env.BACKEND_PORT ?? 8080}`, xfwd: true }])
+    ),
   },
 })
