@@ -105,11 +105,23 @@ pub async fn services() -> impl IntoResponse {
                 })
                 .unwrap_or_default();
 
+            // Ports come from the service endpoint spec, not container inspect
+            let ports: Vec<serde_json::Value> = svc.endpoint.as_ref()
+                .and_then(|e| e.ports.as_ref())
+                .map(|ps| ps.iter().map(|p| json!({
+                    "published":   p.published_port,
+                    "target":      p.target_port,
+                    "protocol":    p.protocol.as_ref().map(|v| v.to_string()).unwrap_or_default(),
+                    "publish_mode": p.publish_mode.as_ref().map(|v| v.to_string()).unwrap_or_default(),
+                })).collect())
+                .unwrap_or_default();
+
             json!({
                 "name": name,
                 "containers": count,
                 "last_deployed": last_deployed,
                 "networks": networks,
+                "ports": ports,
                 "info": {
                     "cpu": { "percent": (cpu * 10.0).round() / 10.0 },
                     "ram": {

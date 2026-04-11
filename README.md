@@ -96,17 +96,23 @@ Open [http://localhost:8080](http://localhost:8080) in your browser. On first la
 docker run -d \
   --name dock-sight \
   --restart unless-stopped \
-  -p 8080:8080 \
+  --network host \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v dock-sight-data:/data \
   -e DATA_DIR=/data \
   towerforge/dock-sight:latest
 ```
 
+> **`--network host` is strongly recommended.** With `-p 8080:8080` Docker's userland-proxy
+> creates an internal TCP relay and the backend only ever sees `172.17.0.1` as the client address.
+> `--network host` bypasses that relay so the real client IP is visible — which makes login
+> event logging and brute-force rate-limiting work correctly.
+> When using host networking, `-p` port mappings are not used; the app listens directly on port 8080 of the host.
+
 The `-v dock-sight-data:/data` volume persists the SQLite database (users, registries, login history) across container recreations.
 
 <details>
-<summary>docker-compose</summary>
+<summary>docker-compose (standalone)</summary>
 
 ```yaml
 services:
@@ -114,8 +120,40 @@ services:
     image: towerforge/dock-sight:latest
     container_name: dock-sight
     restart: unless-stopped
+    network_mode: host          # required for correct client-IP logging
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dock-sight-data:/data
+    environment:
+      - DATA_DIR=/data
+
+volumes:
+  dock-sight-data:
+```
+
+</details>
+
+<details>
+<summary>Docker Swarm stack</summary>
+
+`network_mode: host` is not available in Swarm mode. Use `mode: host` on the port instead —
+this publishes the port directly on the node, bypassing the ingress routing mesh so the real
+client IP reaches the container.
+
+```yaml
+services:
+  dock-sight:
+    image: towerforge/dock-sight:latest
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager   # needs access to the Docker socket
     ports:
-      - "8080:8080"
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host                 # bypasses ingress mesh → real client IP preserved
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - dock-sight-data:/data
