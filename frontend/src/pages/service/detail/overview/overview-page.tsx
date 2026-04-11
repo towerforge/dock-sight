@@ -394,9 +394,10 @@ export default function OverviewPage() {
 
     if (loading) return <Page><Spinner /></Page>
 
-    if (removing) return <Page><Spinner label={`Removing ${name}…`} /></Page>
-
-    if (pulling) return <Page><Spinner label={`Pulling latest image for ${name}…`} /></Page>
+    if (removing)     return <Page><Spinner label={`Removing ${name}…`} /></Page>
+    if (pulling)      return <Page><Spinner label={`Pulling latest image for ${name}…`} /></Page>
+    if (savingPorts)  return <Page><Spinner label="Updating ports…" /></Page>
+    if (savingMounts) return <Page><Spinner label="Updating mounts…" /></Page>
 
     const running     = containers.filter(c => c.running).length
     const stopped     = containers.length - running
@@ -404,11 +405,13 @@ export default function OverviewPage() {
     const allPolicies = [...new Set(containers.map(c => c.restart_policy).filter(Boolean))]
     const allImages   = [...new Set(containers.map(c => c.image).filter(Boolean))]
 
-    const portRows: PortRow[] = [...new Set(containers.flatMap(c => c.ports ?? []))].map(p => {
-        const [host, rest]          = (p as string).split('→')
-        const [portPart, protocol]  = (rest ?? '').split('/')
-        return { id: p as string, host: (host ?? p as string).trim(), container: portPart?.trim() ?? '', protocol: protocol?.trim() ?? '' }
-    })
+    type ServicePort = { published: number | null; target: number | null; protocol: string; publish_mode: string }
+    const portRows: PortRow[] = ((service as unknown as { ports?: ServicePort[] })?.ports ?? []).map((p, i) => ({
+        id:        `${i}`,
+        host:      p.published != null ? String(p.published) : '',
+        container: p.target    != null ? String(p.target)    : '',
+        protocol:  p.protocol.toLowerCase().replace('empty', ''),
+    }))
 
     const mountRows: MountRow[] = containers
         .flatMap(c => c.mounts ?? [])
@@ -577,7 +580,7 @@ export default function OverviewPage() {
             const kept    = portRows.filter(r => r.id !== original?.id).map(rowToPayload)
             const updated = draftToPayload(draft)
             await apiUpdateServicePorts(name, [...kept, updated])
-            setRefreshKey(k => k + 1)
+            refresh()
             setEditingPort(null)
         } catch (err: any) {
             setPortsError(err?.message ?? 'Failed to update ports')
