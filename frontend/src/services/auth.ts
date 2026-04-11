@@ -1,4 +1,4 @@
-import { get, post, del } from './http'
+import { get, post, put, del } from './http'
 
 // ── Session ───────────────────────────────────────────────────────────────────
 
@@ -19,7 +19,8 @@ export const apiUpdateCredentials = (body: {
 
 export type RateLimitEntry = { ip: string; attempts: number; blocked: boolean; reset_at: number; remaining_secs: number }
 export type LoginEvent     = { id: number; ip: string; username: string | null; blocked: boolean; created_at: number }
-export type SecurityStatus = { entries: RateLimitEntry[]; events: LoginEvent[] }
+export type SecurityStatus = { entries: RateLimitEntry[]; events: LoginEvent[]; rate_limit_enabled: boolean }
 
-export const apiSecurityStatus  = ()           => get<SecurityStatus>('/api/auth/security')
-export const apiSecurityClearIp = (ip: string) => del<{ ok: boolean }>(`/api/auth/security?ip=${encodeURIComponent(ip)}`)
+export const apiSecurityStatus       = ()                    => get<SecurityStatus>('/api/auth/security')
+export const apiSecurityClearIp      = (ip: string)          => del<{ ok: boolean }>(`/api/auth/security?ip=${encodeURIComponent(ip)}`)
+export const apiSecuritySetRateLimit = (enabled: boolean)    => put<{ ok: boolean }>('/api/auth/security', { rate_limit_enabled: enabled })

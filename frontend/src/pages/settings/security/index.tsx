@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { RefreshCw, Wifi } from 'lucide-react'
-import { Button, Table } from '@/components/ui'
+import { Button, Table, Switch } from '@/components/ui'
 import type { Column } from '@/components/ui'
-import { apiSecurityStatus, apiSecurityClearIp } from '@/services/api'
+import { apiSecurityStatus, apiSecurityClearIp, apiSecuritySetRateLimit } from '@/services/api'
 import type { RateLimitEntry, LoginEvent } from '@/services/api'
 
 // ── Badge ─────────────────────────────────────────────────────────────────────
@@ -67,10 +67,12 @@ function formatDate(ts: number) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SecurityPage() {
-    const [entries, setEntries] = useState<RateLimitEntry[]>([])
-    const [events, setEvents]   = useState<LoginEvent[]>([])
-    const [loading, setLoading] = useState(false)
-    const [clearing, setClearing] = useState<string | null>(null)
+    const [entries, setEntries]               = useState<RateLimitEntry[]>([])
+    const [events, setEvents]                 = useState<LoginEvent[]>([])
+    const [loading, setLoading]               = useState(false)
+    const [clearing, setClearing]             = useState<string | null>(null)
+    const [rateLimitEnabled, setRateLimitEnabled] = useState(true)
+    const [togglingRateLimit, setTogglingRateLimit] = useState(false)
 
     const load = useCallback(async () => {
         setLoading(true)
@@ -78,10 +80,21 @@ export default function SecurityPage() {
             const data = await apiSecurityStatus()
             setEntries(data.entries)
             setEvents(data.events)
+            setRateLimitEnabled(data.rate_limit_enabled)
         } catch { /* ignore */ } finally {
             setLoading(false)
         }
     }, [])
+
+    const handleToggleRateLimit = async (enabled: boolean) => {
+        setTogglingRateLimit(true)
+        try {
+            await apiSecuritySetRateLimit(enabled)
+            setRateLimitEnabled(enabled)
+        } catch { /* ignore */ } finally {
+            setTogglingRateLimit(false)
+        }
+    }
 
     useEffect(() => { load() }, [load])
 
@@ -194,6 +207,26 @@ export default function SecurityPage() {
                     <RefreshCw size={13} style={{ marginRight: 4 }} />
                     Refresh
                 </Button>
+            </div>
+
+            <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: 'var(--layer-1)', border: '1px solid var(--stroke-1)',
+                borderRadius: 'var(--radius-2)', padding: '14px 20px', marginBottom: 24,
+            }}>
+                <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>
+                        Brute-force protection
+                    </p>
+                    <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-3)' }}>
+                        Block an IP after 10 failed login attempts within 15 minutes.
+                    </p>
+                </div>
+                <Switch
+                    checked={rateLimitEnabled}
+                    onChange={handleToggleRateLimit}
+                    disabled={togglingRateLimit}
+                />
             </div>
 
             <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>

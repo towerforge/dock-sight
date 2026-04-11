@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
 use serde::{Deserialize, Serialize};
@@ -32,13 +32,14 @@ pub struct AuthConfig {
 
 #[derive(Clone)]
 pub struct AuthState {
-    pub config:           Arc<Mutex<AuthConfig>>,
+    pub config:              Arc<Mutex<AuthConfig>>,
     /// token → (user_id, expiry)
-    pub sessions:         Arc<Mutex<HashMap<String, (String, SystemTime)>>>,
-    pub session_duration: Duration,
-    pub db:               Arc<std::sync::Mutex<rusqlite::Connection>>,
-    pub setup_done:       Arc<AtomicBool>,
-    pub secure_cookies:   bool,
+    pub sessions:            Arc<Mutex<HashMap<String, (String, SystemTime)>>>,
+    pub session_duration:    Duration,
+    pub db:                  Arc<std::sync::Mutex<rusqlite::Connection>>,
+    pub setup_done:          Arc<AtomicBool>,
+    pub secure_cookies:      bool,
+    pub rate_limit_enabled:  Arc<AtomicBool>,
 }
 
 impl AuthState {
@@ -56,23 +57,36 @@ impl AuthState {
             .map(|v| v == "true" || v == "1")
             .unwrap_or(false);
 
-        let conn       = crate::db::open(&data_dir).expect("Failed to open database");
-        let config     = Self::load_config(&conn, &data_dir);
-        let setup_done = Self::check_setup_done(&conn);
+        let conn               = crate::db::open(&data_dir).expect("Failed to open database");
+        let config             = Self::load_config(&conn, &data_dir);
+        let setup_done         = Self::check_setup_done(&conn);
+        let rate_limit_enabled = Self::load_bool_setting(&conn, "rate_limit_enabled", true);
 
         Self {
-            config:           Arc::new(Mutex::new(config)),
-            sessions:         Arc::new(Mutex::new(HashMap::new())),
-            session_duration: Duration::from_secs(session_hours * 3600),
-            db:               Arc::new(std::sync::Mutex::new(conn)),
-            setup_done:       Arc::new(AtomicBool::new(setup_done)),
+            config:             Arc::new(Mutex::new(config)),
+            sessions:           Arc::new(Mutex::new(HashMap::new())),
+            session_duration:   Duration::from_secs(session_hours * 3600),
+            db:                 Arc::new(std::sync::Mutex::new(conn)),
+            setup_done:         Arc::new(AtomicBool::new(setup_done)),
             secure_cookies,
+            rate_limit_enabled: Arc::new(AtomicBool::new(rate_limit_enabled)),
         }
     }
 
     fn check_setup_done(conn: &rusqlite::Connection) -> bool {
         conn.query_row("SELECT COUNT(*) FROM users", [], |r| r.get::<_, i64>(0))
             .unwrap_or(0) > 0
+    }
+
+    fn load_bool_setting(conn: &rusqlite::Connection, key: &str, default: bool) -> bool {
+        conn.query_row(
+            "SELECT value FROM settings WHERE key = ?1",
+            [key],
+            |r| r.get::<_, String>(0),
+        )
+        .ok()
+        .map(|v| v == "true" || v == "1")
+        .unwrap_or(default)
     }
 
     fn load_config(conn: &rusqlite::Connection, _data_dir: &PathBuf) -> AuthConfig {
@@ -167,6 +181,9 @@ impl AuthState {
 
     /// Returns `true` if the request should be allowed (not yet blocked).
     pub async fn check_rate_limit(&self, ip: &str) -> bool {
+        if !self.rate_limit_enabled.load(Ordering::Relaxed) {
+            return true;
+        }
         let db  = self.db.clone();
         let ip  = ip.to_string();
         let now = Self::now_secs();
@@ -218,6 +235,23 @@ impl AuthState {
                     );
                 }
             }
+        })
+        .await
+        .ok();
+    }
+
+    /// Enables or disables brute-force rate limiting and persists the setting.
+    pub async fn set_rate_limit_enabled(&self, enabled: bool) {
+        self.rate_limit_enabled.store(enabled, Ordering::Relaxed);
+        let db    = self.db.clone();
+        let value = if enabled { "true" } else { "false" };
+        tokio::task::spawn_blocking(move || {
+            let conn = db.lock().unwrap();
+            let _ = conn.execute(
+                "INSERT INTO settings (key, value) VALUES ('rate_limit_enabled', ?1) \
+                 ON CONFLICT(key) DO UPDATE SET value = ?1",
+                [value],
+            );
         })
         .await
         .ok();

@@ -6,7 +6,7 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use super::{AuthState, RATE_LIMIT_MAX_ATTEMPTS};
@@ -347,7 +347,8 @@ pub async fn security_status(
     .await
     .unwrap_or_default();
 
-    (StatusCode::OK, Json(json!({ "entries": entries, "events": events })))
+    let rate_limit_enabled = auth.rate_limit_enabled.load(Ordering::Relaxed);
+    (StatusCode::OK, Json(json!({ "entries": entries, "events": events, "rate_limit_enabled": rate_limit_enabled })))
 }
 
 // ── Security: clear rate-limit for an IP ─────────────────────────────────────
@@ -372,6 +373,30 @@ pub async fn security_clear(
 
     auth.clear_attempts(&q.ip).await;
     (StatusCode::OK, Json(json!({ "ok": true })))
+}
+
+// ── Security: toggle rate limiting ───────────────────────────────────────────
+
+#[derive(Deserialize, Serialize)]
+pub struct RateLimitConfig {
+    pub rate_limit_enabled: bool,
+}
+
+pub async fn security_set_rate_limit(
+    State(auth): State<AuthState>,
+    headers: HeaderMap,
+    Json(body): Json<RateLimitConfig>,
+) -> impl IntoResponse {
+    let token = match extract_session_cookie(&headers) {
+        Some(t) => t,
+        None => return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Unauthorized" }))),
+    };
+    if auth.get_session_user_id(&token).await.is_none() {
+        return (StatusCode::UNAUTHORIZED, Json(json!({ "error": "Unauthorized" })));
+    }
+
+    auth.set_rate_limit_enabled(body.rate_limit_enabled).await;
+    (StatusCode::OK, Json(json!({ "ok": true, "rate_limit_enabled": body.rate_limit_enabled })))
 }
 
 // ── Update own credentials ────────────────────────────────────────────────────

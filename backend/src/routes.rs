@@ -76,7 +76,7 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
         .route("/api/auth/me",                 get(auth_routes::me))
         .route("/api/auth/credentials",        put(auth_routes::update_credentials))
         // Security: rate-limit status (admin only)
-        .route("/api/auth/security",           get(auth_routes::security_status).delete(auth_routes::security_clear))
+        .route("/api/auth/security",           get(auth_routes::security_status).delete(auth_routes::security_clear).put(auth_routes::security_set_rate_limit))
         // User management (admin-only checks inside handlers)
         .route("/users",                       get(list_users).post(create_user).delete(delete_user))
         .route("/users/update",                put(update_user))
