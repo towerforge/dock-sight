@@ -8,6 +8,7 @@ use bollard::service::{
     EndpointSpec, EndpointPortConfig,
     EndpointPortConfigProtocolEnum, EndpointPortConfigPublishModeEnum,
     NetworkAttachmentConfig,
+    Mount, MountTypeEnum,
 };
 use serde::Deserialize;
 use serde_json::json;
@@ -204,6 +205,133 @@ pub async fn pull_service(
         .build();
 
     match docker.update_service(&q.name, spec, options, credentials).await {
+        Ok(_) => (StatusCode::OK, Json(json!({ "ok": true }))),
+        Err(e) => error(e.to_string()),
+    }
+}
+
+#[derive(Deserialize)]
+pub struct PortConfigItem {
+    pub host_port:      Option<i64>,
+    pub container_port: i64,
+    pub protocol:       String,   // "tcp" | "udp" | "tcp+udp"
+    pub publish_mode:   String,   // "ingress" | "host"
+}
+
+#[derive(Deserialize)]
+pub struct UpdateServicePortsRequest {
+    pub name:  String,
+    pub ports: Vec<PortConfigItem>,
+}
+
+pub async fn update_service_ports(Json(body): Json<UpdateServicePortsRequest>) -> impl IntoResponse {
+    let docker = match Docker::connect_with_local_defaults() {
+        Ok(d) => d,
+        Err(e) => return error(e.to_string()),
+    };
+
+    let service = match docker.inspect_service(&body.name, None).await {
+        Ok(s) => s,
+        Err(e) => return error(e.to_string()),
+    };
+
+    let version = service.version.and_then(|v| v.index).unwrap_or(0);
+    let mut spec = service.spec.unwrap_or_default();
+
+    let mut ports: Vec<EndpointPortConfig> = Vec::new();
+    for p in &body.ports {
+        let publish_mode = if p.publish_mode == "host" {
+            EndpointPortConfigPublishModeEnum::HOST
+        } else {
+            EndpointPortConfigPublishModeEnum::INGRESS
+        };
+        let protocols: Vec<EndpointPortConfigProtocolEnum> = if p.protocol == "tcp+udp" {
+            vec![EndpointPortConfigProtocolEnum::TCP, EndpointPortConfigProtocolEnum::UDP]
+        } else if p.protocol == "udp" {
+            vec![EndpointPortConfigProtocolEnum::UDP]
+        } else {
+            vec![EndpointPortConfigProtocolEnum::TCP]
+        };
+        for proto in protocols {
+            ports.push(EndpointPortConfig {
+                published_port: p.host_port,
+                target_port:    Some(p.container_port),
+                protocol:       Some(proto),
+                publish_mode:   Some(publish_mode.clone()),
+                name:           None,
+            });
+        }
+    }
+
+    spec.endpoint_spec = Some(EndpointSpec {
+        ports: Some(ports),
+        ..Default::default()
+    });
+
+    let options = UpdateServiceOptionsBuilder::default()
+        .version(version as i32)
+        .build();
+
+    match docker.update_service(&body.name, spec, options, None).await {
+        Ok(_) => (StatusCode::OK, Json(json!({ "ok": true }))),
+        Err(e) => error(e.to_string()),
+    }
+}
+
+#[derive(Deserialize)]
+pub struct MountConfigItem {
+    pub source:    Option<String>,
+    pub target:    String,
+    pub typ:       String,        // "bind" | "volume" | "tmpfs"
+    pub read_only: Option<bool>,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateServiceMountsRequest {
+    pub name:   String,
+    pub mounts: Vec<MountConfigItem>,
+}
+
+pub async fn update_service_mounts(Json(body): Json<UpdateServiceMountsRequest>) -> impl IntoResponse {
+    let docker = match Docker::connect_with_local_defaults() {
+        Ok(d) => d,
+        Err(e) => return error(e.to_string()),
+    };
+
+    let service = match docker.inspect_service(&body.name, None).await {
+        Ok(s) => s,
+        Err(e) => return error(e.to_string()),
+    };
+
+    let version = service.version.and_then(|v| v.index).unwrap_or(0);
+    let mut spec = service.spec.unwrap_or_default();
+
+    let mounts: Vec<Mount> = body.mounts.iter().map(|m| {
+        let typ = match m.typ.as_str() {
+            "volume" => MountTypeEnum::VOLUME,
+            "tmpfs"  => MountTypeEnum::TMPFS,
+            _        => MountTypeEnum::BIND,
+        };
+        Mount {
+            target:    Some(m.target.clone()),
+            source:    m.source.clone().filter(|s| !s.is_empty()),
+            typ:       Some(typ),
+            read_only: m.read_only,
+            ..Default::default()
+        }
+    }).collect();
+
+    if let Some(task) = spec.task_template.as_mut() {
+        if let Some(container) = task.container_spec.as_mut() {
+            container.mounts = if mounts.is_empty() { None } else { Some(mounts) };
+        }
+    }
+
+    let options = UpdateServiceOptionsBuilder::default()
+        .version(version as i32)
+        .build();
+
+    match docker.update_service(&body.name, spec, options, None).await {
         Ok(_) => (StatusCode::OK, Json(json!({ "ok": true }))),
         Err(e) => error(e.to_string()),
     }

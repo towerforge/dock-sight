@@ -1,4 +1,4 @@
-import { get, post, del } from './http'
+import { get, post, put, del } from './http'
 
 // ── System ────────────────────────────────────────────────────────────────────
 
@@ -20,7 +20,25 @@ export const apiCreateService = (body: {
 }) => post<{ id?: string }>('/docker-service', body)
 export const apiDeleteService = (name: string)              => del<void>(`/docker-service?name=${encodeURIComponent(name)}`)
 export const apiScaleService  = (name: string, replicas: number) => post<void>('/docker-service/scale', { name, replicas })
-export const apiPullService   = (name: string)              => post<void>(`/docker-service/pull?name=${encodeURIComponent(name)}`)
+export const apiPullService          = (name: string) => post<void>(`/docker-service/pull?name=${encodeURIComponent(name)}`)
+
+export type PortConfigPayload = {
+    host_port:      number | null
+    container_port: number
+    protocol:       'tcp' | 'udp' | 'tcp+udp'
+    publish_mode:   'ingress' | 'host'
+}
+export const apiUpdateServicePorts = (name: string, ports: PortConfigPayload[]) =>
+    put<{ ok: boolean }>('/docker-service/ports', { name, ports })
+
+export type MountConfigPayload = {
+    source:    string
+    target:    string
+    typ:       'bind' | 'volume' | 'tmpfs'
+    read_only: boolean
+}
+export const apiUpdateServiceMounts = (name: string, mounts: MountConfigPayload[]) =>
+    put<{ ok: boolean }>('/docker-service/mounts', { name, mounts })
 
 // ── Networks ──────────────────────────────────────────────────────────────────
 

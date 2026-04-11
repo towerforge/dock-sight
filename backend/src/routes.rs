@@ -17,7 +17,8 @@ use crate::system::routes::sysinfo;
 use crate::docker::{
     services, service_containers, delete_container, service_images, delete_image,
     service_logs, cleanup_preview, run_cleanup, create_service, delete_service,
-    scale_service, pull_service, list_networks, create_network, delete_network,
+    scale_service, pull_service, update_service_ports, update_service_mounts,
+    list_networks, create_network, delete_network,
     list_docker_volumes, create_volume, delete_volume,
 };
 use crate::registries::{list_registries, create_registry, delete_registry};
@@ -64,6 +65,8 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
         .route("/sysinfo",                     get(sysinfo))
         .route("/docker-service",              get(services).post(create_service).delete(delete_service))
         .route("/docker-service/scale",        post(scale_service))
+        .route("/docker-service/ports",        put(update_service_ports))
+        .route("/docker-service/mounts",       put(update_service_mounts))
         .route("/docker-service/pull",         post(pull_service))
         .route("/docker-service/containers",   get(service_containers).delete(delete_container))
         .route("/docker-service/images",       get(service_images).delete(delete_image))
