@@ -9,15 +9,15 @@ import styles from './MainLayout.module.css'
 
 type Section = 'main' | 'service' | 'network' | 'volume'
 
-interface NavItem { to: string; label: string; Icon: React.ElementType; end?: boolean; dev?: boolean }
+interface NavItem { to: string; label: string; Icon: React.ElementType; end?: boolean; dev?: boolean; separator?: boolean }
 
 const MAIN_NAV: NavItem[] = [
-    { to: '/',          label: 'Services',  Icon: Server,       end: true  },
-    { to: '/metrics',   label: 'Metrics',   Icon: BarChart2                },
-    { to: '/network',   label: 'Network',   Icon: Activity,     end: true  },
-    { to: '/volumes',   label: 'Volumes',   Icon: HardDrive                 },
-    { to: '/cleanup',   label: 'Cleanup',   Icon: Trash2                   },
-    { to: '/_dev',      label: 'Dev',       Icon: FlaskConical, dev: true  },
+    { to: '/',          label: 'Services',  Icon: Server,       end: true              },
+    { to: '/network',   label: 'Network',   Icon: Activity,     end: true              },
+    { to: '/volumes',   label: 'Volumes',   Icon: HardDrive                            },
+    { to: '/metrics',   label: 'Metrics',   Icon: BarChart2,    separator: true        },
+    { to: '/cleanup',   label: 'Cleanup',   Icon: Trash2                               },
+    { to: '/_dev',      label: 'Dev',       Icon: FlaskConical, dev: true, separator: true },
 ]
 
 const SERVICE_NAV = [
@@ -57,10 +57,13 @@ function ServiceBrand({ onBack }: { onBack: () => void }) {
 function MainNav() {
     return (
         <>
-            {MAIN_NAV.filter(item => !item.dev || import.meta.env.DEV).map(({ to, label, Icon, end }) => (
-                <NavLink key={to} to={to} end={end} className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
-                    <Icon size={15} />{label}
-                </NavLink>
+            {MAIN_NAV.filter(item => !item.dev || import.meta.env.DEV).map(({ to, label, Icon, end, separator }) => (
+                <span key={to} className={styles.navItem}>
+                    {separator && <span className={styles.navDivider} />}
+                    <NavLink to={to} end={end} className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
+                        <Icon size={15} />{label}
+                    </NavLink>
+                </span>
             ))}
         </>
     )

@@ -30,6 +30,19 @@
     color: var(--text-1);
 }
 
+.navItem {
+    display: flex;
+    align-items: stretch;
+}
+
+.navDivider {
+    display: block;
+    width: 1px;
+    margin: 10px 6px;
+    background: var(--stroke-1);
+    flex-shrink: 0;
+}
+
 .navLink {
     display: flex;
     align-items: center;
