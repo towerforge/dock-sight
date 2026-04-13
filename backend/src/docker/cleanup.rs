@@ -37,9 +37,10 @@ pub async fn cleanup_preview() -> impl IntoResponse {
         })
         .collect();
 
-    // Images referenced by running containers — strip digest hash for reliable matching
-    let used_by_running: HashSet<String> = all_containers.iter()
-        .filter(|c| c.state == Some(ContainerSummaryStateEnum::RUNNING))
+    // Images referenced by any container (running or stopped) — strip digest hash for matching.
+    // Stopped containers still hold a reference; Docker won't remove those images until the
+    // container is deleted first, so we exclude them from the "unused" list too.
+    let used_by_any: HashSet<String> = all_containers.iter()
         .filter_map(|c| {
             let img = c.image.as_ref()?;
             Some(img.split('@').next().unwrap_or(img).to_string())
@@ -52,7 +53,7 @@ pub async fn cleanup_preview() -> impl IntoResponse {
     };
 
     let unused: Vec<_> = all_images.iter()
-        .filter(|img| !img.repo_tags.iter().any(|tag| used_by_running.contains(tag)))
+        .filter(|img| !img.repo_tags.iter().any(|tag| used_by_any.contains(tag)))
         .collect();
 
     let total_space: i64 = unused.iter().map(|img| img.size).sum();

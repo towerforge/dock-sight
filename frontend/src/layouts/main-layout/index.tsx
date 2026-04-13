@@ -364,7 +364,7 @@ export default function MainLayout() {
                 <Nav />
             </nav>
             <div className={styles.body}>
-                <main className={styles.content}>
+                <main className={styles.content} style={panelOpen ? { marginRight: 320 } : undefined}>
                     <Outlet />
                 </main>
                 {panelOpen && <SystemPanel />}

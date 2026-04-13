@@ -17,6 +17,7 @@ import AccountPage from '@/pages/settings/account'
 import UsersPage from '@/pages/settings/users'
 import SecurityPage from '@/pages/settings/security'
 import Metrics from '@/pages/metrics'
+import SystemPage from '@/pages/system'
 import VolumesHome from '@/pages/volumes/home'
 import VolumeDetailLayout from '@/pages/volumes/detail'
 import VolumeOverviewPage from '@/pages/volumes/detail/overview/overview-page'
@@ -54,6 +55,7 @@ function App() {
             <Route path="security"   element={<SecurityPage />} />
           </Route>
           <Route path="/metrics"  element={<Metrics />} />
+          <Route path="/system"   element={<SystemPage />} />
           <Route path="/volumes">
             <Route index element={<VolumesHome />} />
             <Route element={<VolumeDetailLayout />}>
