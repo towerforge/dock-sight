@@ -12,6 +12,30 @@ use chrono::DateTime;
 use crate::auth::AuthState;
 use super::error;
 
+/// Walk a directory recursively and sum the sizes of all files.
+/// Returns -1 if the path doesn't exist or can't be read.
+fn dir_size(path: &str) -> i64 {
+    use std::fs;
+    fn walk(p: &std::path::Path, acc: &mut u64) {
+        let Ok(entries) = fs::read_dir(p) else { return };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if let Ok(meta) = entry.metadata() {
+                if meta.is_dir() {
+                    walk(&path, acc);
+                } else if meta.is_file() {
+                    *acc += meta.len();
+                }
+            }
+        }
+    }
+    let p = std::path::Path::new(path);
+    if !p.exists() { return -1; }
+    let mut total = 0u64;
+    walk(p, &mut total);
+    total as i64
+}
+
 #[derive(Deserialize)]
 pub struct VolumeQuery {
     pub name: String,
@@ -50,9 +74,15 @@ pub async fn list_docker_volumes(State(_auth): State<AuthState>) -> impl IntoRes
                 }
             });
 
-        let (size, ref_count) = v.usage_data.as_ref()
+        let (mut size, ref_count) = v.usage_data.as_ref()
             .map(|u| (u.size, u.ref_count))
             .unwrap_or((-1, -1));
+
+        // Docker Desktop (Mac) fills usage_data; native Linux doesn't.
+        // Fall back to walking the mountpoint directory.
+        if size < 0 {
+            size = dir_size(&v.mountpoint);
+        }
 
         let created = v.created_at.as_deref()
             .and_then(|s| DateTime::parse_from_rfc3339(s).ok())
@@ -71,23 +101,34 @@ pub async fn list_docker_volumes(State(_auth): State<AuthState>) -> impl IntoRes
         })
     }).collect();
 
-    // System disk info (reuse same logic as sysinfo)
+    // System disk info — same logic as system/metrics/disk.rs
     let disks = Disks::new_with_refreshed_list();
-    let (disk_total, disk_available) = disks.list().iter()
-        .filter(|d| {
-            let fs = d.file_system().to_string_lossy().to_lowercase();
-            if matches!(fs.as_str(), "devfs"|"autofs"|"tmpfs"|"devtmpfs"|"sysfs"|"proc"|"procfs"|"overlay") {
-                return false;
+    let mut seen_devices = std::collections::HashSet::<String>::new();
+    let mut disk_total = 0u64;
+    let mut disk_available = 0u64;
+    for d in disks.list() {
+        let fs = d.file_system().to_string_lossy().to_lowercase();
+        if matches!(
+            fs.as_str(),
+            "devfs" | "autofs" | "tmpfs" | "devtmpfs" | "sysfs" | "proc" | "procfs"
+                | "squashfs" | "overlay" | "cgroup" | "cgroup2" | "pstore" | "debugfs"
+                | "securityfs" | "configfs" | "fusectl" | "hugetlbfs" | "mqueue" | "bpf"
+        ) {
+            continue;
+        }
+        #[cfg(target_os = "macos")]
+        {
+            let mp = d.mount_point();
+            if mp != Path::new("/") && !mp.starts_with(Path::new("/Volumes/")) {
+                continue;
             }
-            #[cfg(target_os = "macos")]
-            {
-                let mp = d.mount_point();
-                return mp == Path::new("/") || mp.starts_with(Path::new("/Volumes/"));
-            }
-            #[cfg(not(target_os = "macos"))]
-            true
-        })
-        .fold((0u64, 0u64), |(t, a), d| (t + d.total_space(), a + d.available_space()));
+        }
+        let name = d.name().to_string_lossy().to_string();
+        if seen_devices.insert(name) {
+            disk_total = disk_total.saturating_add(d.total_space());
+            disk_available = disk_available.saturating_add(d.available_space());
+        }
+    }
 
     let disk_used = disk_total.saturating_sub(disk_available);
     let volumes_known_size: i64 = volumes.iter()

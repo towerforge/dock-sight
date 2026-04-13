@@ -65,7 +65,7 @@ function DiskBar({ total, used, free, segments }: { total: number; used: number;
                     </div>
                 )}
             </div>
-            {/* <div style={{ display: 'flex', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
                 {segs.filter(s => s.label !== 'Free').map((seg, i) => (
                     <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text-2)' }}>
                         <span style={{ width: 12, height: 12, borderRadius: '50%', background: seg.color, flexShrink: 0 }} />
@@ -78,7 +78,7 @@ function DiskBar({ total, used, free, segments }: { total: number; used: number;
                     Free
                     <span style={{ color: 'var(--text-3)', fontFamily: 'monospace' }}>{formatBytes(free)}</span>
                 </span>
-            </div> */}
+            </div>
         </div>
     )
 }
@@ -129,7 +129,6 @@ export default function VolumesPage() {
     }, [serviceMap, colorMap, data])
 
     const columns: Column<DockerVolume>[] = useMemo(() => {
-        const hasSizes = data?.volumes.some(v => v.size >= 0) ?? false
         return [
             {
                 key: 'name',
@@ -158,14 +157,14 @@ export default function VolumesPage() {
                 shrink: true,
                 render: v => <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{v.driver}</span>,
             },
-            ...(hasSizes ? [{
-                key: 'size' as keyof DockerVolume,
+            {
+                key: 'size',
                 header: 'Size',
                 shrink: true,
-                render: (v: DockerVolume) => v.size >= 0
+                render: v => v.size >= 0
                     ? <span style={{ fontFamily: 'monospace', fontSize: 13, color: 'var(--text-2)' }}>{formatBytes(v.size)}</span>
                     : <span style={{ color: 'var(--text-3)' }}>—</span>,
-            }] : []),
+            },
             {
                 key: 'created_at',
                 header: 'Created',
@@ -173,7 +172,7 @@ export default function VolumesPage() {
                 render: v => <span style={{ fontSize: 12, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{formatRelativeTime(v.created_at)}</span>,
             },
         ]
-    }, [colorMap, data])
+    }, [colorMap])
 
     if (loading) return (
         <Page>
