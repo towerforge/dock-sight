@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CircuitBoard, HardDrive, Activity } from 'lucide-react'
 import { AreaChart, Area, ResponsiveContainer, YAxis, XAxis, Tooltip, CartesianGrid } from 'recharts'
-import { Page, SegmentedControl } from '@/components/ui'
+import { Page, SegmentedControl, Card, CardBody } from '@/components/ui'
 import { useDashboard } from '@/context/dashboard-context'
 import { formatBytes, formatTooltipTime } from '@/lib/formatters'
 
@@ -169,25 +169,29 @@ function AllView() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-            {METRICS.map((m, i) => (
-                <div key={m.value} style={{ borderBottom: i < METRICS.length - 1 ? '1px solid var(--stroke-1)' : undefined, paddingBottom: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0 0' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--text-2)' }}>
-                            <m.Icon size={13} style={{ color: m.colorHex }} />{m.label}
-                        </span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: m.colorHex, fontVariantNumeric: 'tabular-nums' }}>
-                            {percents[m.value].toFixed(0)}%
-                        </span>
-                    </div>
-                    <SysChart
-                        tab={m.value}
-                        colorHex={m.colorHex}
-                        colorId={m.colorId}
-                        height={180}
-                        compact={i < METRICS.length - 1}
-                    />
-                </div>
-            ))}
+            <Card>
+                <CardBody>
+                    {METRICS.map((m, i) => (
+                        <div key={m.value} style={{ borderBottom: i < METRICS.length - 1 ? '1px solid var(--stroke-1)' : undefined, paddingBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0 0' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--text-2)' }}>
+                                    <m.Icon size={13} style={{ color: m.colorHex }} />{m.label}
+                                </span>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: m.colorHex, fontVariantNumeric: 'tabular-nums' }}>
+                                    {percents[m.value].toFixed(0)}%
+                                </span>
+                            </div>
+                            <SysChart
+                                tab={m.value}
+                                colorHex={m.colorHex}
+                                colorId={m.colorId}
+                                height={180}
+                                compact={i < METRICS.length - 1}
+                            />
+                        </div>
+                    ))}
+                </CardBody>
+            </Card>
         </div>
     )
 }
@@ -207,10 +211,12 @@ export default function SystemPage() {
             {tab === 'all' ? (
                 <AllView />
             ) : active ? (
-                <>
-                    <StatRow tab={active.value} colorHex={active.colorHex} />
-                    <SysChart tab={active.value} colorHex={active.colorHex} colorId={active.colorId} />
-                </>
+                <Card>
+                    <CardBody>
+                        <StatRow tab={active.value} colorHex={active.colorHex} />
+                        <SysChart tab={active.value} colorHex={active.colorHex} colorId={active.colorId} />
+                    </CardBody>
+                </Card>
             ) : null}
         </Page>
     )

@@ -13,8 +13,8 @@ interface Props {
 export function Modal({ open, onClose, title, children }: Props) {
     useEffect(() => {
         if (!open) return
-        document.body.style.overflow = "hidden"
-        return () => { document.body.style.overflow = "" }
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = '' }
     }, [open])
 
     useEffect(() => {

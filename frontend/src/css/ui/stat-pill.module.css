@@ -2,7 +2,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 12px;
+    padding: 10px 12px;
     background: var(--fill-1);
     border: 1px solid var(--stroke-1);
     border-radius: var(--radius-1);

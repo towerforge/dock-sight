@@ -2,17 +2,8 @@ import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import { apiServiceImages, apiDeleteImage } from '@/services/api'
 import { formatBytes } from '@/lib/formatters'
-import { Button, Modal, Table } from '@/components/ui'
+import { Button, Modal, Table, StatPill } from '@/components/ui'
 import type { Column } from '@/components/ui'
-
-function StatChip({ label, value, color }: { label: string; value: number | string; color?: string }) {
-    return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 'var(--radius-1)', background: 'var(--fill-1)', border: '1px solid var(--stroke-1)', fontSize: 12 }}>
-            <span style={{ color: 'var(--text-3)' }}>{label}</span>
-            <span style={{ fontWeight: 700, color: color ?? 'var(--text-1)' }}>{value}</span>
-        </div>
-    )
-}
 
 export function ImagesTab({ serviceName }: { serviceName: string }) {
     const [images, setImages] = useState<any[]>([])
@@ -120,10 +111,10 @@ export function ImagesTab({ serviceName }: { serviceName: string }) {
     return (
         <>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                <StatChip label="Total" value={sorted.length} />
-                <StatChip label="In use" value={inUse} color="#10b981" />
-                <StatChip label="Unused" value={unused} color="var(--text-3)" />
-                <StatChip label="Total size" value={formatBytes(totalSize)} />
+                <StatPill label="Total" value={sorted.length} />
+                <StatPill label="In use" value={inUse} valueColor="#10b981" />
+                <StatPill label="Unused" value={unused} valueColor="var(--text-3)" />
+                <StatPill label="Total size" value={formatBytes(totalSize)} />
             </div>
 
             <Modal open={!!confirmId} onClose={() => setConfirmId(null)} title="Delete image">
