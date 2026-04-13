@@ -1,17 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import { apiServiceContainers, apiDeleteContainer, apiServiceImages } from '@/services/api'
-import { Button, Modal, Table } from '@/components/ui'
+import { Button, Modal, Table, StatPill } from '@/components/ui'
 import type { Column } from '@/components/ui'
-
-function StatChip({ label, value, color }: { label: string; value: number; color?: string }) {
-    return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 'var(--radius-1)', background: 'var(--fill-1)', border: '1px solid var(--stroke-1)', fontSize: 12 }}>
-            <span style={{ color: 'var(--text-3)' }}>{label}</span>
-            <span style={{ fontWeight: 700, color: color ?? 'var(--text-1)' }}>{value}</span>
-        </div>
-    )
-}
 
 const chipStyle: React.CSSProperties = {
     fontSize: 11, padding: '1px 6px', borderRadius: 4,
@@ -135,11 +126,11 @@ export function ContainersTab({ serviceName }: { serviceName: string }) {
     return (
         <>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                <StatChip label="Total" value={sorted.length} />
-                <StatChip label="Running" value={running} color="#10b981" />
-                <StatChip label="Stopped" value={stopped} color="var(--text-3)" />
-                {totalPorts > 0 && <StatChip label="Ports exposed" value={totalPorts} />}
-                {totalMounts > 0 && <StatChip label="Mounts" value={totalMounts} />}
+                <StatPill label="Total" value={sorted.length} />
+                <StatPill label="Running" value={running} valueColor="#10b981" />
+                <StatPill label="Stopped" value={stopped} valueColor="var(--text-3)" />
+                {totalPorts > 0 && <StatPill label="Ports exposed" value={totalPorts} />}
+                {totalMounts > 0 && <StatPill label="Mounts" value={totalMounts} />}
             </div>
 
             <Modal open={!!confirmId} onClose={() => setConfirmId(null)} title="Delete container">

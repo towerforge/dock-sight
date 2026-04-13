@@ -11,6 +11,7 @@ pub mod docker;
 pub mod openapi;
 pub mod registries;
 pub mod users;
+pub mod proxy;
 
 #[derive(RustEmbed)]
 #[folder = "../frontend/dist/"]

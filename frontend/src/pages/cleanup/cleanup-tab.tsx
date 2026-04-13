@@ -2,22 +2,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { Trash2, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react'
 import { apiCleanupPreview, apiRunCleanup } from '@/services/api'
 import { formatBytes } from '@/lib/formatters'
-import { Button, Modal, Table } from '@/components/ui'
+import { Button, Modal, Table, StatPill } from '@/components/ui'
 import type { Column } from '@/components/ui'
 
 interface Container { id: string; name: string; image: string; status: string }
 interface Image     { id: string; tag: string; size: number }
 
 function shortImage(image: string) { return image.split('@')[0] }
-
-function StatChip({ label, value, color }: { label: string; value: number | string; color?: string }) {
-    return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 'var(--radius-1)', background: 'var(--fill-1)', border: '1px solid var(--stroke-1)', fontSize: 12 }}>
-            <span style={{ color: 'var(--text-3)' }}>{label}</span>
-            <span style={{ fontWeight: 700, color: color ?? 'var(--text-1)' }}>{value}</span>
-        </div>
-    )
-}
 
 const containerColumns: Column<Container>[] = [
     {
@@ -136,9 +127,9 @@ export function CleanupTab() {
                 )}
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <StatChip label="Containers" value={containers.length} color={containers.length > 0 ? '#f59e0b' : 'var(--text-3)'} />
-                    <StatChip label="Images" value={images.length} color={images.length > 0 ? '#f59e0b' : 'var(--text-3)'} />
-                    {totalSpace > 0 && <StatChip label="To free" value={`~${formatBytes(totalSpace)}`} />}
+                    <StatPill label="Containers" value={containers.length} valueColor={containers.length > 0 ? '#f59e0b' : 'var(--text-3)'} />
+                    <StatPill label="Images" value={images.length} valueColor={images.length > 0 ? '#f59e0b' : 'var(--text-3)'} />
+                    {totalSpace > 0 && <StatPill label="To free" value={`~${formatBytes(totalSpace)}`} />}
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
                         <Button variant={2} onClick={fetchPreview}><RefreshCw size={14} /> Refresh</Button>
                         <Button variant={5} onClick={() => setConfirm(true)} disabled={isEmpty || running}>

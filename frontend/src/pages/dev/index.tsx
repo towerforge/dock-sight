@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Folder, FileText } from "lucide-react"
-import { Button, Input, Select, Card, CardHeader, CardBody, CardFooter, Grid, Col, Text, Modal, Page, Tabs, TabBar, Tab, TabPanel, Table, TableCell } from "@/components/ui"
+import { Button, Input, Select, Card, CardHeader, CardBody, CardFooter, Grid, Col, Text, Modal, Page, Tabs, TabBar, Tab, TabPanel, Table, TableCell, Spinner, SearchBar, SegmentedControl, StatPill, InlineSelect, Switch, Checkbox } from "@/components/ui"
 import type { Column } from "@/components/ui"
 
 const OPTIONS = [
@@ -39,8 +39,28 @@ const devTableColumns: Column<FileRow>[] = [
     },
 ]
 
+const SEG_OPTIONS = [
+    { value: 'all',  label: 'All'  },
+    { value: 'cpu',  label: 'CPU'  },
+    { value: 'ram',  label: 'RAM'  },
+    { value: 'disk', label: 'Disk' },
+]
+
+const INLINE_OPTIONS = [
+    { value: 'all',     label: 'All networks'  },
+    { value: 'bridge',  label: 'bridge'        },
+    { value: 'host',    label: 'host'          },
+]
+
 export default function Dev() {
-    const [modal, setModal] = useState(false)
+    const [modal,    setModal]    = useState(false)
+    const [search,   setSearch]   = useState('')
+    const [seg,      setSeg]      = useState('all')
+    const [inline,   setInline]   = useState('all')
+    const [sw1,      setSw1]      = useState(true)
+    const [sw2,      setSw2]      = useState(false)
+    const [cb1,      setCb1]      = useState(true)
+    const [cb2,      setCb2]      = useState(false)
 
     return (
         <Page>
@@ -139,6 +159,63 @@ export default function Dev() {
                         data={devTableData}
                         keyExtractor={row => row.name}
                     />
+                </Col>
+            </Grid>
+
+            <Text variant="body" as="h2" style={{ marginBottom: 12 }}>SearchBar</Text>
+            <Grid gap={16} style={{ marginBottom: 32 }}>
+                <Col span={12} md={6}>
+                    <SearchBar value={search} onChange={setSearch} placeholder="Search containers…" />
+                </Col>
+            </Grid>
+
+            <Text variant="body" as="h2" style={{ marginBottom: 12 }}>SegmentedControl</Text>
+            <Grid gap={16} style={{ marginBottom: 32 }}>
+                <Col span={12}>
+                    <SegmentedControl options={SEG_OPTIONS} value={seg} onChange={setSeg} />
+                </Col>
+            </Grid>
+
+            <Text variant="body" as="h2" style={{ marginBottom: 12 }}>InlineSelect</Text>
+            <Grid gap={16} style={{ marginBottom: 32 }}>
+                <Col span={12}>
+                    <InlineSelect label="Network" value={inline} options={INLINE_OPTIONS} onChange={setInline} />
+                </Col>
+            </Grid>
+
+            <Text variant="body" as="h2" style={{ marginBottom: 12 }}>StatPill</Text>
+            <Grid gap={16} style={{ marginBottom: 32 }}>
+                <Col span={12} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <StatPill label="Total" value={42} />
+                    <StatPill label="Running" value={38} valueColor="#10b981" />
+                    <StatPill label="Stopped" value={4} valueColor="var(--text-3)" />
+                    <StatPill label="Size" value="1.2 GB" />
+                </Col>
+            </Grid>
+
+            <Text variant="body" as="h2" style={{ marginBottom: 12 }}>Switch</Text>
+            <Grid gap={16} style={{ marginBottom: 32 }}>
+                <Col span={12} style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                    <Switch checked={sw1} onChange={setSw1} label="Enabled" />
+                    <Switch checked={sw2} onChange={setSw2} label="Disabled (off)" />
+                    <Switch checked={true} onChange={() => {}} label="Disabled prop" disabled />
+                </Col>
+            </Grid>
+
+            <Text variant="body" as="h2" style={{ marginBottom: 12 }}>Checkbox</Text>
+            <Grid gap={16} style={{ marginBottom: 32 }}>
+                <Col span={12} style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                    <Checkbox checked={cb1} onChange={setCb1} label="Checked" />
+                    <Checkbox checked={cb2} onChange={setCb2} label="Unchecked" />
+                    <Checkbox checked={true} onChange={() => {}} label="Disabled" disabled />
+                </Col>
+            </Grid>
+
+            <Text variant="body" as="h2" style={{ marginBottom: 12 }}>Spinner</Text>
+            <Grid gap={16} style={{ marginBottom: 32 }}>
+                <Col span={12} style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+                    <Spinner />
+                    <Spinner label="Cargando…" />
                 </Col>
             </Grid>
 

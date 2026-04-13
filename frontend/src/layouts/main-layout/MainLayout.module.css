@@ -4,6 +4,9 @@
     padding: 0 20px 0 28px;
     height: 44px;
     background: var(--layer-1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
 }
 
 .brand {
@@ -28,6 +31,9 @@
     border-bottom: 1px solid var(--stroke-1);
     background: var(--layer-1);
     color: var(--text-1);
+    position: sticky;
+    top: 44px;
+    z-index: 49;
 }
 
 .navItem {
@@ -78,7 +84,6 @@
 
 .body {
     display: flex;
-    align-items: flex-start;
     min-height: calc(100vh - 88px);
 }
 
@@ -88,13 +93,26 @@
 }
 
 .panel {
+    position: fixed;
+    top: 88px;
+    right: 0;
     width: 320px;
-    flex-shrink: 0;
+    height: calc(100vh - 88px);
     border-left: 1px solid var(--stroke-1);
     background: var(--layer-1);
-    min-height: calc(100vh - 88px);
+    overflow-y: auto;
     padding: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s;
+    z-index: 40;
 }
+.panel:hover {
+    scrollbar-color: var(--stroke-1) transparent;
+}
+.panel::-webkit-scrollbar       { width: 4px; }
+.panel::-webkit-scrollbar-thumb { background: transparent; border-radius: 2px; }
+.panel:hover::-webkit-scrollbar-thumb { background: var(--stroke-1); }
 
 .toggleRoot {
     display: inline-flex;

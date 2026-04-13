@@ -1,4 +1,5 @@
 import { CircuitBoard, HardDrive, Activity } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useDashboard } from '@/context/dashboard-context'
 import { formatBytes } from '@/lib/formatters'
 import { MiniSysChart } from '@/components/dashboard/mini-sys-chart'
@@ -40,15 +41,24 @@ export function SystemPanel() {
         net: {
             percent: netPercent,
             lines: [
-                `↓ ${formatBytes(sys?.network?.total_rx ?? 0)}/s`,
                 `↑ ${formatBytes(sys?.network?.total_tx ?? 0)}/s`,
+                `↓ ${formatBytes(sys?.network?.total_rx ?? 0)}/s`,
             ],
         },
     }
 
+    const navigate = useNavigate()
+
     return (
         <aside className={styles.panel}>
-            <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>System</p>
+            <p
+                onClick={() => navigate('/system')}
+                style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}
+            >
+                System ↗
+            </p>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {METRICS.map(({ key, label, Icon, colorHex, colorId }, i) => {
                     const dataKey = key === 'net' ? 'network' : key

@@ -17,6 +17,7 @@ import AccountPage from '@/pages/settings/account'
 import UsersPage from '@/pages/settings/users'
 import SecurityPage from '@/pages/settings/security'
 import Metrics from '@/pages/metrics'
+import SystemPage from '@/pages/system'
 import VolumesHome from '@/pages/volumes/home'
 import VolumeDetailLayout from '@/pages/volumes/detail'
 import VolumeOverviewPage from '@/pages/volumes/detail/overview/overview-page'
@@ -24,6 +25,10 @@ import NetworkHome from '@/pages/network/home'
 import NetworkDetailLayout from '@/pages/network/detail'
 import NetworkOverviewPage from '@/pages/network/detail/overview/overview-page'
 import NetworkServicesPage from '@/pages/network/detail/services/services-page'
+import ProxyHome from '@/pages/proxy/home'
+import ProxyDetailLayout from '@/pages/proxy'
+import ProxyOverviewPage from '@/pages/proxy/detail/overview/overview-page'
+import ProxyConfigPage from '@/pages/proxy/detail/config/config-page'
 
 const Dev = import.meta.env.DEV ? lazy(() => import('@/pages/dev')) : null
 
@@ -50,6 +55,7 @@ function App() {
             <Route path="security"   element={<SecurityPage />} />
           </Route>
           <Route path="/metrics"  element={<Metrics />} />
+          <Route path="/system"   element={<SystemPage />} />
           <Route path="/volumes">
             <Route index element={<VolumesHome />} />
             <Route element={<VolumeDetailLayout />}>
@@ -61,6 +67,13 @@ function App() {
             <Route element={<NetworkDetailLayout />}>
               <Route path="overview" element={<NetworkOverviewPage />} />
               <Route path="services" element={<NetworkServicesPage />} />
+            </Route>
+          </Route>
+          <Route path="/proxy">
+            <Route index element={<ProxyHome />} />
+            <Route element={<ProxyDetailLayout />}>
+              <Route path="overview" element={<ProxyOverviewPage />} />
+              <Route path="config"   element={<ProxyConfigPage />} />
             </Route>
           </Route>
           {Dev && <Route path="/_dev" element={<Suspense><Dev /></Suspense>} />}
