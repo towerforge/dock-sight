@@ -24,6 +24,10 @@ import NetworkHome from '@/pages/network/home'
 import NetworkDetailLayout from '@/pages/network/detail'
 import NetworkOverviewPage from '@/pages/network/detail/overview/overview-page'
 import NetworkServicesPage from '@/pages/network/detail/services/services-page'
+import ProxyHome from '@/pages/proxy/home'
+import ProxyDetailLayout from '@/pages/proxy'
+import ProxyOverviewPage from '@/pages/proxy/detail/overview/overview-page'
+import ProxyConfigPage from '@/pages/proxy/detail/config/config-page'
 
 const Dev = import.meta.env.DEV ? lazy(() => import('@/pages/dev')) : null
 
@@ -61,6 +65,13 @@ function App() {
             <Route element={<NetworkDetailLayout />}>
               <Route path="overview" element={<NetworkOverviewPage />} />
               <Route path="services" element={<NetworkServicesPage />} />
+            </Route>
+          </Route>
+          <Route path="/proxy">
+            <Route index element={<ProxyHome />} />
+            <Route element={<ProxyDetailLayout />}>
+              <Route path="overview" element={<ProxyOverviewPage />} />
+              <Route path="config"   element={<ProxyConfigPage />} />
             </Route>
           </Route>
           {Dev && <Route path="/_dev" element={<Suspense><Dev /></Suspense>} />}

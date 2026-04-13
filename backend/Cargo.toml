@@ -24,3 +24,12 @@ chrono = "0.4"
 bcrypt = "0.15"
 uuid = { version = "1", features = ["v4"] }
 rusqlite = { version = "0.32", features = ["bundled"] }
+
+# --- Proxy module dependencies ---
+hyper = { version = "1", features = ["server", "client", "http1", "http2"] }   # HTTP/1+2 server and client for the reverse proxy engine
+hyper-util = { version = "0.1", features = ["tokio", "client", "client-legacy"] } # Tokio-compatible hyper utilities (connection pooling, executor)
+tokio-rustls = "0.26"   # Async TLS via rustls — used to terminate HTTPS on ports 80/443
+rustls = "0.23"         # Pure-Rust TLS implementation, no OpenSSL dependency
+rustls-pemfile = "2"    # Parse PEM certificate and key files stored in DATA_DIR
+instant-acme = "0.6"    # ACME v2 (Let's Encrypt) client — HTTP-01 challenge, certificate issuance and renewal
+rcgen = "0.13"          # Generate self-signed certificates locally when Let's Encrypt is not selected

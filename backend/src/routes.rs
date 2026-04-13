@@ -23,6 +23,7 @@ use crate::docker::{
 };
 use crate::registries::{list_registries, create_registry, delete_registry};
 use crate::users::{list_users, create_user, delete_user, update_user};
+use crate::proxy::{list_hosts, get_host, create_host, update_host, delete_host, request_ssl};
 use crate::openapi::ApiDoc;
 use utoipa::OpenApi;
 
@@ -83,6 +84,10 @@ pub fn create_router(dev_mode: bool, port: u16) -> Router {
         // User management (admin-only checks inside handlers)
         .route("/users",                       get(list_users).post(create_user).delete(delete_user))
         .route("/users/update",                put(update_user))
+        // Proxy management
+        .route("/api/proxy/hosts",             get(list_hosts).post(create_host))
+        .route("/api/proxy/hosts/{id}",        get(get_host).put(update_host).delete(delete_host))
+        .route("/api/proxy/hosts/{id}/ssl",    post(request_ssl))
         .route("/version",                     get(version))
         .route("/openapi.json",                get(|| async { axum::Json(ApiDoc::openapi()) }))
         .with_state(auth_state.clone());

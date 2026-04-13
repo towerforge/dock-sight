@@ -5,11 +5,18 @@ export interface SystemStats {
     network: { total_rx: number; total_tx: number; max_limit: number }
 }
 
+export interface ServicePort {
+    published: number | null
+    target:    number | null
+    protocol:  string
+}
+
 export interface DockerService {
     name: string
     containers: number
     last_deployed: number
     networks: string[]
+    ports: ServicePort[]
     info: {
         cpu: { percent: number }
         ram: { used: number; percent: number }

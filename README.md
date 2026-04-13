@@ -34,6 +34,7 @@ Dock Sight runs as a single binary and serves a real-time dashboard in your brow
 | **Registries** | Manage private DockerHub registries (create, list, delete) and use them when deploying new services |
 | **Users** | Multi-user access — create, delete and reset passwords for any user. All users have the same privileges |
 | **Security** | Brute-force protection per IP (blocked after 10 failed attempts in 15 min). Rate-limit state and login event log are persisted in SQLite and visible in Settings → Security |
+| **Proxy** | Built-in reverse proxy — map domains to services, issue and auto-renew Let's Encrypt certificates (HTTP-01), or generate self-signed certs. No nginx or external dependencies required |
 
 ## Requirements
 
@@ -251,6 +252,63 @@ All state is stored in a single SQLite database (`dock-sight.db`) in `DATA_DIR`:
 | `registries` | DockerHub registry credentials |
 | `login_attempts` | Active rate-limit counters per IP |
 | `login_events` | Login attempt history (last 50 shown in Settings → Security) |
+
+## Proxy
+
+Dock Sight includes a built-in reverse proxy that runs natively alongside the dashboard — no nginx, Caddy or external process required. It is implemented entirely in Rust using `hyper` + `rustls` and managed from a dedicated **Proxy** section in the UI.
+
+### How it works
+
+The proxy engine starts two listeners inside the same binary:
+
+- **Port 80** — HTTP, used for Let's Encrypt HTTP-01 challenge responses and optional redirect to HTTPS
+- **Port 443** — HTTPS, TLS-terminated with the certificates managed by dock-sight
+
+Incoming requests are routed by the `Host` header to the configured target URL. Configuration is read from SQLite at runtime — adding or updating a host takes effect immediately without restarting the service.
+
+### Adding a proxy host
+
+1. Open the **Proxy** section in the sidebar
+2. Click **Add Proxy Host**
+3. Fill in the domain (`app.example.com`), the target URL (`http://localhost:3000`) and choose an SSL mode
+4. Save — the host is active immediately
+
+### SSL modes
+
+| Mode | Description |
+|---|---|
+| **None** | Plain HTTP only, no TLS |
+| **Let's Encrypt** | Automatically issues and renews a certificate via ACME HTTP-01. Port 80 must be reachable from the internet |
+| **Self-signed** | Generates a local certificate with `rcgen`. Useful for internal services or testing |
+
+### Auto-renewal
+
+When Let's Encrypt is selected, dock-sight checks certificate expiry in the background and renews automatically 7 days before expiration. The current expiry date and renewal status are visible inline in the proxy host list.
+
+### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `PROXY_HTTP_PORT` | `80` | Port the proxy listens on for HTTP traffic |
+| `PROXY_HTTPS_PORT` | `443` | Port the proxy listens on for HTTPS traffic |
+| `ACME_EMAIL` | — | Contact email sent to Let's Encrypt during certificate issuance (required when using Let's Encrypt mode) |
+
+### Data persistence
+
+Proxy configuration and certificates are stored in the same SQLite database as the rest of dock-sight:
+
+| Table | Contents |
+|---|---|
+| `proxy_hosts` | Domain, target URL, SSL mode, force-HTTPS flag, enabled state |
+| `ssl_certificates` | PEM certificate and key, expiry date, last renewal timestamp |
+
+### Scope and limitations
+
+- One target URL per host (no load balancing)
+- HTTP-01 challenge only — DNS-01 and wildcard certificates are not supported
+- Port 80 must be accessible from the internet for Let's Encrypt to work
+
+---
 
 ## Service grouping
 

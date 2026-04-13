@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom'
-import { PanelRight, Server, Trash2, FlaskConical, Box, Image as ImageIcon, FileArchive, ArrowLeft, BarChart2, LayoutDashboard, Settings, LogOut, Info, HardDrive, Activity } from 'lucide-react'
+import { PanelRight, Server, Trash2, FlaskConical, Box, Image as ImageIcon, FileArchive, ArrowLeft, BarChart2, LayoutDashboard, Settings, LogOut, Info, HardDrive, Activity, Globe } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui'
 import { useAuth } from '@/hooks/use-auth'
 import { AboutModal } from '@/components/about-modal'
 import { SystemPanel } from './system-panel'
 import styles from './MainLayout.module.css'
 
-type Section = 'main' | 'service' | 'network' | 'volume'
+type Section = 'main' | 'service' | 'network' | 'volume' | 'proxy'
 
 interface NavItem { to: string; label: string; Icon: React.ElementType; end?: boolean; dev?: boolean; separator?: boolean }
 
@@ -16,7 +16,8 @@ const MAIN_NAV: NavItem[] = [
     { to: '/network',   label: 'Network',   Icon: Activity,     end: true              },
     { to: '/volumes',   label: 'Volumes',   Icon: HardDrive                            },
     { to: '/metrics',   label: 'Metrics',   Icon: BarChart2,    separator: true        },
-    { to: '/cleanup',   label: 'Cleanup',   Icon: Trash2                               },
+    { to: '/proxy',     label: 'Proxy',     Icon: Globe                                },
+    { to: '/cleanup',   label: 'Cleanup',   Icon: Trash2,       separator: true        },
     { to: '/_dev',      label: 'Dev',       Icon: FlaskConical, dev: true, separator: true },
 ]
 
@@ -97,6 +98,32 @@ const NETWORK_NAV = [
 const VOLUME_NAV = [
     { path: 'overview', label: 'Overview', Icon: LayoutDashboard },
 ] as const
+
+const PROXY_NAV = [
+    { path: 'overview', label: 'Overview',      Icon: LayoutDashboard },
+    { path: 'config',   label: 'Custom config', Icon: FileArchive      },
+] as const
+
+function ProxyNav() {
+    const [searchParams] = useSearchParams()
+    const location = useLocation()
+    const id     = searchParams.get('id')     ?? ''
+    const domain = searchParams.get('domain') ?? ''
+
+    return (
+        <>
+            {PROXY_NAV.map(({ path, label, Icon }) => {
+                const to       = `/proxy/${path}?id=${encodeURIComponent(id)}&domain=${encodeURIComponent(domain)}`
+                const isActive = location.pathname === `/proxy/${path}`
+                return (
+                    <NavLink key={path} to={to} className={`${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}>
+                        <Icon size={15} />{label}
+                    </NavLink>
+                )
+            })}
+        </>
+    )
+}
 
 function NetworkBrand({ onBack }: { onBack: () => void }) {
     const [searchParams] = useSearchParams()
@@ -239,11 +266,39 @@ function UserMenu({ username, onLogout, onAbout }: { username: string; onLogout:
 }
 
 
+function ProxyBrand({ onBack }: { onBack: () => void }) {
+    const [searchParams] = useSearchParams()
+    const domain = searchParams.get('domain') ?? ''
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+                onClick={onBack}
+                title="Back to proxy"
+                aria-label="Back to proxy"
+                style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-2)', padding: '4px', borderRadius: 'var(--radius-1)',
+                    transition: 'color 0.15s', fontSize: 18,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}
+            >
+                <ArrowLeft size={18} /> <span style={{ paddingLeft: 5 }}>proxy</span>
+            </button>
+            <span style={{ paddingRight: 5, fontWeight: 100, color: 'var(--text-2)' }}>/</span>
+            <span className={styles.brand}>{domain || 'Host'}</span>
+        </div>
+    )
+}
+
 const SECTION_NAV: Record<Section, React.ComponentType> = {
     main:    MainNav,
     service: ServiceNav,
     network: NetworkNav,
     volume:  VolumeNav,
+    proxy:   ProxyNav,
 }
 
 const SECTION_BRAND: Record<Section, React.ComponentType<{ onBack: () => void }>> = {
@@ -251,6 +306,7 @@ const SECTION_BRAND: Record<Section, React.ComponentType<{ onBack: () => void }>
     service: ({ onBack }) => <ServiceBrand onBack={onBack} />,
     network: ({ onBack }) => <NetworkBrand onBack={onBack} />,
     volume:  ({ onBack }) => <VolumeBrand  onBack={onBack} />,
+    proxy:   ({ onBack }) => <ProxyBrand   onBack={onBack} />,
 }
 
 export default function MainLayout() {
@@ -262,7 +318,8 @@ export default function MainLayout() {
     const section: Section =
         location.pathname.startsWith('/service') ? 'service' :
         location.pathname.startsWith('/network') && location.pathname !== '/network' ? 'network' :
-        location.pathname.startsWith('/volumes') && location.pathname !== '/volumes' ? 'volume' : 'main'
+        location.pathname.startsWith('/volumes') && location.pathname !== '/volumes' ? 'volume' :
+        location.pathname.startsWith('/proxy')   && location.pathname !== '/proxy'   ? 'proxy'   : 'main'
 
     const handleLogout = async () => {
         await logout()
@@ -274,6 +331,7 @@ export default function MainLayout() {
     const onBack =
         section === 'network' ? () => navigate('/network') :
         section === 'volume'  ? () => navigate('/volumes') :
+        section === 'proxy'   ? () => navigate('/proxy')   :
         () => navigate('/')
 
     return (
