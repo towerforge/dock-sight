@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Plus, AlertCircle, ShieldCheck, ShieldOff, ShieldAlert, PauseCircle } from 'lucide-react'
+import { Plus, AlertCircle, ShieldCheck, ShieldOff, ShieldAlert, PauseCircle } from 'lucide-react'
 import { Page, Table, Button, SearchBar } from '@/components/ui'
 import { InlineSelect } from '@/components/ui/inline-select'
 import type { Column } from '@/components/ui'
